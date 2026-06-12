@@ -2166,6 +2166,8 @@ button {
     max-height: 100vh;
     border-radius: 0;
     border: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .detail-backdrop-img {
     height: 50vh;
