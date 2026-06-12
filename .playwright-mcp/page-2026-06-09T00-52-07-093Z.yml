@@ -1,0 +1,561 @@
+- generic [ref=e2]:
+  - link "Skip to content" [ref=e3] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e4]:
+    - button "webstreamer" [ref=e5] [cursor=pointer]:
+      - img [ref=e7]
+      - generic [ref=e10]: webstreamer
+    - navigation [ref=e11]:
+      - button "Home" [ref=e12] [cursor=pointer]
+      - button "My List" [ref=e13] [cursor=pointer]
+    - button "Refresh" [ref=e421] [cursor=pointer]:
+      - img [ref=e15]
+      - generic [ref=e20]: Refresh
+    - generic [ref=e21]:
+      - img [ref=e22]
+      - textbox / [ref=e25]:
+        - /placeholder: Search title, cast, genre, year...
+      - generic: /
+    - button "Toggle sound" [ref=e26] [cursor=pointer]:
+      - img [ref=e27]
+  - main [ref=e31]:
+    - dialog "Choose stream source" [ref=e567]:
+      - generic [ref=e568]:
+        - generic [ref=e569]:
+          - generic [ref=e570]:
+            - paragraph [ref=e571]: Choose source
+            - 'heading "Spider-Man: Into the Spider-Verse" [level=2] [ref=e572]'
+          - button "Close stream picker" [ref=e573] [cursor=pointer]:
+            - img [ref=e574]
+        - generic [ref=e582]:
+          - img [ref=e583]
+          - generic [ref=e585]:
+            - strong [ref=e586]: "Audio Notice:"
+            - text: Web browsers do not support DTS, TrueHD, or Atmos audio natively. If a source plays with
+            - strong [ref=e587]: no sound
+            - text: ", please choose a different stream (e.g. choose standard/AAC stereo)."
+        - generic [ref=e588]:
+          - button "VidSrc (Server 1) Alternative Web-Ready Stream (Stereo/AAC Audio & Subtitles) Auto Stream" [ref=e589] [cursor=pointer]:
+            - img [ref=e591]
+            - generic [ref=e593]:
+              - strong [ref=e594]: VidSrc (Server 1)
+              - generic [ref=e595]: Alternative Web-Ready Stream (Stereo/AAC Audio & Subtitles)
+            - generic [ref=e596]:
+              - generic [ref=e597]: Auto
+              - generic [ref=e598]: Stream
+          - button "VidSrc (Server 2) Alternative Web-Ready Stream (Stereo/AAC Audio) Auto Stream" [ref=e599] [cursor=pointer]:
+            - img [ref=e601]
+            - generic [ref=e603]:
+              - strong [ref=e604]: VidSrc (Server 2)
+              - generic [ref=e605]: Alternative Web-Ready Stream (Stereo/AAC Audio)
+            - generic [ref=e606]:
+              - generic [ref=e607]: Auto
+              - generic [ref=e608]: Stream
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD HDR10 BluRay REMUX x265 10bit HEVC [Org UHD Hindi BD 5.1 640Kbps + DTS-HDMA TrueHD Atmos 7.1 English] ESubs FGT-4kHdHub.mkv 💾 47.47 GB 🔗 HubCloud (FSL) from 4KHDHub 2160P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e609] [cursor=pointer]:
+            - img [ref=e611]
+            - generic [ref=e613]:
+              - strong [ref=e614]: WebStreamrMBG
+              - generic [ref=e615]: Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD HDR10 BluRay REMUX x265 10bit HEVC [Org UHD Hindi BD 5.1 640Kbps + DTS-HDMA TrueHD Atmos 7.1 English] ESubs FGT-4kHdHub.mkv 💾 47.47 GB 🔗 HubCloud (FSL) from 4KHDHub
+            - generic [ref=e616]:
+              - generic [ref=e617]: 2160P
+              - generic [ref=e618]: Stream
+              - generic [ref=e619]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD SDR BluRay x264 8bit AVC [Org UHD Hindi BD 5.1 ~ 640Kbps + DTS-HDMA TrueHD Atmos 7.1 English] ESubs ~ SWTYBLZ-4kHdHub.mkv ⚠️ no seek 💾 28.78 GB 🔗 HubCloud (10Gbps) from 4KHDHub 2160P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e620] [cursor=pointer]:
+            - img [ref=e622]
+            - generic [ref=e624]:
+              - strong [ref=e625]: WebStreamrMBG
+              - generic [ref=e626]: Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD SDR BluRay x264 8bit AVC [Org UHD Hindi BD 5.1 ~ 640Kbps + DTS-HDMA TrueHD Atmos 7.1 English] ESubs ~ SWTYBLZ-4kHdHub.mkv ⚠️ no seek 💾 28.78 GB 🔗 HubCloud (10Gbps) from 4KHDHub
+            - generic [ref=e627]:
+              - generic [ref=e628]: 2160P
+              - generic [ref=e629]: Stream
+              - generic [ref=e630]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD SDR BluRay x264 8bit AVC [Org UHD Hindi BD 5.1 ~ 640Kbps + DTS-HDMA TrueHD Atmos 7.1 English] ESubs ~ SWTYBLZ-4kHdHub.mkv ⚠️ no seek 💾 28.78 GB 🔗 HubCloud (DF) from 4KHDHub 2160P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e631] [cursor=pointer]:
+            - img [ref=e633]
+            - generic [ref=e635]:
+              - strong [ref=e636]: WebStreamrMBG
+              - generic [ref=e637]: Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD SDR BluRay x264 8bit AVC [Org UHD Hindi BD 5.1 ~ 640Kbps + DTS-HDMA TrueHD Atmos 7.1 English] ESubs ~ SWTYBLZ-4kHdHub.mkv ⚠️ no seek 💾 28.78 GB 🔗 HubCloud (DF) from 4KHDHub
+            - generic [ref=e638]:
+              - generic [ref=e639]: 2160P
+              - generic [ref=e640]: Stream
+              - generic [ref=e641]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 1080p BluRay REMUX x264 AVC [Org UHD Hindi BD 5.1 640Kbps + DTS-HDMA TrueHD Atmos 7.1 English] ESubs FGT-4kHdHub.mkv 💾 28.34 GB 🔗 HubCloud (FSL) from 4KHDHub 2160P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e642] [cursor=pointer]:
+            - img [ref=e644]
+            - generic [ref=e646]:
+              - strong [ref=e647]: WebStreamrMBG
+              - generic [ref=e648]: Spider-Man - Into the Spider-Verse (2018) 1080p BluRay REMUX x264 AVC [Org UHD Hindi BD 5.1 640Kbps + DTS-HDMA TrueHD Atmos 7.1 English] ESubs FGT-4kHdHub.mkv 💾 28.34 GB 🔗 HubCloud (FSL) from 4KHDHub
+            - generic [ref=e649]:
+              - generic [ref=e650]: 2160P
+              - generic [ref=e651]: Stream
+              - generic [ref=e652]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD HDR10 BluRay x265 10bit HEVC [Org UHD Hindi BD 5.1 ~ 640Kbps + TrueHD Atmos 7.1 English] ESubs ~ TERMiNAL-4kHdHub.mkv ⚠️ no seek 💾 15.9 GB 🔗 HubCloud (10Gbps) from 4KHDHub 2160P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e653] [cursor=pointer]:
+            - img [ref=e655]
+            - generic [ref=e657]:
+              - strong [ref=e658]: WebStreamrMBG
+              - generic [ref=e659]: Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD HDR10 BluRay x265 10bit HEVC [Org UHD Hindi BD 5.1 ~ 640Kbps + TrueHD Atmos 7.1 English] ESubs ~ TERMiNAL-4kHdHub.mkv ⚠️ no seek 💾 15.9 GB 🔗 HubCloud (10Gbps) from 4KHDHub
+            - generic [ref=e660]:
+              - generic [ref=e661]: 2160P
+              - generic [ref=e662]: Stream
+              - generic [ref=e663]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD HDR10 BluRay x265 10bit HEVC [Org UHD Hindi BD 5.1 ~ 640Kbps + TrueHD Atmos 7.1 English] ESubs ~ TERMiNAL-4kHdHub.mkv ⚠️ no seek 💾 15.9 GB 🔗 HubCloud (DF) from 4KHDHub 2160P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e664] [cursor=pointer]:
+            - img [ref=e666]
+            - generic [ref=e668]:
+              - strong [ref=e669]: WebStreamrMBG
+              - generic [ref=e670]: Spider-Man - Into the Spider-Verse (2018) 2160p 4K UHD HDR10 BluRay x265 10bit HEVC [Org UHD Hindi BD 5.1 ~ 640Kbps + TrueHD Atmos 7.1 English] ESubs ~ TERMiNAL-4kHdHub.mkv ⚠️ no seek 💾 15.9 GB 🔗 HubCloud (DF) from 4KHDHub
+            - generic [ref=e671]:
+              - generic [ref=e672]: 2160P
+              - generic [ref=e673]: Stream
+              - generic [ref=e674]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 1080p BluRay x264 AVC [Org UHD Hindi BD 5.1 ~ 640Kbps + DTS-HDMA 5.1 English] ESubs ~ WiKi-4kHdHub.mkv ⚠️ no seek 💾 16.26 GB 🔗 HubCloud (10Gbps) from 4KHDHub 1080P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e675] [cursor=pointer]:
+            - img [ref=e677]
+            - generic [ref=e679]:
+              - strong [ref=e680]: WebStreamrMBG
+              - generic [ref=e681]: Spider-Man - Into the Spider-Verse (2018) 1080p BluRay x264 AVC [Org UHD Hindi BD 5.1 ~ 640Kbps + DTS-HDMA 5.1 English] ESubs ~ WiKi-4kHdHub.mkv ⚠️ no seek 💾 16.26 GB 🔗 HubCloud (10Gbps) from 4KHDHub
+            - generic [ref=e682]:
+              - generic [ref=e683]: 1080P
+              - generic [ref=e684]: Stream
+              - generic [ref=e685]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 1080p BluRay x264 AVC [Org UHD Hindi BD 5.1 ~ 640Kbps + DTS-HDMA 5.1 English] ESubs ~ WiKi-4kHdHub.mkv ⚠️ no seek 💾 16.26 GB 🔗 HubCloud (DF) from 4KHDHub 1080P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e686] [cursor=pointer]:
+            - img [ref=e688]
+            - generic [ref=e690]:
+              - strong [ref=e691]: WebStreamrMBG
+              - generic [ref=e692]: Spider-Man - Into the Spider-Verse (2018) 1080p BluRay x264 AVC [Org UHD Hindi BD 5.1 ~ 640Kbps + DTS-HDMA 5.1 English] ESubs ~ WiKi-4kHdHub.mkv ⚠️ no seek 💾 16.26 GB 🔗 HubCloud (DF) from 4KHDHub
+            - generic [ref=e693]:
+              - generic [ref=e694]: 1080P
+              - generic [ref=e695]: Stream
+              - generic [ref=e696]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 1080p BluRay x265 10bit HEVC [Org UHD Hindi BD 5.1 - 640Kbps + DDP 5.1 English] ESubs - r0b0t [TAoE]-4kHdHub.mkv ⚠️ no seek 💾 8.48 GB 🔗 HubCloud (10Gbps) from 4KHDHub 1080P Stream" [ref=e697] [cursor=pointer]:
+            - img [ref=e699]
+            - generic [ref=e701]:
+              - strong [ref=e702]: WebStreamrMBG
+              - generic [ref=e703]: Spider-Man - Into the Spider-Verse (2018) 1080p BluRay x265 10bit HEVC [Org UHD Hindi BD 5.1 - 640Kbps + DDP 5.1 English] ESubs - r0b0t [TAoE]-4kHdHub.mkv ⚠️ no seek 💾 8.48 GB 🔗 HubCloud (10Gbps) from 4KHDHub
+            - generic [ref=e704]:
+              - generic [ref=e705]: 1080P
+              - generic [ref=e706]: Stream
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) 1080p BluRay x265 10bit HEVC [Org UHD Hindi BD 5.1 - 640Kbps + DDP 5.1 English] ESubs - r0b0t [TAoE]-4kHdHub.mkv ⚠️ no seek 💾 8.48 GB 🔗 HubCloud (DF) from 4KHDHub 1080P Stream" [ref=e707] [cursor=pointer]:
+            - img [ref=e709]
+            - generic [ref=e711]:
+              - strong [ref=e712]: WebStreamrMBG
+              - generic [ref=e713]: Spider-Man - Into the Spider-Verse (2018) 1080p BluRay x265 10bit HEVC [Org UHD Hindi BD 5.1 - 640Kbps + DDP 5.1 English] ESubs - r0b0t [TAoE]-4kHdHub.mkv ⚠️ no seek 💾 8.48 GB 🔗 HubCloud (DF) from 4KHDHub
+            - generic [ref=e714]:
+              - generic [ref=e715]: 1080P
+              - generic [ref=e716]: Stream
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) DS4K 1080p HDR-R BDRip HEVC [Hindi (BD) DD 5.1 + English DTS 5.1] ESubs - PeruGuy-4kHdHub.mkv ⚠️ no seek 💾 5.06 GB 🔗 HubCloud (10Gbps) from 4KHDHub 1080P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e717] [cursor=pointer]:
+            - img [ref=e719]
+            - generic [ref=e721]:
+              - strong [ref=e722]: WebStreamrMBG
+              - generic [ref=e723]: Spider-Man - Into the Spider-Verse (2018) DS4K 1080p HDR-R BDRip HEVC [Hindi (BD) DD 5.1 + English DTS 5.1] ESubs - PeruGuy-4kHdHub.mkv ⚠️ no seek 💾 5.06 GB 🔗 HubCloud (10Gbps) from 4KHDHub
+            - generic [ref=e724]:
+              - generic [ref=e725]: 1080P
+              - generic [ref=e726]: Stream
+              - generic [ref=e727]: ⚠️ DTS/TrueHD Unsupported
+          - button "WebStreamrMBG Spider-Man - Into the Spider-Verse (2018) DS4K 1080p HDR-R BDRip HEVC [Hindi (BD) DD 5.1 + English DTS 5.1] ESubs - PeruGuy-4kHdHub.mkv ⚠️ no seek 💾 5.06 GB 🔗 HubCloud (DF) from 4KHDHub 1080P Stream ⚠️ DTS/TrueHD Unsupported" [ref=e728] [cursor=pointer]:
+            - img [ref=e730]
+            - generic [ref=e732]:
+              - strong [ref=e733]: WebStreamrMBG
+              - generic [ref=e734]: Spider-Man - Into the Spider-Verse (2018) DS4K 1080p HDR-R BDRip HEVC [Hindi (BD) DD 5.1 + English DTS 5.1] ESubs - PeruGuy-4kHdHub.mkv ⚠️ no seek 💾 5.06 GB 🔗 HubCloud (DF) from 4KHDHub
+            - generic [ref=e735]:
+              - generic [ref=e736]: 1080P
+              - generic [ref=e737]: Stream
+              - generic [ref=e738]: ⚠️ DTS/TrueHD Unsupported
+    - generic [ref=e32]:
+      - img "Wednesday backdrop" [ref=e739]
+      - generic [ref=e740]:
+        - generic [ref=e741]: Featured Now
+        - heading "Wednesday" [level=1] [ref=e742]
+        - generic [ref=e743]:
+          - generic [ref=e744]: "8.3"
+          - generic [ref=e745]: "2022"
+          - generic [ref=e746]: TV Show
+          - generic [ref=e747]: Sci-Fi & Fantasy / Mystery
+        - paragraph [ref=e748]: Smart, sarcastic and a little dead inside, Wednesday Addams investigates twisted mysteries while making new friends — and foes — at Nevermore Academy.
+        - generic [ref=e749]:
+          - button "Play" [ref=e750] [cursor=pointer]:
+            - img [ref=e751]
+            - text: Play
+          - button "Details" [ref=e753] [cursor=pointer]
+          - button "My List" [ref=e754] [cursor=pointer]:
+            - img [ref=e755]
+            - text: My List
+        - paragraph [ref=e757]: Catalog refreshed from TMDB · Jun 9, 12:51 PM · 24 titles
+    - generic [ref=e66]:
+      - generic "Vibe filters" [ref=e67]:
+        - button "🌈 All Vibes" [ref=e68] [cursor=pointer]: 🌈 All Vibes
+        - button "👻 Spooky/Scared" [ref=e70] [cursor=pointer]
+        - button "🔥 Hype/Action" [ref=e71] [cursor=pointer]
+        - button "🧠 Mind-bending" [ref=e72] [cursor=pointer]
+        - button "🍿 Chill Vibez" [ref=e73] [cursor=pointer]
+        - button "💖 Romance" [ref=e74] [cursor=pointer]
+      - generic "Genre filters" [ref=e75]:
+        - button "All" [ref=e76] [cursor=pointer]
+        - button "Action" [ref=e77] [cursor=pointer]
+        - button "Sci-Fi" [ref=e78] [cursor=pointer]
+        - button "Horror" [ref=e79] [cursor=pointer]
+        - button "Drama" [ref=e80] [cursor=pointer]
+        - button "Comedy" [ref=e81] [cursor=pointer]
+        - button "Mystery" [ref=e82] [cursor=pointer]
+        - button "Animation" [ref=e83] [cursor=pointer]
+        - button "Thriller" [ref=e84] [cursor=pointer]
+        - button "Romance" [ref=e85] [cursor=pointer]
+        - button "Adventure" [ref=e86] [cursor=pointer]
+      - generic "Advanced search filters" [ref=e87]:
+        - generic [ref=e88]:
+          - img [ref=e89]
+          - text: Filters
+        - combobox "Filter by media type" [ref=e90] [cursor=pointer]:
+          - option "All types" [selected]
+          - option "Movies"
+          - option "TV Shows"
+        - combobox "Filter by year" [ref=e91] [cursor=pointer]:
+          - option "Any year" [selected]
+          - option "2020s"
+          - option "2010s"
+          - option "Before 2010"
+        - combobox "Filter by minimum rating" [ref=e92] [cursor=pointer]:
+          - option "Any rating" [selected]
+          - option "9.0+"
+          - option "8.5+"
+          - option "8.0+"
+        - button "Reset" [ref=e93] [cursor=pointer]
+    - generic [ref=e94]:
+      - generic [ref=e95]:
+        - generic [ref=e96]:
+          - heading "TOP 10 Today" [level=2] [ref=e97]
+          - generic [ref=e98]: 10 titles
+        - generic [ref=e99]:
+          - button "Open details for Arcane" [ref=e118]:
+            - img "Arcane poster" [ref=e119]
+            - button "Toggle favorite" [ref=e121] [cursor=pointer]:
+              - img [ref=e122]
+            - generic [ref=e124]:
+              - heading "Arcane" [level=3] [ref=e125]
+              - paragraph [ref=e126]: 8.8 · 2021 · TV Show
+          - button "Open details for Rick and Morty" [ref=e109]:
+            - img "Rick and Morty poster" [ref=e110]
+            - button "Toggle favorite" [ref=e112] [cursor=pointer]:
+              - img [ref=e113]
+            - generic [ref=e115]:
+              - heading "Rick and Morty" [level=3] [ref=e116]
+              - paragraph [ref=e117]: 8.7 · 2013 · TV Show
+          - button "Open details for Stranger Things" [ref=e100]:
+            - img "Stranger Things poster" [ref=e101]
+            - button "Toggle favorite" [ref=e103] [cursor=pointer]:
+              - img [ref=e104]
+            - generic [ref=e106]:
+              - heading "Stranger Things" [level=3] [ref=e107]
+              - paragraph [ref=e108]: 8.6 · 2016 · TV Show
+          - 'button "Open details for Demon Slayer: Kimetsu no Yaiba" [ref=e145]':
+            - 'img "Demon Slayer: Kimetsu no Yaiba poster" [ref=e146]'
+            - button "Toggle favorite" [ref=e148] [cursor=pointer]:
+              - img [ref=e149]
+            - generic [ref=e151]:
+              - 'heading "Demon Slayer: Kimetsu no Yaiba" [level=3] [ref=e152]'
+              - paragraph [ref=e153]: 8.6 · 2019 · TV Show
+          - button "Open details for Interstellar" [ref=e136]:
+            - img "Interstellar poster" [ref=e137]
+            - button "Toggle favorite" [ref=e139] [cursor=pointer]:
+              - img [ref=e140]
+            - generic [ref=e142]:
+              - heading "Interstellar" [level=3] [ref=e143]
+              - paragraph [ref=e144]: 8.5 · 2014 · Movie
+          - 'button "Open details for Spider-Man: Into the Spider-Verse" [ref=e163]':
+            - 'img "Spider-Man: Into the Spider-Verse poster" [ref=e164]'
+            - button "Toggle favorite" [ref=e166] [cursor=pointer]:
+              - img [ref=e167]
+            - generic [ref=e169]:
+              - 'heading "Spider-Man: Into the Spider-Verse" [level=3] [ref=e170]'
+              - paragraph [ref=e171]: 8.4 · 2018 · Movie
+          - button "Open details for Wednesday" [ref=e172]:
+            - img "Wednesday poster" [ref=e173]
+            - button "Toggle favorite" [ref=e175] [cursor=pointer]:
+              - img [ref=e176]
+            - generic [ref=e178]:
+              - heading "Wednesday" [level=3] [ref=e179]
+              - paragraph [ref=e180]: 8.3 · 2022 · TV Show
+          - button "Open details for Hoppers" [ref=e422]:
+            - img "Hoppers poster" [ref=e423]
+            - button "Toggle favorite" [ref=e425] [cursor=pointer]:
+              - img [ref=e426]
+            - generic [ref=e428]:
+              - heading "Hoppers" [level=3] [ref=e429]
+              - paragraph [ref=e430]: 8.2 · 2026 · Movie
+          - 'button "Open details for Dune: Part Two" [ref=e154]':
+            - 'img "Dune: Part Two poster" [ref=e155]'
+            - button "Toggle favorite" [ref=e157] [cursor=pointer]:
+              - img [ref=e158]
+            - generic [ref=e160]:
+              - 'heading "Dune: Part Two" [level=3] [ref=e161]'
+              - paragraph [ref=e162]: 8.1 · 2024 · Movie
+          - button "Open details for Disclosure Day" [ref=e431]:
+            - img "Disclosure Day poster" [ref=e432]
+            - button "Toggle favorite" [ref=e434] [cursor=pointer]:
+              - img [ref=e435]
+            - generic [ref=e437]:
+              - heading "Disclosure Day" [level=3] [ref=e438]
+              - paragraph [ref=e439]: 8.1 · 2026 · Movie
+      - generic [ref=e190]:
+        - generic [ref=e191]:
+          - heading "Trending Today" [level=2] [ref=e192]
+          - generic [ref=e193]: 12 titles
+        - generic [ref=e194]:
+          - button "Open details for Stranger Things" [ref=e195]:
+            - img "Stranger Things poster" [ref=e196]
+            - button "Toggle favorite" [ref=e198] [cursor=pointer]:
+              - img [ref=e199]
+            - generic [ref=e201]:
+              - heading "Stranger Things" [level=3] [ref=e202]
+              - paragraph [ref=e203]: 8.6 · 2016 · TV Show
+          - 'button "Open details for Spider-Man: Into the Spider-Verse" [ref=e204]':
+            - 'img "Spider-Man: Into the Spider-Verse poster" [ref=e205]'
+            - button "Toggle favorite" [ref=e207] [cursor=pointer]:
+              - img [ref=e208]
+            - generic [ref=e210]:
+              - 'heading "Spider-Man: Into the Spider-Verse" [level=3] [ref=e211]'
+              - paragraph [ref=e212]: 8.4 · 2018 · Movie
+          - button "Open details for Wednesday" [ref=e213]:
+            - img "Wednesday poster" [ref=e214]
+            - button "Toggle favorite" [ref=e216] [cursor=pointer]:
+              - img [ref=e217]
+            - generic [ref=e219]:
+              - heading "Wednesday" [level=3] [ref=e220]
+              - paragraph [ref=e221]: 8.3 · 2022 · TV Show
+          - 'button "Open details for Dune: Part Two" [ref=e222]':
+            - 'img "Dune: Part Two poster" [ref=e223]'
+            - button "Toggle favorite" [ref=e225] [cursor=pointer]:
+              - img [ref=e226]
+            - generic [ref=e228]:
+              - 'heading "Dune: Part Two" [level=3] [ref=e229]'
+              - paragraph [ref=e230]: 8.1 · 2024 · Movie
+          - button "Open details for Rick and Morty" [ref=e231]:
+            - img "Rick and Morty poster" [ref=e232]
+            - button "Toggle favorite" [ref=e234] [cursor=pointer]:
+              - img [ref=e235]
+            - generic [ref=e237]:
+              - heading "Rick and Morty" [level=3] [ref=e238]
+              - paragraph [ref=e239]: 8.7 · 2013 · TV Show
+          - button "Open details for Squid Game" [ref=e240]:
+            - img "Squid Game poster" [ref=e241]
+            - button "Toggle favorite" [ref=e243] [cursor=pointer]:
+              - img [ref=e244]
+            - generic [ref=e246]:
+              - heading "Squid Game" [level=3] [ref=e247]
+              - paragraph [ref=e248]: 7.9 · 2021 · TV Show
+          - button "Open details for Everything Everywhere All at Once" [ref=e249]:
+            - img "Everything Everywhere All at Once poster" [ref=e250]
+            - button "Toggle favorite" [ref=e252] [cursor=pointer]:
+              - img [ref=e253]
+            - generic [ref=e255]:
+              - heading "Everything Everywhere All at Once" [level=3] [ref=e256]
+              - paragraph [ref=e257]: 7.7 · 2022 · Movie
+          - button "Open details for Knives Out" [ref=e258]:
+            - img "Knives Out poster" [ref=e259]
+            - button "Toggle favorite" [ref=e261] [cursor=pointer]:
+              - img [ref=e262]
+            - generic [ref=e264]:
+              - heading "Knives Out" [level=3] [ref=e265]
+              - paragraph [ref=e266]: 7.8 · 2019 · Movie
+          - button "Open details for Interstellar" [ref=e267]:
+            - img "Interstellar poster" [ref=e268]
+            - button "Toggle favorite" [ref=e270] [cursor=pointer]:
+              - img [ref=e271]
+            - generic [ref=e273]:
+              - heading "Interstellar" [level=3] [ref=e274]
+              - paragraph [ref=e275]: 8.5 · 2014 · Movie
+          - button "Open details for Arcane" [ref=e276]:
+            - img "Arcane poster" [ref=e277]
+            - button "Toggle favorite" [ref=e279] [cursor=pointer]:
+              - img [ref=e280]
+            - generic [ref=e282]:
+              - heading "Arcane" [level=3] [ref=e283]
+              - paragraph [ref=e284]: 8.8 · 2021 · TV Show
+          - 'button "Open details for Demon Slayer: Kimetsu no Yaiba" [ref=e285]':
+            - 'img "Demon Slayer: Kimetsu no Yaiba poster" [ref=e286]'
+            - button "Toggle favorite" [ref=e288] [cursor=pointer]:
+              - img [ref=e289]
+            - generic [ref=e291]:
+              - 'heading "Demon Slayer: Kimetsu no Yaiba" [level=3] [ref=e292]'
+              - paragraph [ref=e293]: 8.6 · 2019 · TV Show
+          - button "Open details for La La Land" [ref=e294]:
+            - img "La La Land poster" [ref=e295]
+            - button "Toggle favorite" [ref=e297] [cursor=pointer]:
+              - img [ref=e298]
+            - generic [ref=e300]:
+              - heading "La La Land" [level=3] [ref=e301]
+              - paragraph [ref=e302]: 7.9 · 2016 · Movie
+      - generic [ref=e303]:
+        - generic [ref=e304]:
+          - heading "Only on Webstreamer" [level=2] [ref=e305]
+          - generic [ref=e306]: 6 titles
+        - generic [ref=e307]:
+          - button "Open details for Stranger Things" [ref=e308]:
+            - img "Stranger Things poster" [ref=e309]
+            - button "Toggle favorite" [ref=e311] [cursor=pointer]:
+              - img [ref=e312]
+            - generic [ref=e314]:
+              - heading "Stranger Things" [level=3] [ref=e315]
+              - paragraph [ref=e316]: 8.6 · 2016 · TV Show
+          - button "Open details for Wednesday" [ref=e317]:
+            - img "Wednesday poster" [ref=e318]
+            - button "Toggle favorite" [ref=e320] [cursor=pointer]:
+              - img [ref=e321]
+            - generic [ref=e323]:
+              - heading "Wednesday" [level=3] [ref=e324]
+              - paragraph [ref=e325]: 8.3 · 2022 · TV Show
+          - button "Open details for Rick and Morty" [ref=e326]:
+            - img "Rick and Morty poster" [ref=e327]
+            - button "Toggle favorite" [ref=e329] [cursor=pointer]:
+              - img [ref=e330]
+            - generic [ref=e332]:
+              - heading "Rick and Morty" [level=3] [ref=e333]
+              - paragraph [ref=e334]: 8.7 · 2013 · TV Show
+          - button "Open details for Squid Game" [ref=e335]:
+            - img "Squid Game poster" [ref=e336]
+            - button "Toggle favorite" [ref=e338] [cursor=pointer]:
+              - img [ref=e339]
+            - generic [ref=e341]:
+              - heading "Squid Game" [level=3] [ref=e342]
+              - paragraph [ref=e343]: 7.9 · 2021 · TV Show
+          - button "Open details for Arcane" [ref=e344]:
+            - img "Arcane poster" [ref=e345]
+            - button "Toggle favorite" [ref=e347] [cursor=pointer]:
+              - img [ref=e348]
+            - generic [ref=e350]:
+              - heading "Arcane" [level=3] [ref=e351]
+              - paragraph [ref=e352]: 8.8 · 2021 · TV Show
+          - 'button "Open details for Demon Slayer: Kimetsu no Yaiba" [ref=e353]':
+            - 'img "Demon Slayer: Kimetsu no Yaiba poster" [ref=e354]'
+            - button "Toggle favorite" [ref=e356] [cursor=pointer]:
+              - img [ref=e357]
+            - generic [ref=e359]:
+              - 'heading "Demon Slayer: Kimetsu no Yaiba" [level=3] [ref=e360]'
+              - paragraph [ref=e361]: 8.6 · 2019 · TV Show
+      - generic [ref=e362]:
+        - generic [ref=e363]:
+          - heading "Movies" [level=2] [ref=e364]
+          - generic [ref=e365]: 18 titles
+        - generic [ref=e366]:
+          - 'button "Open details for Spider-Man: Into the Spider-Verse" [ref=e367]':
+            - 'img "Spider-Man: Into the Spider-Verse poster" [ref=e368]'
+            - button "Toggle favorite" [ref=e370] [cursor=pointer]:
+              - img [ref=e371]
+            - generic [ref=e373]:
+              - 'heading "Spider-Man: Into the Spider-Verse" [level=3] [ref=e374]'
+              - paragraph [ref=e375]: 8.4 · 2018 · Movie
+          - 'button "Open details for Dune: Part Two" [ref=e376]':
+            - 'img "Dune: Part Two poster" [ref=e377]'
+            - button "Toggle favorite" [ref=e379] [cursor=pointer]:
+              - img [ref=e380]
+            - generic [ref=e382]:
+              - 'heading "Dune: Part Two" [level=3] [ref=e383]'
+              - paragraph [ref=e384]: 8.1 · 2024 · Movie
+          - button "Open details for Everything Everywhere All at Once" [ref=e385]:
+            - img "Everything Everywhere All at Once poster" [ref=e386]
+            - button "Toggle favorite" [ref=e388] [cursor=pointer]:
+              - img [ref=e389]
+            - generic [ref=e391]:
+              - heading "Everything Everywhere All at Once" [level=3] [ref=e392]
+              - paragraph [ref=e393]: 7.7 · 2022 · Movie
+          - button "Open details for Knives Out" [ref=e394]:
+            - img "Knives Out poster" [ref=e395]
+            - button "Toggle favorite" [ref=e397] [cursor=pointer]:
+              - img [ref=e398]
+            - generic [ref=e400]:
+              - heading "Knives Out" [level=3] [ref=e401]
+              - paragraph [ref=e402]: 7.8 · 2019 · Movie
+          - button "Open details for Interstellar" [ref=e403]:
+            - img "Interstellar poster" [ref=e404]
+            - button "Toggle favorite" [ref=e406] [cursor=pointer]:
+              - img [ref=e407]
+            - generic [ref=e409]:
+              - heading "Interstellar" [level=3] [ref=e410]
+              - paragraph [ref=e411]: 8.5 · 2014 · Movie
+          - button "Open details for La La Land" [ref=e412]:
+            - img "La La Land poster" [ref=e413]
+            - button "Toggle favorite" [ref=e415] [cursor=pointer]:
+              - img [ref=e416]
+            - generic [ref=e418]:
+              - heading "La La Land" [level=3] [ref=e419]
+              - paragraph [ref=e420]: 7.9 · 2016 · Movie
+          - button "Open details for Disclosure Day" [ref=e440]:
+            - img "Disclosure Day poster" [ref=e441]
+            - button "Toggle favorite" [ref=e443] [cursor=pointer]:
+              - img [ref=e444]
+            - generic [ref=e446]:
+              - heading "Disclosure Day" [level=3] [ref=e447]
+              - paragraph [ref=e448]: 8.1 · 2026 · Movie
+          - button "Open details for In the Grey" [ref=e449]:
+            - img "In the Grey poster" [ref=e450]
+            - button "Toggle favorite" [ref=e452] [cursor=pointer]:
+              - img [ref=e453]
+            - generic [ref=e455]:
+              - heading "In the Grey" [level=3] [ref=e456]
+              - paragraph [ref=e457]: 6.6 · 2026 · Movie
+          - button "Open details for Obsession" [ref=e458]:
+            - img "Obsession poster" [ref=e459]
+            - button "Toggle favorite" [ref=e461] [cursor=pointer]:
+              - img [ref=e462]
+            - generic [ref=e464]:
+              - heading "Obsession" [level=3] [ref=e465]
+              - paragraph [ref=e466]: 7.9 · 2026 · Movie
+          - button "Open details for Hokum" [ref=e467]:
+            - img "Hokum poster" [ref=e468]
+            - button "Toggle favorite" [ref=e470] [cursor=pointer]:
+              - img [ref=e471]
+            - generic [ref=e473]:
+              - heading "Hokum" [level=3] [ref=e474]
+              - paragraph [ref=e475]: 6.7 · 2026 · Movie
+          - button "Open details for Toy Story 5" [ref=e476]:
+            - img "Toy Story 5 poster" [ref=e477]
+            - button "Toggle favorite" [ref=e479] [cursor=pointer]:
+              - img [ref=e480]
+            - generic [ref=e482]:
+              - heading "Toy Story 5" [level=3] [ref=e483]
+              - paragraph [ref=e484]: "-- · 2026 · Movie"
+          - button "Open details for Backrooms" [ref=e485]:
+            - img "Backrooms poster" [ref=e486]
+            - button "Toggle favorite" [ref=e488] [cursor=pointer]:
+              - img [ref=e489]
+            - generic [ref=e491]:
+              - heading "Backrooms" [level=3] [ref=e492]
+              - paragraph [ref=e493]: 6.9 · 2026 · Movie
+          - button "Open details for Scary Movie" [ref=e494]:
+            - img "Scary Movie poster" [ref=e495]
+            - button "Toggle favorite" [ref=e497] [cursor=pointer]:
+              - img [ref=e498]
+            - generic [ref=e500]:
+              - heading "Scary Movie" [level=3] [ref=e501]
+              - paragraph [ref=e502]: 5.8 · 2026 · Movie
+          - button "Open details for Masters of the Universe" [ref=e503]:
+            - img "Masters of the Universe poster" [ref=e504]
+            - button "Toggle favorite" [ref=e506] [cursor=pointer]:
+              - img [ref=e507]
+            - generic [ref=e509]:
+              - heading "Masters of the Universe" [level=3] [ref=e510]
+              - paragraph [ref=e511]: 7.3 · 2026 · Movie
+          - button "Open details for Hoppers" [ref=e512]:
+            - img "Hoppers poster" [ref=e513]
+            - button "Toggle favorite" [ref=e515] [cursor=pointer]:
+              - img [ref=e516]
+            - generic [ref=e518]:
+              - heading "Hoppers" [level=3] [ref=e519]
+              - paragraph [ref=e520]: 8.2 · 2026 · Movie
+          - 'button "Open details for Spider-Man: Brand New Day" [ref=e521]':
+            - 'img "Spider-Man: Brand New Day poster" [ref=e522]'
+            - button "Toggle favorite" [ref=e524] [cursor=pointer]:
+              - img [ref=e525]
+            - generic [ref=e527]:
+              - 'heading "Spider-Man: Brand New Day" [level=3] [ref=e528]'
+              - paragraph [ref=e529]: "-- · 2026 · Movie"
+          - button "Open details for Mortal Kombat II" [ref=e530]:
+            - img "Mortal Kombat II poster" [ref=e531]
+            - button "Toggle favorite" [ref=e533] [cursor=pointer]:
+              - img [ref=e534]
+            - generic [ref=e536]:
+              - heading "Mortal Kombat II" [level=3] [ref=e537]
+              - paragraph [ref=e538]: 7 · 2026 · Movie
+          - button "Open details for Office Romance" [ref=e539]:
+            - img "Office Romance poster" [ref=e540]
+            - button "Toggle favorite" [ref=e542] [cursor=pointer]:
+              - img [ref=e543]
+            - generic [ref=e545]:
+              - heading "Office Romance" [level=3] [ref=e546]
+              - paragraph [ref=e547]: 6.7 · 2026 · Movie

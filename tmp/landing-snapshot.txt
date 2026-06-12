@@ -1,0 +1,59 @@
+- generic [ref=e2]:
+  - link "Skip to content" [ref=e29] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e30]:
+    - button "┌ ┐ └ ┘ / > █ Openstream Your freedom to stream free" [ref=e902] [cursor=pointer]:
+      - generic [ref=e34]:
+        - generic: ┌
+        - generic: ┐
+        - generic: └
+        - generic: ┘
+        - generic [ref=e35]: /
+        - generic [ref=e36]: ">"
+        - generic [ref=e37]: █
+      - generic [ref=e38]:
+        - generic "Openstream" [ref=e39]
+        - generic [ref=e60]: Your freedom to stream free
+    - navigation [ref=e61]:
+      - button "Home" [ref=e62] [cursor=pointer]
+      - button "My List" [ref=e63] [cursor=pointer]
+    - button "Refresh" [ref=e903] [cursor=pointer]:
+      - img [ref=e65]
+      - generic [ref=e70]: Refresh
+    - generic [ref=e71]:
+      - img [ref=e72]
+      - textbox / [ref=e75]:
+        - /placeholder: Search title, cast, genre, year...
+      - generic: /
+    - button "Toggle sound" [ref=e76] [cursor=pointer]:
+      - img [ref=e77]
+  - generic [ref=e81]:
+    - generic [ref=e82]:
+      - img [ref=e83]
+      - generic [ref=e85]:
+        - text: For
+        - strong [ref=e86]: complete popup and ad blocking
+        - text: ", install"
+        - link "uBlock Origin" [ref=e87] [cursor=pointer]:
+          - /url: https://github.com/gorhill/uBlock
+        - text: — open-source, lightweight, and blocks ads, pop-ups, overlays, and trackers.
+    - button [ref=e92] [cursor=pointer]:
+      - img [ref=e93]
+  - generic [ref=e96] [cursor=pointer]:
+    - img [ref=e97]
+    - generic [ref=e100]: "0"
+  - main [ref=e101]:
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - 'img "Spider-Man: Into the Spider-Verse backdrop" [ref=e906]'
+        - generic [ref=e907]
+      - generic [ref=e139]:
+        - generic "Genre filters" [ref=e140]
+        - generic "Advanced search filters" [ref=e152]
+      - generic [ref=e158]:
+        - generic [ref=e159]
+        - generic [ref=e264]
+        - generic [ref=e381]
+        - generic [ref=e486]
+        - generic [ref=e591]
+        - generic [ref=e797]

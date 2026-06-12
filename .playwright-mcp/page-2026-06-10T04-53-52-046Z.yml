@@ -1,0 +1,348 @@
+- generic [ref=e2]:
+  - link "Skip to content" [ref=e3] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e4]:
+    - button "O p e n s t r e a m" [ref=e5] [cursor=pointer]:
+      - img [ref=e7]
+      - generic [ref=e10]:
+        - generic [ref=e11]: O
+        - generic [ref=e12]: p
+        - generic [ref=e13]: e
+        - generic [ref=e14]: "n"
+        - generic [ref=e15]: s
+        - generic [ref=e16]: t
+        - generic [ref=e17]: r
+        - generic [ref=e18]: e
+        - generic [ref=e19]: a
+        - generic [ref=e20]: m
+    - navigation [ref=e22]:
+      - button "Home" [ref=e23] [cursor=pointer]
+      - button "My List" [ref=e24] [cursor=pointer]
+    - button "Refreshing" [disabled] [ref=e25]:
+      - img [ref=e26]
+      - generic [ref=e31]: Refreshing
+    - generic [ref=e32]:
+      - img [ref=e33]
+      - textbox / [ref=e36]:
+        - /placeholder: Search title, cast, genre, year...
+      - generic: /
+    - button "Toggle sound" [ref=e37] [cursor=pointer]:
+      - img [ref=e38]
+  - generic [ref=e42]:
+    - generic [ref=e43]:
+      - img [ref=e44]
+      - generic [ref=e46]:
+        - text: For
+        - strong [ref=e47]: popup blocking
+        - text: ", install"
+        - link "Poper Blocker" [ref=e48] [cursor=pointer]:
+          - /url: https://poperblocker.com/
+          - text: Poper Blocker
+          - img [ref=e49]
+        - text: — blocks pop-ups, overlays, and pop-unders from embed sites.
+    - button [ref=e53] [cursor=pointer]:
+      - img [ref=e54]
+  - generic [ref=e57] [cursor=pointer]:
+    - img [ref=e58]
+    - generic [ref=e61]: "0"
+  - main [ref=e62]:
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - img "Stranger Things backdrop" [ref=e65]
+        - generic [ref=e67]:
+          - text: Featured Now
+          - heading "Stranger Things" [level=1] [ref=e68]
+          - generic [ref=e69]:
+            - generic [ref=e70]: "9.2"
+            - generic [ref=e71]: "2024"
+            - generic [ref=e72]: TV Show
+            - generic [ref=e73]: Sci-Fi / Horror
+          - paragraph [ref=e74]: When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl with telekinetic powers.
+          - generic [ref=e75]:
+            - button "Play" [ref=e76] [cursor=pointer]:
+              - img [ref=e77]
+              - text: Play
+            - button "Details" [ref=e79] [cursor=pointer]
+            - button "My List" [ref=e80] [cursor=pointer]:
+              - img [ref=e81]
+              - text: My List
+          - generic [ref=e85]: Refreshing TMDB catalog...
+      - region "Refreshing TMDB details" [ref=e86]
+      - generic [ref=e99]:
+        - generic "Genre filters" [ref=e100]:
+          - button "All" [ref=e101] [cursor=pointer]
+          - button "Action" [ref=e102] [cursor=pointer]
+          - button "Sci-Fi" [ref=e103] [cursor=pointer]
+          - button "Horror" [ref=e104] [cursor=pointer]
+          - button "Drama" [ref=e105] [cursor=pointer]
+          - button "Comedy" [ref=e106] [cursor=pointer]
+          - button "Mystery" [ref=e107] [cursor=pointer]
+          - button "Animation" [ref=e108] [cursor=pointer]
+          - button "Thriller" [ref=e109] [cursor=pointer]
+          - button "Romance" [ref=e110] [cursor=pointer]
+          - button "Adventure" [ref=e111] [cursor=pointer]
+        - generic "Advanced search filters" [ref=e112]:
+          - button "Advanced Search" [ref=e113] [cursor=pointer]:
+            - img [ref=e114]
+            - text: Advanced Search
+            - img [ref=e115]
+          - button "Reset" [ref=e117] [cursor=pointer]
+      - generic [ref=e118]:
+        - generic [ref=e119]:
+          - generic [ref=e120]:
+            - heading "TOP 10 Today" [level=2] [ref=e121]
+            - generic [ref=e122]: 10 titles
+          - generic [ref=e123]:
+            - button "Open details for Stranger Things" [ref=e124] [cursor=pointer]:
+              - img "Stranger Things poster" [ref=e125]
+              - button "Toggle favorite" [ref=e126]:
+                - img [ref=e127]
+              - generic [ref=e129]:
+                - heading "Stranger Things" [level=3] [ref=e130]
+                - paragraph [ref=e131]: 9.2 · 2024 · TV Show
+            - button "Open details for Rick and Morty" [ref=e132] [cursor=pointer]:
+              - img "Rick and Morty poster" [ref=e133]
+              - button "Toggle favorite" [ref=e134]:
+                - img [ref=e135]
+              - generic [ref=e137]:
+                - heading "Rick and Morty" [level=3] [ref=e138]
+                - paragraph [ref=e139]: 9.1 · 2023 · TV Show
+            - button "Open details for Arcane" [ref=e140] [cursor=pointer]:
+              - img "Arcane poster" [ref=e141]
+              - button "Toggle favorite" [ref=e142]:
+                - img [ref=e143]
+              - generic [ref=e145]:
+                - heading "Arcane" [level=3] [ref=e146]
+                - paragraph [ref=e147]: 9 · 2021 · TV Show
+            - button "Open details for Everything Everywhere All at Once" [ref=e148] [cursor=pointer]:
+              - img "Everything Everywhere All at Once poster" [ref=e149]
+              - button "Toggle favorite" [ref=e150]:
+                - img [ref=e151]
+              - generic [ref=e153]:
+                - heading "Everything Everywhere All at Once" [level=3] [ref=e154]
+                - paragraph [ref=e155]: 8.8 · 2022 · Movie
+            - button "Open details for Interstellar" [ref=e156] [cursor=pointer]:
+              - img "Interstellar poster" [ref=e157]
+              - button "Toggle favorite" [ref=e158]:
+                - img [ref=e159]
+              - generic [ref=e161]:
+                - heading "Interstellar" [level=3] [ref=e162]
+                - paragraph [ref=e163]: 8.7 · 2014 · Movie
+            - 'button "Open details for Demon Slayer: Kimetsu no Yaiba" [ref=e164] [cursor=pointer]':
+              - 'img "Demon Slayer: Kimetsu no Yaiba poster" [ref=e165]'
+              - button "Toggle favorite" [ref=e166]:
+                - img [ref=e167]
+              - generic [ref=e169]:
+                - 'heading "Demon Slayer: Kimetsu no Yaiba" [level=3] [ref=e170]'
+                - paragraph [ref=e171]: 8.7 · 2019 · TV Show
+            - 'button "Open details for Dune: Part Two" [ref=e172] [cursor=pointer]':
+              - 'img "Dune: Part Two poster" [ref=e173]'
+              - button "Toggle favorite" [ref=e174]:
+                - img [ref=e175]
+              - generic [ref=e177]:
+                - 'heading "Dune: Part Two" [level=3] [ref=e178]'
+                - paragraph [ref=e179]: 8.6 · 2024 · Movie
+            - 'button "Open details for Spider-Man: Into the Spider-Verse" [ref=e180] [cursor=pointer]':
+              - 'img "Spider-Man: Into the Spider-Verse poster" [ref=e181]'
+              - button "Toggle favorite" [ref=e182]:
+                - img [ref=e183]
+              - generic [ref=e185]:
+                - 'heading "Spider-Man: Into the Spider-Verse" [level=3] [ref=e186]'
+                - paragraph [ref=e187]: 8.4 · 2018 · Movie
+            - button "Open details for Wednesday" [ref=e188] [cursor=pointer]:
+              - img "Wednesday poster" [ref=e189]
+              - button "Toggle favorite" [ref=e190]:
+                - img [ref=e191]
+              - generic [ref=e193]:
+                - heading "Wednesday" [level=3] [ref=e194]
+                - paragraph [ref=e195]: 8.1 · 2022 · TV Show
+            - button "Open details for Squid Game" [ref=e196] [cursor=pointer]:
+              - img "Squid Game poster" [ref=e197]
+              - button "Toggle favorite" [ref=e198]:
+                - img [ref=e199]
+              - generic [ref=e201]:
+                - heading "Squid Game" [level=3] [ref=e202]
+                - paragraph [ref=e203]: 8 · 2021 · TV Show
+        - generic [ref=e204]:
+          - generic [ref=e205]:
+            - heading "Trending Today" [level=2] [ref=e206]
+            - generic [ref=e207]: 12 titles
+          - generic [ref=e208]:
+            - button "Open details for Stranger Things" [ref=e209] [cursor=pointer]:
+              - img "Stranger Things poster" [ref=e210]
+              - button "Toggle favorite" [ref=e211]:
+                - img [ref=e212]
+              - generic [ref=e214]:
+                - heading "Stranger Things" [level=3] [ref=e215]
+                - paragraph [ref=e216]: 9.2 · 2024 · TV Show
+            - 'button "Open details for Spider-Man: Into the Spider-Verse" [ref=e217] [cursor=pointer]':
+              - 'img "Spider-Man: Into the Spider-Verse poster" [ref=e218]'
+              - button "Toggle favorite" [ref=e219]:
+                - img [ref=e220]
+              - generic [ref=e222]:
+                - 'heading "Spider-Man: Into the Spider-Verse" [level=3] [ref=e223]'
+                - paragraph [ref=e224]: 8.4 · 2018 · Movie
+            - button "Open details for Wednesday" [ref=e225] [cursor=pointer]:
+              - img "Wednesday poster" [ref=e226]
+              - button "Toggle favorite" [ref=e227]:
+                - img [ref=e228]
+              - generic [ref=e230]:
+                - heading "Wednesday" [level=3] [ref=e231]
+                - paragraph [ref=e232]: 8.1 · 2022 · TV Show
+            - 'button "Open details for Dune: Part Two" [ref=e233] [cursor=pointer]':
+              - 'img "Dune: Part Two poster" [ref=e234]'
+              - button "Toggle favorite" [ref=e235]:
+                - img [ref=e236]
+              - generic [ref=e238]:
+                - 'heading "Dune: Part Two" [level=3] [ref=e239]'
+                - paragraph [ref=e240]: 8.6 · 2024 · Movie
+            - button "Open details for Rick and Morty" [ref=e241] [cursor=pointer]:
+              - img "Rick and Morty poster" [ref=e242]
+              - button "Toggle favorite" [ref=e243]:
+                - img [ref=e244]
+              - generic [ref=e246]:
+                - heading "Rick and Morty" [level=3] [ref=e247]
+                - paragraph [ref=e248]: 9.1 · 2023 · TV Show
+            - button "Open details for Squid Game" [ref=e249] [cursor=pointer]:
+              - img "Squid Game poster" [ref=e250]
+              - button "Toggle favorite" [ref=e251]:
+                - img [ref=e252]
+              - generic [ref=e254]:
+                - heading "Squid Game" [level=3] [ref=e255]
+                - paragraph [ref=e256]: 8 · 2021 · TV Show
+            - button "Open details for Everything Everywhere All at Once" [ref=e257] [cursor=pointer]:
+              - img "Everything Everywhere All at Once poster" [ref=e258]
+              - button "Toggle favorite" [ref=e259]:
+                - img [ref=e260]
+              - generic [ref=e262]:
+                - heading "Everything Everywhere All at Once" [level=3] [ref=e263]
+                - paragraph [ref=e264]: 8.8 · 2022 · Movie
+            - button "Open details for Knives Out" [ref=e265] [cursor=pointer]:
+              - img "Knives Out poster" [ref=e266]
+              - button "Toggle favorite" [ref=e267]:
+                - img [ref=e268]
+              - generic [ref=e270]:
+                - heading "Knives Out" [level=3] [ref=e271]
+                - paragraph [ref=e272]: 7.9 · 2019 · Movie
+            - button "Open details for Interstellar" [ref=e273] [cursor=pointer]:
+              - img "Interstellar poster" [ref=e274]
+              - button "Toggle favorite" [ref=e275]:
+                - img [ref=e276]
+              - generic [ref=e278]:
+                - heading "Interstellar" [level=3] [ref=e279]
+                - paragraph [ref=e280]: 8.7 · 2014 · Movie
+            - button "Open details for Arcane" [ref=e281] [cursor=pointer]:
+              - img "Arcane poster" [ref=e282]
+              - button "Toggle favorite" [ref=e283]:
+                - img [ref=e284]
+              - generic [ref=e286]:
+                - heading "Arcane" [level=3] [ref=e287]
+                - paragraph [ref=e288]: 9 · 2021 · TV Show
+            - 'button "Open details for Demon Slayer: Kimetsu no Yaiba" [ref=e289] [cursor=pointer]':
+              - 'img "Demon Slayer: Kimetsu no Yaiba poster" [ref=e290]'
+              - button "Toggle favorite" [ref=e291]:
+                - img [ref=e292]
+              - generic [ref=e294]:
+                - 'heading "Demon Slayer: Kimetsu no Yaiba" [level=3] [ref=e295]'
+                - paragraph [ref=e296]: 8.7 · 2019 · TV Show
+            - button "Open details for La La Land" [ref=e297] [cursor=pointer]:
+              - img "La La Land poster" [ref=e298]
+              - button "Toggle favorite" [ref=e299]:
+                - img [ref=e300]
+              - generic [ref=e302]:
+                - heading "La La Land" [level=3] [ref=e303]
+                - paragraph [ref=e304]: 8 · 2016 · Movie
+        - generic [ref=e305]:
+          - generic [ref=e306]:
+            - heading "Only on Openstream" [level=2] [ref=e307]
+            - generic [ref=e308]: 6 titles
+          - generic [ref=e309]:
+            - button "Open details for Stranger Things" [ref=e310] [cursor=pointer]:
+              - img "Stranger Things poster" [ref=e311]
+              - button "Toggle favorite" [ref=e312]:
+                - img [ref=e313]
+              - generic [ref=e315]:
+                - heading "Stranger Things" [level=3] [ref=e316]
+                - paragraph [ref=e317]: 9.2 · 2024 · TV Show
+            - button "Open details for Wednesday" [ref=e318] [cursor=pointer]:
+              - img "Wednesday poster" [ref=e319]
+              - button "Toggle favorite" [ref=e320]:
+                - img [ref=e321]
+              - generic [ref=e323]:
+                - heading "Wednesday" [level=3] [ref=e324]
+                - paragraph [ref=e325]: 8.1 · 2022 · TV Show
+            - button "Open details for Rick and Morty" [ref=e326] [cursor=pointer]:
+              - img "Rick and Morty poster" [ref=e327]
+              - button "Toggle favorite" [ref=e328]:
+                - img [ref=e329]
+              - generic [ref=e331]:
+                - heading "Rick and Morty" [level=3] [ref=e332]
+                - paragraph [ref=e333]: 9.1 · 2023 · TV Show
+            - button "Open details for Squid Game" [ref=e334] [cursor=pointer]:
+              - img "Squid Game poster" [ref=e335]
+              - button "Toggle favorite" [ref=e336]:
+                - img [ref=e337]
+              - generic [ref=e339]:
+                - heading "Squid Game" [level=3] [ref=e340]
+                - paragraph [ref=e341]: 8 · 2021 · TV Show
+            - button "Open details for Arcane" [ref=e342] [cursor=pointer]:
+              - img "Arcane poster" [ref=e343]
+              - button "Toggle favorite" [ref=e344]:
+                - img [ref=e345]
+              - generic [ref=e347]:
+                - heading "Arcane" [level=3] [ref=e348]
+                - paragraph [ref=e349]: 9 · 2021 · TV Show
+            - 'button "Open details for Demon Slayer: Kimetsu no Yaiba" [ref=e350] [cursor=pointer]':
+              - 'img "Demon Slayer: Kimetsu no Yaiba poster" [ref=e351]'
+              - button "Toggle favorite" [ref=e352]:
+                - img [ref=e353]
+              - generic [ref=e355]:
+                - 'heading "Demon Slayer: Kimetsu no Yaiba" [level=3] [ref=e356]'
+                - paragraph [ref=e357]: 8.7 · 2019 · TV Show
+        - generic [ref=e358]:
+          - generic [ref=e359]:
+            - heading "Movies" [level=2] [ref=e360]
+            - generic [ref=e361]: 6 titles
+          - generic [ref=e362]:
+            - 'button "Open details for Spider-Man: Into the Spider-Verse" [ref=e363] [cursor=pointer]':
+              - 'img "Spider-Man: Into the Spider-Verse poster" [ref=e364]'
+              - button "Toggle favorite" [ref=e365]:
+                - img [ref=e366]
+              - generic [ref=e368]:
+                - 'heading "Spider-Man: Into the Spider-Verse" [level=3] [ref=e369]'
+                - paragraph [ref=e370]: 8.4 · 2018 · Movie
+            - 'button "Open details for Dune: Part Two" [ref=e371] [cursor=pointer]':
+              - 'img "Dune: Part Two poster" [ref=e372]'
+              - button "Toggle favorite" [ref=e373]:
+                - img [ref=e374]
+              - generic [ref=e376]:
+                - 'heading "Dune: Part Two" [level=3] [ref=e377]'
+                - paragraph [ref=e378]: 8.6 · 2024 · Movie
+            - button "Open details for Everything Everywhere All at Once" [ref=e379] [cursor=pointer]:
+              - img "Everything Everywhere All at Once poster" [ref=e380]
+              - button "Toggle favorite" [ref=e381]:
+                - img [ref=e382]
+              - generic [ref=e384]:
+                - heading "Everything Everywhere All at Once" [level=3] [ref=e385]
+                - paragraph [ref=e386]: 8.8 · 2022 · Movie
+            - button "Open details for Knives Out" [ref=e387] [cursor=pointer]:
+              - img "Knives Out poster" [ref=e388]
+              - button "Toggle favorite" [ref=e389]:
+                - img [ref=e390]
+              - generic [ref=e392]:
+                - heading "Knives Out" [level=3] [ref=e393]
+                - paragraph [ref=e394]: 7.9 · 2019 · Movie
+            - button "Open details for Interstellar" [ref=e395] [cursor=pointer]:
+              - img "Interstellar poster" [ref=e396]
+              - button "Toggle favorite" [ref=e397]:
+                - img [ref=e398]
+              - generic [ref=e400]:
+                - heading "Interstellar" [level=3] [ref=e401]
+                - paragraph [ref=e402]: 8.7 · 2014 · Movie
+            - button "Open details for La La Land" [ref=e403] [cursor=pointer]:
+              - img "La La Land poster" [ref=e404]
+              - button "Toggle favorite" [ref=e405]:
+                - img [ref=e406]
+              - generic [ref=e408]:
+                - heading "La La Land" [level=3] [ref=e409]
+                - paragraph [ref=e410]: 8 · 2016 · Movie

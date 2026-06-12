@@ -1,0 +1,453 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=DM+Serif+Display:ital@1&display=swap');
+
+:root {
+  --loading-bg: #2a2a2c;
+  --loading-ink: #ede2cc;
+  --loading-ink-dim: #b6a98f;
+  --loading-line: #3a3a3c;
+  --mx: 0;
+  --my: 0;
+}
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--loading-bg);
+  color: var(--loading-ink);
+  font-family: "Courier New", monospace;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.loading-noise-filter {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.loading-grid,
+.loading-fx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.loading-grid { z-index: 0; }
+.loading-fx { z-index: 1; mix-blend-mode: screen; }
+
+.loading-crosshatch,
+.loading-scanlines,
+.loading-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.loading-crosshatch {
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.35) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+}
+
+.loading-scanlines {
+  z-index: 6;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px, transparent 1px, transparent 3px);
+  animation: scanShift 6s linear infinite;
+}
+
+.loading-vignette {
+  z-index: 6;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.55) 100%);
+}
+
+.loading-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: opacity 0.4s ease-out, visibility 0.4s;
+}
+
+.loading-boot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000;
+  filter: url(#bootNoise);
+  opacity: 0.55;
+  animation: bootFlicker 0.12s steps(2) infinite;
+}
+
+.loading-boot::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--loading-ink);
+  box-shadow: 0 0 18px 4px var(--loading-ink);
+  animation: bootSweep 0.9s ease-out forwards;
+}
+
+.boot-text,
+.boot-skip {
+  font-family: "VT323", monospace;
+  color: var(--loading-ink);
+  letter-spacing: 6px;
+  animation: bootBlink 0.5s steps(2) infinite;
+  z-index: 1;
+}
+
+.boot-text { font-size: 22px; }
+.boot-skip {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  font-size: 12px;
+  color: var(--loading-ink-dim);
+  letter-spacing: 2px;
+}
+
+.booting-done .loading-boot {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loading-stage {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.openstream-branding {
+  color: var(--loading-ink, #ede2cc);
+  transform: translate(calc(var(--mx) * -8px), calc(var(--my) * -8px));
+  transition: transform 0.18s ease-out;
+}
+
+.brand-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.brand-text-stack {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.logo-glyph {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.03em;
+  min-width: 1.7em;
+  font-family: "Courier New", monospace;
+  color: #fff;
+  font-size: clamp(60px, 10vw, 130px);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  padding: 18px 30px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 22px;
+  background: transparent;
+  backdrop-filter: blur(10px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.logo-glyph .glyph { display: inline-block; flex: 0 0 auto; }
+.logo-glyph:not(.scrambling) .glyph { text-shadow: 0 0 6px rgba(255, 255, 255, 0.3); }
+
+.cursor-blink,
+.brand-cursor {
+  display: inline-block;
+  animation: blink 1s steps(2) infinite;
+}
+
+.cursor-blink {
+  flex: 0 0 auto;
+  color: #fff;
+  font-size: 0.7em;
+  margin-left: 0.06em;
+  vertical-align: 0.18em;
+  transform: scaleX(0.1);
+}
+
+.logo-glyph .bracket {
+  position: absolute;
+  font-family: "Courier New", monospace;
+  font-size: 0.38em;
+  line-height: 1;
+  color: #fff;
+  pointer-events: none;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.45);
+  animation: bracketPulse 3.2s ease-in-out infinite;
+}
+
+.bracket-tl { top: 6px; left: 6px; }
+.bracket-tr { top: 6px; right: 6px; animation-delay: 0.8s; }
+.bracket-bl { bottom: 6px; left: 6px; animation-delay: 1.6s; }
+.bracket-br { bottom: 6px; right: 6px; animation-delay: 2.4s; }
+
+.pixel-title {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  font-family: "Press Start 2P", "VT323", "Courier New", monospace;
+  color: var(--loading-ink, #ede2cc);
+  font-size: clamp(40px, 7vw, 96px);
+  line-height: 1;
+  letter-spacing: 4px;
+  text-transform: lowercase;
+  image-rendering: pixelated;
+  animation: glitch 7s steps(1) infinite;
+}
+
+.pixel-title .glyph {
+  display: inline-block;
+  min-width: 0.6em;
+}
+
+.pixel-title.glitch-burst {
+  animation: glitchBurst 0.18s steps(2) 3;
+}
+
+.brand-tagline {
+  font-family: "DM Serif Display", "Times New Roman", Times, serif;
+  font-style: italic;
+  font-size: clamp(28px, 4.2vw, 58px);
+  color: var(--loading-ink, #ede2cc);
+  margin-top: 8px;
+  letter-spacing: 0.5px;
+  opacity: 0;
+  animation: fadeUp 1.2s ease-out 0.6s forwards;
+}
+
+.openstream-branding.compact {
+  --loading-ink: #fff;
+  max-width: min(42vw, 560px);
+  transform: none;
+}
+
+.openstream-branding.compact .brand-logo-row {
+  align-items: center;
+  gap: 18px;
+}
+
+.openstream-branding.compact .logo-glyph {
+  font-size: clamp(42px, 5vw, 84px);
+  padding: 10px 18px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.openstream-branding.compact .pixel-title {
+  font-size: clamp(24px, 3vw, 48px);
+  letter-spacing: 2px;
+}
+
+.openstream-branding.compact .brand-tagline {
+  font-size: clamp(22px, 2.5vw, 40px);
+  margin-left: 2px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.openstream-branding.header-mode {
+  --loading-ink: #fff;
+  display: inline-flex;
+  max-width: none;
+  transform: none;
+  transition: none;
+}
+
+.openstream-branding.header-mode .brand-logo-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.openstream-branding.header-mode .brand-text-stack {
+  display: none;
+}
+
+.openstream-branding.header-mode .logo-glyph {
+  min-width: 2.1em;
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: none;
+  box-shadow: none;
+  font-size: clamp(18px, 1.8vw, 24px);
+}
+
+.openstream-branding.header-mode .logo-glyph .bracket {
+  font-size: 0.34em;
+}
+
+.openstream-branding.header-mode .bracket-tl { top: 3px; left: 3px; }
+.openstream-branding.header-mode .bracket-tr { top: 3px; right: 3px; }
+.openstream-branding.header-mode .bracket-bl { bottom: 3px; left: 3px; }
+.openstream-branding.header-mode .bracket-br { bottom: 3px; right: 3px; }
+
+.openstream-branding.header-mode .pixel-title {
+  font-size: clamp(13px, 1.25vw, 16px);
+  letter-spacing: 1px;
+}
+
+.loading-side-info {
+  position: fixed;
+  right: 18px;
+  top: 18px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  color: var(--loading-ink-dim);
+  text-align: right;
+  line-height: 1.5;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.loading-side-info .dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--loading-ink);
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  animation: ping 1.6s ease-in-out infinite;
+}
+
+.counter {
+  color: var(--loading-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.loading-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 38px;
+  transform: translateX(-50%);
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  color: var(--loading-ink-dim);
+  letter-spacing: 2px;
+  z-index: 3;
+  opacity: 0;
+  animation: fadeUp 1s ease-out 1.2s forwards;
+}
+
+.loading-sparkle {
+  position: fixed;
+  right: 60px;
+  bottom: 90px;
+  width: 22px;
+  height: 22px;
+  z-index: 3;
+  pointer-events: none;
+  transform-origin: center;
+  animation: spin 6s linear infinite, pulse 3.2s ease-in-out infinite;
+}
+
+.loading-sparkle svg { width: 100%; height: 100%; }
+
+.loading-ticker {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.35);
+  border-top: 1px solid var(--loading-line);
+  color: var(--loading-ink-dim);
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  padding: 6px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  z-index: 4;
+}
+
+.loading-ticker .track {
+  display: inline-block;
+  padding-left: 100%;
+  animation: scroll 38s linear infinite;
+}
+
+.loading-ticker span { margin: 0 30px; }
+
+.trail {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  color: var(--loading-ink);
+  font-family: "VT323", monospace;
+  font-size: 16px;
+  line-height: 1;
+  animation: trailFade 0.6s ease-out forwards;
+}
+
+@keyframes scanShift { from { background-position: 0 0; } to { background-position: 0 80px; } }
+@keyframes bootFlicker { 0% { opacity: 0.6; } 50% { opacity: 0.25; } 100% { opacity: 0.6; } }
+@keyframes bootSweep { 0% { top: 50%; opacity: 1; } 45% { top: 0%; opacity: 1; } 50% { top: 0%; opacity: 0; } 55% { top: 100%; opacity: 1; } 100% { top: 100%; opacity: 0; } }
+@keyframes bootBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes bracketPulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.18); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes glitch { 0%, 92%, 100% { transform: translate(0, 0); filter: none; } 93% { transform: translate(-2px, 0); } 94% { transform: translate(2px, 1px); filter: brightness(1.4); } 95% { transform: translate(-1px, -1px); filter: brightness(0.8); } 96% { transform: translate(0, 0); filter: none; } }
+@keyframes glitchBurst { 0% { transform: translate(0,0); text-shadow: 0 0 0 currentColor; } 25% { transform: translate(-3px, 1px); text-shadow: 2px 0 0 #67e8f9, -2px 0 0 #f472b6; } 50% { transform: translate(3px, -1px); text-shadow: -2px 0 0 #67e8f9, 2px 0 0 #f472b6; } 75% { transform: translate(-1px, 0); text-shadow: 3px 0 0 #67e8f9, -3px 0 0 #f472b6; } 100% { transform: translate(0,0); text-shadow: 0 0 0 currentColor; } }
+@keyframes spin { from { transform: rotate(0deg) scale(var(--spark-scale, 1)); } to { transform: rotate(360deg) scale(var(--spark-scale, 1)); } }
+@keyframes pulse { 0%, 100% { filter: drop-shadow(0 0 2px rgba(237,226,204,0.2)); } 50% { filter: drop-shadow(0 0 12px rgba(237,226,204,0.6)); } }
+@keyframes ping { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.7); } }
+@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes trailFade { from { opacity: 0.9; transform: translate(-50%, -50%) translateY(0); } to { opacity: 0; transform: translate(-50%, -50%) translateY(-22px); } }
+
+@media (max-width: 900px) {
+  .brand-logo-row,
+  .openstream-branding.compact .brand-logo-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .brand-text-stack {
+    width: 100%;
+  }
+
+  .openstream-branding.compact {
+    max-width: 100%;
+  }
+
+  .openstream-branding.header-mode .brand-logo-row {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 760px) {
+  .logo-glyph { font-size: clamp(48px, 14vw, 72px); padding: 10px 18px; }
+  .loading-sparkle { right: 18px; bottom: 50px; }
+  .boot-text { font-size: 18px; letter-spacing: 3px; padding: 0 24px; text-align: center; }
+}

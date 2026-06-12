@@ -1,0 +1,7 @@
+! WebStreamer popup/ad cleanup filters
+! Import into uBlock Origin: Dashboard -> My filters -> paste these rules -> Apply changes
+||zerodrifts.com^
+||zerodrifts.com^$popup
+||zerodrifts.com^$popunder
+||zerodrifts.com/limited-deal.html^
+||zerodrifts.com/next-phase.html^
