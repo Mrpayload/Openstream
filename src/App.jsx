@@ -413,13 +413,6 @@ function DetailModal({ movie, isFavorite, onClose, onPlay, onToggleFavorite, sea
               <span><Calendar size={14} /> {movie.year}</span>
               <span>{movie.genres.slice(0, 3).join(" / ")}</span>
             </div>
-            <p>{movie.description}</p>
-            <div className="detail-meta-grid">
-              <span>Creator</span>
-              <strong>{movie.creator || "Unknown"}</strong>
-              <span>Cast</span>
-              <strong>{movie.cast?.slice(0, 4).join(", ") || "Not listed"}</strong>
-            </div>
             <div className="hero-actions">
               <button className="primary-btn clickable" onClick={() => onPlay()}>
                 <Play size={18} fill="currentColor" />
@@ -429,6 +422,13 @@ function DetailModal({ movie, isFavorite, onClose, onPlay, onToggleFavorite, sea
                 <Heart size={18} fill={isFavorite ? "currentColor" : "none"} />
                 {isFavorite ? "Saved" : "My List"}
               </button>
+            </div>
+            <p>{movie.description}</p>
+            <div className="detail-meta-grid">
+              <span>Creator</span>
+              <strong>{movie.creator || "Unknown"}</strong>
+              <span>Cast</span>
+              <strong>{movie.cast?.slice(0, 4).join(", ") || "Not listed"}</strong>
             </div>
           </div>
         </div>
