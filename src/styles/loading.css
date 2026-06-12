@@ -447,7 +447,16 @@
 }
 
 @media (max-width: 760px) {
-  .logo-glyph { font-size: clamp(48px, 14vw, 72px); padding: 10px 18px; }
+  .logo-glyph { font-size: clamp(42px, 14vw, 72px); padding: 10px 18px; }
   .loading-sparkle { right: 18px; bottom: 50px; }
   .boot-text { font-size: 18px; letter-spacing: 3px; padding: 0 24px; text-align: center; }
+  .pixel-title { font-size: clamp(26px, 9vw, 48px); }
+  .brand-tagline { font-size: clamp(18px, 5vw, 40px); }
+  .loading-side-info { font-size: 9px; right: 10px; top: 10px; }
+  .loading-hint { font-size: 9px; bottom: 24px; letter-spacing: 1px; }
+  .loading-boot { flex-direction: column; gap: 8px; }
+  .boot-text { font-size: 14px; letter-spacing: 2px; }
+  .boot-skip { position: static; font-size: 10px; }
+  .loading-stage { padding: 20px 12px; }
+  .openstream-branding.loading-branding { transform: none; }
 }
