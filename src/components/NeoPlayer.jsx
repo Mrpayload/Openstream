@@ -953,8 +953,8 @@ export default function NeoPlayer({
           )}
         </div>
 
-        {/* source picker — always available in header */}
-        <div className="player-popover-wrap" style={{ pointerEvents: "auto" }}>
+        {/* source picker — follows control visibility */}
+        <div className="player-popover-wrap" style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none", transition: "opacity 0.25s" }}>
           <button onClick={() => setShowSourceMenu((v) => !v)} className="soft-btn accent clickable"><ListVideo size={15} /> Source</button>
           {showSourceMenu && (
             <div className="player-popover source-popover" style={{ bottom: "auto", top: "calc(100% + 0.55rem)" }}>
@@ -971,8 +971,8 @@ export default function NeoPlayer({
           )}
         </div>
 
-        {/* fullscreen button — always available */}
-        <button onClick={toggleFullscreen} className="icon-control clickable" title="Fullscreen" style={{ pointerEvents: "auto" }}>{isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}</button>
+        {/* fullscreen button — follows control visibility */}
+        <button onClick={toggleFullscreen} className="icon-control clickable" title="Fullscreen" style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none", transition: "opacity 0.25s" }}>{isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}</button>
 
         <div className="player-title-block">
           <h3>{title}</h3>
