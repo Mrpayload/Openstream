@@ -130,8 +130,7 @@ function announceToHttpTracker(trackerUrl, infoHash, peerId, port = 6881) {
         .map((b) => "%" + b.toString(16).toUpperCase().padStart(2, "0"))
         .join("");
 
-      // peer_id is a 20-char ASCII string — URLSearchParams is fine
-      const peerIdBuf = peerId;
+      // peer_id is a 20-char ASCII string; encode it byte-for-byte.
       const encodedPeerId = Array.from(Buffer.from(peerId, "ascii"))
         .map((b) => "%" + b.toString(16).toUpperCase().padStart(2, "0"))
         .join("");
@@ -202,6 +201,12 @@ export default function trackerProxyPlugin() {
       wss = new WebSocketServer({ noServer: true });
 
       // Handle WebSocket upgrade for /ws/tracker
+      // `server.httpServer` is null in some Vite server contexts (notably
+      // Vitest, which creates its own server without a real HTTP listener).
+      // The tracker WebSocket is only needed during `vite dev` for torrent
+      // peer connections, so guard the upgrade handler and bail out cleanly
+      // when there's no HTTP server to attach to.
+      if (!server.httpServer) return;
       server.httpServer.on("upgrade", (req, socket, head) => {
         if (req.url === "/ws/tracker") {
           wss.handleUpgrade(req, socket, head, (ws) => {

@@ -3,7 +3,7 @@ import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, ChevronUp, Film, He
 import { genresList, movies as fallbackMovies } from "./data/movies";
 import { fetchEzvidapiStream, fetchFlixhqStream, fetchMediafusionStream, fetchSmplstreamStream, fetchStreams, fetchTorrentioStream } from "./services/streamApi";
 import { discoverTmdbCatalogItems, fetchTmdbSeasonEpisodes, fetchTmdbSeasons, hasTmdbCredentials, hydrateCatalogFromTmdb, searchTmdb } from "./services/tmdbApi";
-import { getStreamLabel, hasProxyHeaders, isBrowserPlayableStream } from "./utils/streamUtils";
+import { getStreamLabel, hasProxyHeaders, isBrowserPlayableStream, isMagnetUrl } from "./utils/streamUtils";
 import { useLandingData } from "./hooks/useLandingData";
 import { useSwipeDownDismiss } from "./hooks/useSwipeDownDismiss";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -236,6 +236,68 @@ const getPlaybackKey = (playable) => {
     return `tv:${playable.tmdbId}:${playable.seasonNumber}:${playable.episodeNumber}`;
   }
   return `movie:${playable.tmdbId}`;
+};
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const pickStreamTorrentFile = (files, preferredIndex) => {
+  if (!Array.isArray(files) || files.length === 0) return null;
+  const preferred = Number.isInteger(preferredIndex)
+    ? files.find((file) => file.index === preferredIndex && file.isMedia)
+    : null;
+  if (preferred) return preferred;
+  return files
+    .filter((file) => file.isMedia)
+    .sort((a, b) => (b.length || 0) - (a.length || 0))[0] || null;
+};
+
+const waitForStreamTorrentFile = async (infoHash, preferredIndex) => {
+  const deadline = Date.now() + 45_000;
+  let lastError = "Torrent metadata is not ready yet";
+  while (Date.now() < deadline) {
+    const response = await fetch(`/api/stream/${encodeURIComponent(infoHash)}/status`, { cache: "no-store" });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      lastError = body.error || `Torrent status failed (${response.status})`;
+    } else {
+      const file = pickStreamTorrentFile(body.files, preferredIndex);
+      if (body.ready && file) return { status: body, file };
+      if (body.metadataTimedOut) lastError = "Torrent metadata lookup timed out";
+    }
+    await wait(1000);
+  }
+  throw new Error(lastError);
+};
+
+const prepareStreamTorrentPlayback = async (stream) => {
+  const magnet = stream.originalMagnet || stream.url;
+  if (!magnet?.startsWith("magnet:?")) {
+    throw new Error("Stream Torrent row is missing the original magnet link");
+  }
+
+  const response = await fetch("/api/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ magnet })
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || "Could not start server torrent");
+  if (!body.infoHash) throw new Error("Torrent server did not return an infoHash");
+
+  const preferredIndex = Number.isInteger(stream.fileIdx) ? stream.fileIdx : null;
+  const { file } = await waitForStreamTorrentFile(body.infoHash, preferredIndex);
+  const params = new URLSearchParams();
+  if (stream.isHls) params.set("transcode", "1");
+  const query = params.toString();
+
+  return {
+    ...stream,
+    url: `/api/stream/${encodeURIComponent(body.infoHash)}/${file.index}${query ? `?${query}` : ""}`,
+    streamTorrentInfoHash: body.infoHash,
+    streamTorrentFileIndex: file.index,
+    activeTorrentFileName: file.name,
+    isMagnet: false,
+  };
 };
 
 const getStoredPlaybackPosition = (playbackKey) => {
@@ -996,7 +1058,7 @@ export default function App() {
     setSectionsResolved({ webstreamer: false, torrentio: false });
   };
 
-  const selectStream = (stream) => {
+  const selectStream = async (stream) => {
     if (!streamRequest) return;
 
     if (!stream.url) {
@@ -1009,8 +1071,33 @@ export default function App() {
       return;
     }
 
-    const selectedStream = stream;
     const selectedStreamIndex = currentStreams.findIndex((candidate) => candidate === stream);
+    let selectedStream = stream;
+
+    if (stream.serverTorrent || stream.source === "stream-torrent" || stream.isMagnet || isMagnetUrl(stream.url)) {
+      setIsStreamLoading(true);
+      setStreamError(null);
+      showToast("Starting server-backed torrent...", "loading");
+      try {
+        const needsTranscode = stream.behaviorHints?.notWebReady || stream.isNotWebReady;
+        if (needsTranscode && !stream.isHls) {
+          stream.isHls = true;
+        }
+        if (!stream.originalMagnet) {
+          stream.originalMagnet = stream.url;
+        }
+        selectedStream = await prepareStreamTorrentPlayback(stream);
+        showToast("Server-backed torrent ready", "success");
+      } catch (error) {
+        setStreamError(error instanceof Error ? error.message : "Could not start server-backed torrent playback");
+        showToast("Server-backed torrent failed", "error");
+        setIsStreamLoading(false);
+        return;
+      }
+    }
+    const playbackStreams = selectedStreamIndex >= 0
+      ? currentStreams.map((candidate, index) => index === selectedStreamIndex ? selectedStream : candidate)
+      : currentStreams;
 
     setCurrentlyPlaying({
       ...streamRequest,
@@ -1018,7 +1105,7 @@ export default function App() {
       subtitle: `${streamRequest.subtitle} · ${getStreamLabel(selectedStream)}`,
       stream: selectedStream,
       streamIndex: selectedStreamIndex,
-      streams: currentStreams,
+      streams: playbackStreams,
       playbackKey: getPlaybackKey(streamRequest)
     });
     closeStreamPicker();
@@ -1027,15 +1114,18 @@ export default function App() {
 
   const switchPlayerStream = useCallback((stream, index) => {
     if (!stream?.url || hasProxyHeaders(stream)) return false;
+    const selectedStream = stream.serverTorrent && stream.serverUrl
+      ? { ...stream, url: stream.serverUrl }
+      : stream;
 
     setCurrentlyPlaying((prev) => {
       if (!prev) return null;
       return {
         ...prev,
-        videoUrl: stream.url,
-        stream,
+        videoUrl: selectedStream.url,
+        stream: selectedStream,
         streamIndex: index,
-        subtitle: `${prev.subtitle.split(" · ")[0]} · ${getStreamLabel(stream)}`
+        subtitle: `${prev.subtitle.split(" · ")[0]} · ${getStreamLabel(selectedStream)}`
       };
     });
 

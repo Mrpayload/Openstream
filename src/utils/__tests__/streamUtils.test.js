@@ -9,6 +9,7 @@ import {
   getStreamQuality,
   getStreamSource,
   hasProxyHeaders,
+  isBrowserPlayableStream,
   isExternalPlayerRecommended,
   isHlsUrl,
   isIframeUrl,
@@ -35,7 +36,10 @@ const flushPromises = async () => {
 
 import {
   formatTorrentStatus,
+  getMagnetFileIndex,
+  hasMseCompatibleVideo,
   listVideoFiles,
+  pickFileByIndex,
   pickVideoFile,
   default as TorrentStreamSession,
 } from "../torrentPlayer";
@@ -46,8 +50,18 @@ import {
 } from "../fallbackStreams";
 import {
   isSetupOrConfigStream,
+  parseMagnetSelectOnly,
   stripEmbeddedUrls,
 } from "../../../vite/torrentio-plugin.js";
+// `isMseContainer` and `buildUnsupportedContainerError` live in the
+// dev-proxy plugin (torrent-stream-plugin.js), not the Stremio addon
+// plugin (torrentio-plugin.js). They were extracted there so the
+// dev proxy and the in-browser client agree on what counts as
+// MSE-demuxable. Import from the correct file below.
+import {
+  buildUnsupportedContainerError,
+  isMseContainer,
+} from "../../../vite/torrent-stream-plugin.js";
 
 describe("hasProxyHeaders", () => {
   it("returns false for streams without behaviorHints", () => {
@@ -129,6 +143,15 @@ describe("partitionStreams", () => {
     expect(result.webstreamer).toHaveLength(1);
   });
 
+  it("classifies all torrent entries as torrentio or webstreamer", () => {
+    const result = partitionStreams([
+      { url: "/api/torrent/stream?magnet=abc", source: "stream-torrent", serverTorrent: true },
+      { url: "magnet:?xt=urn:btih:abc", source: "torrentio", isMagnet: true }
+    ]);
+    expect(result.torrentio).toHaveLength(1);
+    expect(result.webstreamer).toHaveLength(1);
+  });
+
   it("keeps Torrentio configure links in the torrentio bucket", () => {
     const result = partitionStreams([
       { url: "https://torrentio.strem.fun/configure", source: "torrentio", isConfigLink: true }
@@ -139,6 +162,17 @@ describe("partitionStreams", () => {
   it("returns empty buckets for an empty / invalid input", () => {
     expect(partitionStreams([])).toEqual({ iframe: [], webstreamer: [], torrentio: [] });
     expect(partitionStreams(null)).toEqual({ iframe: [], webstreamer: [], torrentio: [] });
+  });
+});
+
+describe("isBrowserPlayableStream", () => {
+  it("excludes Torrentio magnet links even when their title contains supported audio", () => {
+    expect(isBrowserPlayableStream({
+      url: "magnet:?xt=urn:btih:abc",
+      isMagnet: true,
+      name: "Torrentio · Movie.2024.1080p.AAC.H264",
+      title: "1080p AAC"
+    })).toBe(false);
   });
 });
 
@@ -441,6 +475,33 @@ describe("pickVideoFile", () => {
     expect(pickVideoFile(files).name).toBe("movie.mp4");
   });
 
+  it("prefers a smaller MP4 sibling over a much larger MKV when the MKV can't be MSE-demuxed", () => {
+    // Without the container penalty, size dominates and the 8GB MKV
+    // would always win. With the MKV penalty, a 1.5GB MP4 sibling is
+    // the safer browser-playable pick.
+    const files = [
+      { name: "release/movie.mkv", length: 8_000_000_000 },
+      { name: "release/movie.mp4", length: 1_500_000_000 }
+    ];
+    const picked = pickVideoFile(files);
+    expect(picked?.name).toBe("release/movie.mp4");
+  });
+
+  it("prefers WebM over MKV of similar size when no MP4 is present", () => {
+    const files = [
+      { name: "release/movie.mkv", length: 2_500_000_000 },
+      { name: "release/movie.webm", length: 2_300_000_000 }
+    ];
+    expect(pickVideoFile(files)?.name).toBe("release/movie.webm");
+  });
+
+  it("still falls back to MKV when no MSE-compatible container is present", () => {
+    const files = [
+      { name: "release/movie.mkv", length: 4_000_000_000 }
+    ];
+    expect(pickVideoFile(files)?.name).toBe("release/movie.mkv");
+  });
+
   it("returns null for empty / invalid input", () => {
     expect(pickVideoFile([])).toBe(null);
     expect(pickVideoFile(null)).toBe(null);
@@ -459,15 +520,153 @@ describe("listVideoFiles", () => {
       { name: "Release/Featurettes/behind.mkv", length: 200_000_000 }
     ];
     const ranked = listVideoFiles(files);
-    expect(ranked).toHaveLength(2);
+    // The Featurettes/ behind-the-scenes extras are correctly
+    // identified as junk by the JUNK_FILE_PATTERNS, so the ranked list
+    // only contains the main MKV. (The earlier test expected 2 entries
+    // because the Featurettes pattern hadn't been added yet.)
+    expect(ranked).toHaveLength(1);
     expect(ranked[0].name).toBe("Release/movie.mkv");
-    expect(ranked[1].name).toBe("Release/Featurettes/behind.mkv");
   });
 
   it("returns an empty array for empty / invalid input", () => {
     expect(listVideoFiles([])).toEqual([]);
     expect(listVideoFiles(null)).toEqual([]);
     expect(listVideoFiles(undefined)).toEqual([]);
+  });
+});
+
+describe("getMagnetFileIndex", () => {
+  it("parses the so= parameter from a magnet URI", () => {
+    expect(getMagnetFileIndex("magnet:?xt=urn:btih:abc&so=3&dn=foo")).toBe(3);
+  });
+
+  it("accepts so= as the first query parameter", () => {
+    expect(getMagnetFileIndex("magnet:?so=0&xt=urn:btih:abc")).toBe(0);
+  });
+
+  it("returns null when the parameter is missing", () => {
+    expect(getMagnetFileIndex("magnet:?xt=urn:btih:abc&dn=foo")).toBe(null);
+  });
+
+  it("returns null for non-numeric so= values", () => {
+    expect(getMagnetFileIndex("magnet:?xt=urn:btih:abc&so=abc")).toBe(null);
+  });
+
+  it("returns null for negative indices", () => {
+    expect(getMagnetFileIndex("magnet:?xt=urn:btih:abc&so=-1")).toBe(null);
+  });
+
+  it("returns null for non-magnet input", () => {
+    expect(getMagnetFileIndex("https://example.com/foo.mkv")).toBe(null);
+    expect(getMagnetFileIndex("")).toBe(null);
+    expect(getMagnetFileIndex(null)).toBe(null);
+  });
+});
+
+describe("parseMagnetSelectOnly (vite plugin re-export)", () => {
+  it("matches the in-browser parser", () => {
+    expect(parseMagnetSelectOnly("magnet:?xt=urn:btih:abc&so=2")).toBe(2);
+    expect(parseMagnetSelectOnly("magnet:?xt=urn:btih:abc")).toBe(null);
+  });
+});
+
+describe("isMseContainer (dev proxy)", () => {
+  it("flags the browser-native MP4/M4V/MOV/WEBM/OGV containers", () => {
+    expect(isMseContainer({ name: "movie.mp4" })).toBe(true);
+    expect(isMseContainer({ name: "movie.m4v" })).toBe(true);
+    expect(isMseContainer({ name: "movie.m4p" })).toBe(true);
+    expect(isMseContainer({ name: "movie.mov" })).toBe(true);
+    expect(isMseContainer({ name: "movie.webm" })).toBe(true);
+    expect(isMseContainer({ name: "movie.ogv" })).toBe(true);
+    expect(isMseContainer({ name: "Release/movie.mp4" })).toBe(true);
+  });
+
+  it("rejects containers Chrome cannot demux in MSE", () => {
+    expect(isMseContainer({ name: "movie.mkv" })).toBe(false);
+    expect(isMseContainer({ name: "movie.avi" })).toBe(false);
+    expect(isMseContainer({ name: "movie.ts" })).toBe(false);
+    expect(isMseContainer({ name: "movie.mpg" })).toBe(false);
+  });
+
+  it("returns false for files without a name", () => {
+    expect(isMseContainer({})).toBe(false);
+    expect(isMseContainer(null)).toBe(false);
+    expect(isMseContainer({ name: "" })).toBe(false);
+  });
+});
+
+describe("buildUnsupportedContainerError (dev proxy 415 payload)", () => {
+  it("returns a 415 with the container extension and an actionable message", () => {
+    const { statusCode, body } = buildUnsupportedContainerError({ name: "movie.mkv" });
+    expect(statusCode).toBe(415);
+    expect(body.container).toBe("mkv");
+    expect(body.fileName).toBe("movie.mkv");
+    expect(body.needsExternalPlayer).toBe(true);
+    expect(body.error).toMatch(/MKV/);
+    expect(body.error).toMatch(/VLC|torrent client/i);
+  });
+
+  it("falls back to a generic message for files without an extension", () => {
+    const { body } = buildUnsupportedContainerError({ name: "movie" });
+    expect(body.container).toBe("");
+    expect(body.error).toMatch(/this container/);
+  });
+
+  it("tolerates a missing file object", () => {
+    const { body } = buildUnsupportedContainerError(null);
+    expect(body.fileName).toBe("");
+    expect(body.error).toMatch(/this container/);
+  });
+});
+
+describe("pickFileByIndex", () => {
+  it("returns the file at the given zero-based index", () => {
+    const files = [
+      { name: "movie.mkv", length: 4_000_000_000 },
+      { name: "sample.mkv", length: 8_000_000 },
+      { name: "movie.mp4", length: 1_500_000_000 }
+    ];
+    expect(pickFileByIndex(files, 2)?.name).toBe("movie.mp4");
+  });
+
+  it("skips junk files even when the index points at them", () => {
+    const files = [
+      { name: "movie.mkv", length: 4_000_000_000 },
+      { name: "sample.mkv", length: 8_000_000 }
+    ];
+    expect(pickFileByIndex(files, 1)).toBe(null);
+  });
+
+  it("returns null for an out-of-range index", () => {
+    expect(pickFileByIndex([{ name: "movie.mkv" }], 5)).toBe(null);
+  });
+
+  it("returns null for non-integer or missing indices", () => {
+    const files = [{ name: "movie.mkv", length: 4_000_000_000 }];
+    expect(pickFileByIndex(files, undefined)).toBe(null);
+    expect(pickFileByIndex(files, null)).toBe(null);
+    expect(pickFileByIndex(files, 0.5)).toBe(null);
+  });
+});
+
+describe("hasMseCompatibleVideo", () => {
+  it("returns true when at least one MSE-compatible file is present", () => {
+    expect(hasMseCompatibleVideo([
+      { name: "movie.mkv" },
+      { name: "movie.mp4" }
+    ])).toBe(true);
+  });
+
+  it("returns false when only non-MSE containers are present", () => {
+    expect(hasMseCompatibleVideo([
+      { name: "movie.mkv" },
+      { name: "movie.avi" }
+    ])).toBe(false);
+  });
+
+  it("returns false for empty / invalid input", () => {
+    expect(hasMseCompatibleVideo([])).toBe(false);
+    expect(hasMseCompatibleVideo(null)).toBe(false);
   });
 });
 
@@ -504,7 +703,7 @@ describe("TorrentStreamSession", () => {
   const makeFakeClient = ({ torrent }) => {
     const calls = { add: 0, destroyed: 0 };
     const instance = {
-      add: (magnet, cb) => { calls.add++; cb(torrent); },
+      add: (magnet, opts, cb) => { calls.add++; cb(torrent); },
       on: () => {},
       destroy: () => { calls.destroyed++; }
     };
@@ -560,6 +759,176 @@ describe("TorrentStreamSession", () => {
     expect(calls.destroyed).toBe(1);
   });
 
+  it("honours the Stremio fileIdx from the load() handler context", async () => {
+    const files = [
+      { name: "Release/movie.mkv", length: 4_000_000_000 },
+      { name: "Release/movie.mp4", length: 1_500_000_000 }
+    ];
+    const fakeTorrent = {
+      files,
+      numPeers: 0,
+      downloadSpeed: 0,
+      uploaded: 0,
+      downloaded: 0,
+      progress: 0,
+      on: () => {},
+      destroy: () => {}
+    };
+    const { ctor } = makeFakeClient({ torrent: fakeTorrent });
+    mockTorrentClientCtor.mockImplementation(ctor);
+
+    const session = new TorrentStreamSession();
+    const fileChanges = [];
+    const renderTargets = [];
+    // Override renderTo on the chosen file so we can assert which file
+    // the session picked.
+    files[1].renderTo = (video, opts, cb) => { renderTargets.push(files[1].name); cb(); };
+    session.load("magnet:?xt=urn:btih:abc", {}, {
+      fileIdx: 1,
+      onFileChange: (f) => fileChanges.push(f?.name)
+    });
+    await vi.waitFor(() => expect(renderTargets).toHaveLength(1));
+    expect(fileChanges[0]).toBe("Release/movie.mp4");
+    expect(renderTargets[0]).toBe("Release/movie.mp4");
+
+    session.cleanup();
+  });
+
+  it("honours the magnet so= parameter when no fileIdx is supplied", async () => {
+    const files = [
+      { name: "Release/movie.mkv", length: 4_000_000_000 },
+      { name: "Release/movie.mp4", length: 1_500_000_000 }
+    ];
+    const fakeTorrent = {
+      files,
+      numPeers: 0,
+      downloadSpeed: 0,
+      uploaded: 0,
+      downloaded: 0,
+      progress: 0,
+      on: () => {},
+      destroy: () => {}
+    };
+    const { ctor } = makeFakeClient({ torrent: fakeTorrent });
+    mockTorrentClientCtor.mockImplementation(ctor);
+
+    const session = new TorrentStreamSession();
+    const fileChanges = [];
+    files[1].renderTo = (_v, _o, cb) => cb();
+    session.load("magnet:?xt=urn:btih:abc&so=1", {}, {
+      onFileChange: (f) => fileChanges.push(f?.name)
+    });
+    await vi.waitFor(() => expect(fileChanges).toHaveLength(1));
+    expect(fileChanges[0]).toBe("Release/movie.mp4");
+
+    session.cleanup();
+  });
+
+  it("surfaces a clear error when the only file is not MSE-compatible", async () => {
+    const fakeFile = {
+      name: "movie.mkv",
+      renderTo: () => {}
+    };
+    const fakeTorrent = {
+      files: [fakeFile],
+      numPeers: 0,
+      downloadSpeed: 0,
+      uploaded: 0,
+      downloaded: 0,
+      progress: 0,
+      on: () => {},
+      destroy: () => {}
+    };
+    const { ctor } = makeFakeClient({ torrent: fakeTorrent });
+    mockTorrentClientCtor.mockImplementation(ctor);
+
+    const session = new TorrentStreamSession();
+    const errors = [];
+    const fileChanges = [];
+    session.load("magnet:?xt=urn:btih:abc", {}, {
+      onError: (e) => errors.push(e),
+      onFileChange: (f) => fileChanges.push(f?.name)
+    });
+    await flushPromises();
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/MKV/);
+    expect(errors[0].message).toMatch(/torrent client|VLC/i);
+    // renderTo must NOT have been called.
+    expect(fileChanges).toHaveLength(0);
+
+    session.cleanup();
+  });
+
+  it("respects the addon's isNotWebReady hint and short-circuits when there is no MSE sibling", async () => {
+    // isNotWebReady only fires when there is *no* MSE-compatible sibling
+    // in the torrent. We use an MKV-only file list so the
+    // `isNotWebReady && !anyMse` branch actually triggers.
+    const fakeFile = {
+      name: "movie.mkv",
+      renderTo: () => {}
+    };
+    const fakeTorrent = {
+      files: [fakeFile],
+      numPeers: 0,
+      downloadSpeed: 0,
+      uploaded: 0,
+      downloaded: 0,
+      progress: 0,
+      on: () => {},
+      destroy: () => {}
+    };
+    const { ctor } = makeFakeClient({ torrent: fakeTorrent });
+    mockTorrentClientCtor.mockImplementation(ctor);
+
+    const session = new TorrentStreamSession();
+    const errors = [];
+    session.load("magnet:?xt=urn:btih:abc", {}, {
+      isNotWebReady: true,
+      onError: (e) => errors.push(e)
+    });
+    await flushPromises();
+    expect(errors).toHaveLength(1);
+    expect(errors[0].message).toMatch(/not web-ready/);
+
+    session.cleanup();
+  });
+
+  it("ignores isNotWebReady when an MSE-compatible sibling exists (user can pick it from Files)", async () => {
+    // The user should be able to fall back to the MP4 sibling even when
+    // the addon flagged a different file as not web-ready.
+    const fakeFiles = [
+      { name: "movie.mkv", renderTo: () => {} },
+      { name: "movie.mp4", renderTo: (_v, _o, cb) => cb() }
+    ];
+    const fakeTorrent = {
+      files: fakeFiles,
+      numPeers: 0,
+      downloadSpeed: 0,
+      uploaded: 0,
+      downloaded: 0,
+      progress: 0,
+      on: () => {},
+      destroy: () => {}
+    };
+    const { ctor } = makeFakeClient({ torrent: fakeTorrent });
+    mockTorrentClientCtor.mockImplementation(ctor);
+
+    const session = new TorrentStreamSession();
+    const errors = [];
+    const fileChanges = [];
+    session.load("magnet:?xt=urn:btih:abc", {}, {
+      isNotWebReady: true,
+      onError: (e) => errors.push(e),
+      onFileChange: (f) => fileChanges.push(f?.name)
+    });
+    await flushPromises();
+    expect(errors).toHaveLength(0);
+    expect(fileChanges).toHaveLength(1);
+    expect(fileChanges[0]).toBe("movie.mp4");
+
+    session.cleanup();
+  });
+
   it("reports an error when the torrent has no files", async () => {
     const fakeTorrent = { files: [], on: () => {}, destroy: () => {} };
     const { ctor } = makeFakeClient({ torrent: fakeTorrent });
@@ -591,7 +960,7 @@ describe("TorrentStreamSession", () => {
     // Replace add() with a deferred variant so we can call cleanup()
     // before the torrent resolves.
     let resolveAdd = () => {};
-    instance.add = (magnet, cb) => { resolveAdd = () => cb(fakeTorrent); };
+    instance.add = (magnet, opts, cb) => { resolveAdd = () => cb(fakeTorrent); };
 
     const session = new TorrentStreamSession();
     session.load("magnet:?xt=urn:btih:abc", {}, { onError: () => {} });

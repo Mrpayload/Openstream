@@ -13,6 +13,8 @@ const devPlugins = async () => {
     { default: smplStreamPlugin },
     { default: mediafusionPlugin },
     { default: torrentioPlugin },
+    { default: torrentStreamPlugin },
+    { default: transcodePlugin },
     { default: sidecarPlugin },
     { default: trackerProxyPlugin },
   ] = await Promise.all([
@@ -21,6 +23,8 @@ const devPlugins = async () => {
     import('./vite/smplstream-plugin.js'),
     import('./vite/mediafusion-plugin.js'),
     import('./vite/torrentio-plugin.js'),
+    import('./vite/torrent-stream-plugin.js'),
+    import('./vite/transcode-plugin.js'),
     import('./vite/sidecar-plugin.js'),
     import('./vite/tracker-proxy-plugin.js'),
   ])
@@ -30,6 +34,8 @@ const devPlugins = async () => {
     smplStreamPlugin(),
     mediafusionPlugin(),
     torrentioPlugin(),
+    torrentStreamPlugin(),
+    transcodePlugin(),
     sidecarPlugin(),
     trackerProxyPlugin(),
   ]

@@ -43,7 +43,11 @@ export default function StreamPicker({
   // tappable. App.jsx pushes them to `streams` synchronously; the Webstreamer
   // and Torrentio tabs fill in as the API calls resolve.
   const [activeTab, setActiveTab] = useState("iframe");
-  const counts = { webstreamer: webstreamer.length, iframe: iframe.length, torrentio: torrentio.length };
+  const counts = {
+    webstreamer: webstreamer.length,
+    iframe: iframe.length,
+    torrentio: torrentio.length
+  };
   const prioritizedWebstreamer = useMemo(() => prioritizeGoodToGoStreams(webstreamer), [webstreamer]);
   const activeStreams = activeTab === "iframe"
     ? iframe
@@ -77,6 +81,17 @@ export default function StreamPicker({
     if (onNotify) {
       onNotify(ok ? `${label} copied` : "Copy failed", ok ? "success" : "error");
     }
+  };
+
+  const handlePlayClick = (stream, event) => {
+    event.stopPropagation();
+    onSelect(stream);
+  };
+
+  const handleMagnetOpen = (stream, event) => {
+    event.stopPropagation();
+    if (!stream?.url) return;
+    window.open(stream.url, "_self");
   };
 
   // Truncate long magnet URLs for the visible row; the full URL stays in
@@ -218,9 +233,9 @@ export default function StreamPicker({
                   <>
                     <Loader2 className="spin" size={18} />
                     <span>
-                      {activeTab === "webstreamer"
-                        ? "Loading direct streams from webstreamer sources..."
-                        : "Searching Torrentio until torrent streams are available..."}
+                  {activeTab === "webstreamer"
+                    ? "Loading direct streams from webstreamer sources..."
+                    : "Searching Torrentio for server-backed torrent streams..."}
                     </span>
                   </>
                 ) : activeTab === "torrentio" ? (
@@ -237,7 +252,7 @@ export default function StreamPicker({
               const isConfigLink = Boolean(stream.isConfigLink);
               const isMagnet = !isConfigLink && (isTorrentioTab || isMagnetUrl(stream.url) || stream.isMagnet);
               const isIframeStream = !isMagnet && !isConfigLink && (stream.isIframe || isIframeUrl(stream.url));
-              const recommended = !isMagnet && isBrowserPlayableStream(stream);
+              const recommended = isMagnet || (!isMagnet && isBrowserPlayableStream(stream));
               const audioSupport = checkAudioSupport(stream);
               const audioNeedsVlc = !isConfigLink && !isMagnet && !isIframeStream && audioSupport.supported === false;
               const quality = getStreamQuality(stream);
@@ -260,10 +275,12 @@ export default function StreamPicker({
                     <small>
                       ({isBlocked
                         ? "Unsupported Source"
-                        : isConfigLink
-                          ? "Torrentio setup link · opens in browser"
+                          : isConfigLink
+                            ? "Torrentio setup link · opens in browser"
                           : isMagnet
-                            ? "Magnet stream · browser torrent playback"
+                            ? stream.isHls || stream.behaviorHints?.notWebReady || stream.isNotWebReady
+                              ? "Server-backed torrent · HLS transcode"
+                              : "Server-backed torrent · HTTP range stream"
                             : isIframeStream
                               ? "Web-Ready Fallback"
                               : `${getStreamFormat(stream)} direct stream`})
@@ -276,25 +293,59 @@ export default function StreamPicker({
                   </span>
                   <span className="stream-tags">
                     {(isMagnet || isConfigLink) && stream.url && (
-                      <button
-                        type="button"
-                        className="magnet-copy-btn"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleCopyMagnet(stream.url, isConfigLink ? "Configure link" : "Magnet link");
-                        }}
-                        aria-label={isConfigLink ? "Copy configure link to clipboard" : "Copy magnet link to clipboard"}
-                        title={isConfigLink ? "Copy configure link" : "Copy magnet link"}
-                      >
-                        <Copy size={13} />
-                      </button>
+                      <span className="stream-magnet-actions">
+                        {isMagnet && (
+                          <button
+                            type="button"
+                            className="stream-action-btn play-btn"
+                            onClick={(event) => handlePlayClick(stream, event)}
+                            aria-label="Play in browser"
+                            title="Play via server-backed torrent"
+                          >
+                            <Play size={13} fill="currentColor" /> Play
+                          </button>
+                        )}
+                        {isMagnet && (
+                          <button
+                            type="button"
+                            className="stream-action-btn magnet-btn"
+                            onClick={(event) => handleMagnetOpen(stream, event)}
+                            aria-label="Open in torrent downloader"
+                            title="Open in external torrent client"
+                          >
+                            <Magnet size={13} /> Magnet
+                          </button>
+                        )}
+                        {isConfigLink && (
+                          <button
+                            type="button"
+                            className="stream-action-btn config-btn"
+                            onClick={(event) => { event.stopPropagation(); handleOpenConfig(); }}
+                            aria-label="Open Torrentio configuration"
+                            title="Open configuration in browser"
+                          >
+                            <ExternalLink size={13} /> Configure
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="stream-action-btn copy-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleCopyMagnet(stream.url, isConfigLink ? "Configure link" : "Magnet link");
+                          }}
+                          aria-label={isConfigLink ? "Copy configure link to clipboard" : "Copy magnet link to clipboard"}
+                          title={isConfigLink ? "Copy configure link" : "Copy magnet link"}
+                        >
+                          <Copy size={13} />
+                        </button>
+                      </span>
                     )}
-                    {isConfigLink && <span className="torrent-badge">Configure</span>}
-                    {isMagnet && <span className="torrent-badge">Magnet</span>}
                     {isMagnet && Number.isFinite(stream.seeds) && <span className="seed-badge">Seeds: {stream.seeds}</span>}
+                    {isMagnet && <span className="recommended-badge">Server</span>}
                     {!isConfigLink && !isMagnet && (
                       <span className={`audio-status-badge ${audioNeedsVlc ? "vlc-recommended" : "good-to-go"}`}>
-                        {audioNeedsVlc ? "Use VLC" : "Good to go"}
+                        {audioNeedsVlc ? "Use local player" : "Good to go"}
                       </span>
                     )}
                     {recommended && <span className="recommended-badge">Recommended</span>}
@@ -308,17 +359,10 @@ export default function StreamPicker({
                 return (
                   <div
                     key={`${stream.url || stream.name}-${index}`}
-                    className={`stream-option stream-option-magnet ${isBlocked ? "" : "clickable"}`}
+                    className="stream-option stream-option-magnet"
                     role="button"
                     tabIndex={isBlocked ? -1 : 0}
                     aria-disabled={isBlocked}
-                    onClick={handleOpenConfig}
-                    onKeyDown={(event) => {
-                      if (event.currentTarget !== event.target) return;
-                      if (event.key !== "Enter" && event.key !== " ") return;
-                      event.preventDefault();
-                      handleOpenConfig();
-                    }}
                     title={isBlocked ? "Configure link unavailable" : "Open Torrentio configuration"}
                   >
                     {inner}
@@ -330,20 +374,13 @@ export default function StreamPicker({
                 return (
                   <div
                     key={`${stream.url || stream.name}-${index}`}
-                    className={`stream-option stream-option-magnet ${isBlocked ? "" : "clickable"}`}
+                    className="stream-option stream-option-magnet"
                     role="button"
                     tabIndex={isBlocked ? -1 : 0}
                     aria-disabled={isBlocked}
-                    onClick={() => onSelect(stream)}
-                    onKeyDown={(event) => {
-                      if (event.currentTarget !== event.target) return;
-                      if (event.key !== "Enter" && event.key !== " ") return;
-                      event.preventDefault();
-                      onSelect(stream);
-                    }}
                     title={isBlocked
                       ? "Stream not playable in browser"
-                      : "Open this magnet in an external torrent client (VLC, qBittorrent, etc.)"}
+                      : "Play in browser or open magnet in external client"}
                   >
                     {inner}
                   </div>

@@ -152,10 +152,11 @@ export default function transcodePlugin() {
       server.middlewares.use("/api/transcode/segment/", async (req, res) => {
         try {
           const parts = req.url.split("?")[0].split("/").filter(Boolean);
-          // parts: ["api", "transcode", "segment", "<jobId>", "<filename>..."]
-          if (parts.length < 4) { sendNotFound(res); return; }
-          const jobId = decodeURIComponent(parts[2]);
-          const filename = parts.slice(3).join("/");
+          // The middleware is mounted at /api/transcode/segment/, so Vite's
+          // connect stack passes only ["<jobId>", "<filename>..."] here.
+          if (parts.length < 2) { sendNotFound(res); return; }
+          const jobId = decodeURIComponent(parts[0]);
+          const filename = parts.slice(1).join("/");
           const job = touchJob(jobId);
           if (!job) { sendJson(res, 404, { error: "Job not found or expired" }); return; }
           const absPath = resolveSegmentPath(job, filename);

@@ -1,0 +1,105 @@
+model = "MiniMax-M3"
+model_provider = "tokenrouter"
+model_reasoning_effort = "medium"
+
+
+
+service_tier = "priority"
+
+
+notify = [ "C:\\Users\\vaishnav\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\789504f803e82e2b\\bin\\node_modules\\@oai\\sky\\bin\\windows\\codex-computer-use.exe", "turn-ended" ]
+
+[marketplaces.openai-bundled]
+last_updated = "2026-06-15T01:54:18Z"
+source_type = "local"
+source = '\\?\C:\Users\vaishnav\.codex\.tmp\bundled-marketplaces\openai-bundled'
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-06-15T01:28:40Z"
+source_type = "local"
+source = '\\?\C:\Users\vaishnav\.cache\codex-runtimes\codex-primary-runtime\plugins\openai-primary-runtime'
+
+[plugins."hugging-face@openai-curated"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."computer-use@openai-bundled"]
+enabled = true
+
+[plugins."chrome@openai-bundled"]
+enabled = true
+
+[plugins."picsart@openai-curated"]
+enabled = true
+
+[plugins."canva@openai-curated"]
+enabled = true
+
+[plugins."nvidia@openai-curated"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."google-drive@openai-curated"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[windows]
+sandbox = "elevated"
+
+[projects.'c:\users\vaishnav\onedrive\documents\new project']
+trust_level = "trusted"
+
+[projects.'v:\antgravity\webstreamer']
+trust_level = "trusted"
+
+[desktop]
+conversationDetailMode = "STEPS_COMMANDS"
+
+[desktop.open-in-target-preferences]
+global = "cursor"
+
+[desktop.open-in-target-preferences.perPath]
+'C:\Users\vaishnav\OneDrive\Documents\New project' = "cursor"
+'V:\Antgravity\webstreamer' = "cursor"
+
+[features]
+js_repl = false
+
+[mcp_servers.node_repl]
+args = []
+command = 'C:\Users\vaishnav\AppData\Local\OpenAI\Codex\runtimes\cua_node\789504f803e82e2b\bin\node_repl.exe'
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = 'C:\Users\vaishnav\AppData\Local\OpenAI\Codex\runtimes\cua_node\789504f803e82e2b\bin\node_modules'
+NODE_REPL_NODE_PATH = 'C:\Users\vaishnav\AppData\Local\OpenAI\Codex\runtimes\cua_node\789504f803e82e2b\bin\node.exe'
+NODE_REPL_TRUSTED_CODE_PATHS = 'C:\Users\vaishnav\.codex'
+CODEX_HOME = 'C:\Users\vaishnav\.codex'
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "27dca86fd6b571c49414a4b78e46b57bcf683a46cd1319799c11fbb6cfae3110,bdc61752e0f9d9b1e73e3cba25ca71d3d9fe54d335ed8196378106081474d7c1"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.609.41114"
+SKY_CUA_NATIVE_PIPE = "1"
+SKY_CUA_NATIVE_PIPE_DIRECTORY = '\\.\pipe\codex-computer-use-581a1ce9-0107-45b1-a798-0bb21d1e08fb'
+CODEX_CLI_PATH = 'C:\Users\vaishnav\AppData\Local\OpenAI\Codex\bin\f1c7ee7a13db5fed\codex.exe'
+[model_providers.tokenrouter]
+name = "TokenRouter"
+base_url = "https://api.tokenrouter.com/v1"
+env_key = "TOKENROUTER_API_KEY"
+
+

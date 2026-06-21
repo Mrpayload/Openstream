@@ -158,9 +158,22 @@ const parseSize = (sizeText) => {
 const parseSeeds = (value) => {
   if (!value) return null;
   const text = String(value);
+  // Stremio / Torrentio encodes the seed count as 👤 N, "Seeds: N",
+  // or "Seeders: N". We deliberately do NOT match "Peers" because in
+  // torrent terminology that includes leechers and is not the same
+  // quantity as seeders.
   const match = text.match(/(?:\u{1F464}|\bseed(?:s|ers)?\b)\s*:?\s*(\d+)/iu);
   return match ? Number(match[1]) : null;
 };
+
+// Parse the `so=` (select only) parameter from a magnet URI. Uses the
+// shared helper from `src/utils/magnet.js` so there's a single source of
+// truth (the Vite plugin and the in-browser client must agree on what
+// `so=` means to avoid drift bugs). We import it as a regular binding
+// then re-export it under the historical `parseMagnetSelectOnly` name
+// that the test suite expects.
+import { getMagnetFileIndex } from "../src/utils/magnet.js";
+export const parseMagnetSelectOnly = getMagnetFileIndex;
 
 // Detect "configure/setup" stream entries. The upstream Torrentio addon can
 // return stream objects that point at the public setup page instead of a real
@@ -219,9 +232,12 @@ const normalizeStream = (raw) => {
       isMagnet: false,
       isConfigLink: true,
       isHls: false,
+      isIframe: false,
       quality: null,
       size: null,
       seeds: null,
+      fileIdx: null,
+      isNotWebReady: false,
       source: "torrentio"
     };
   }
@@ -231,20 +247,39 @@ const normalizeStream = (raw) => {
   const firstLine = stripEmbeddedUrls((raw.name || "Torrentio").split("\n")[0].trim()) || "Torrentio";
   const cleanedTitle = stripEmbeddedUrls(raw.title || "");
   const size = parseSize(raw.title || "");
-  const seeds = parseSeeds(raw.title || raw.name || "");
+  // Stremio's protocol: seed count is encoded in the title or name as
+  // "👤 124" / "Seeds: 124" / "Seeders: 124". Try the title first, then
+  // the name, and finally the description field some indexers use.
+  const seeds = parseSeeds(raw.title) ?? parseSeeds(raw.name) ?? parseSeeds(raw.description);
   const qualityMatch = (raw.title || "").match(/\b(2160p|1080p|720p|480p|4K)\b/i);
   const quality = qualityMatch ? qualityMatch[1].toUpperCase() : null;
+
+  // Stremio protocol: when the addon specifies a particular file inside a
+  // multi-file torrent (fileIdx), we round-trip that index to the player
+  // so it can honour the addon's choice instead of guessing the main file.
+  const fileIdx = Number.isInteger(raw.fileIdx) && raw.fileIdx >= 0
+    ? raw.fileIdx
+    : parseMagnetSelectOnly(magnet);
+
+  // Pass through behaviorHints verbatim so `notWebReady`, `bingeGroup`, etc.
+  // can be honoured downstream. Add a normalised `isNotWebReady` flag for
+  // the picker/player to branch on without re-parsing the hints object.
+  const behaviorHints = raw.behaviorHints || {};
+  const isNotWebReady = Boolean(behaviorHints.notWebReady);
 
   return {
     url: magnet,
     name: `Torrentio · ${firstLine}`,
     title: cleanedTitle || `Magnet stream · ${raw.infoHash.slice(0, 8)}`,
-    behaviorHints: raw.behaviorHints || {},
+    behaviorHints,
     isMagnet: true,
     isHls: false,
+    isIframe: false,
     quality,
     size,
     seeds,
+    fileIdx: fileIdx ?? null,
+    isNotWebReady,
     source: "torrentio"
   };
 };
@@ -295,12 +330,15 @@ const buildConfigLink = () => ({
   behaviorHints: {},
   isMagnet: false,
   isConfigLink: true,
-    isHls: false,
-    quality: null,
-    size: null,
-    seeds: null,
-    source: "torrentio"
-  });
+  isHls: false,
+  isIframe: false,
+  quality: null,
+  size: null,
+  seeds: null,
+  fileIdx: null,
+  isNotWebReady: false,
+  source: "torrentio"
+});
 
 const sortTorrentioStreams = (streams) => [...streams].sort((a, b) => {
   if (a.isConfigLink && !b.isConfigLink) return 1;

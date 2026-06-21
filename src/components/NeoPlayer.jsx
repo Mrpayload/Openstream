@@ -133,6 +133,21 @@ export default function NeoPlayer({
 }) {
   const isIframe = isIframeUrl(videoUrl);
   const isMagnet = isWebtorrentPlayable(currentStream) || (videoUrl && isMagnetUrl(videoUrl));
+  const shouldTranscodeTorrent = Boolean(currentStream?.isNotWebReady || currentStream?.behaviorHints?.notWebReady);
+  const torrentProxyUrl = import.meta.env.DEV && videoUrl && isMagnetUrl(videoUrl)
+    ? (() => {
+        const params = new URLSearchParams({ magnet: videoUrl });
+        if (Number.isInteger(currentStream?.fileIdx)) {
+          params.set("fileIdx", String(currentStream.fileIdx));
+        }
+        if (shouldTranscodeTorrent) {
+          params.set("transcode", "1");
+        }
+        return `/api/torrent/stream?${params.toString()}`;
+      })()
+    : null;
+  const usesTorrentProxy = Boolean(torrentProxyUrl);
+  const torrentProxyNeedsHls = Boolean(torrentProxyUrl && shouldTranscodeTorrent);
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const hlsRef = useRef(null);
@@ -164,6 +179,12 @@ export default function NeoPlayer({
   // file from a multi-file release without leaving the player.
   const [torrentFileList, setTorrentFileList] = useState([]);
   const [activeTorrentFileName, setActiveTorrentFileName] = useState(null);
+  // True when the currently-playing torrent file is in a container
+  // Chrome can demux via MediaSource Extensions (mp4, m4v, mov, m4p,
+  // webm, ogv). MKV / AVI siblings are kept visible in the Files popover
+  // but tagged as "external player only" so the user knows why they
+  // can't be rendered in the browser.
+  const [isPlayingFileMse, setIsPlayingFileMse] = useState(true);
 
   // popover toggles
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
@@ -220,6 +241,16 @@ export default function NeoPlayer({
   const isLoadingRef = useRef(true);
   useEffect(() => { isLoadingRef.current = isLoading; }, [isLoading]);
 
+  // Track the most recent dev-proxy URL so the onError handler can probe
+  // it to distinguish a real decoder failure from a 4xx JSON error
+  // payload (the Vite torrent plugin returns 415 + JSON when the picked
+  // file is in a container Chrome can't demux). Refs (not state) because
+  // the onError handler is a stable callback and we don't want a
+  // re-render whenever the proxy URL changes — the src effect already
+  // re-runs for that.
+  const torrentProxyUrlRef = useRef(null);
+  useEffect(() => { torrentProxyUrlRef.current = torrentProxyUrl; }, [torrentProxyUrl]);
+
   const onPlaybackErrorRef = useRef(onPlaybackError);
   useEffect(() => { onPlaybackErrorRef.current = onPlaybackError; }, [onPlaybackError]);
 
@@ -263,15 +294,56 @@ export default function NeoPlayer({
     errorGuardRef.current = false;
   }, []);
 
+  // Probe the dev proxy when the <video> element fires onError. The
+  // torrent-stream Vite plugin returns 415 + JSON for non-MSE
+  // containers (MKV / AVI / TS); a plain <video> onError would
+  // otherwise surface a useless "This source failed to play" message.
+  // The probe only runs in dev-mode (torrentProxyUrl is set) and only
+  // checks the response status — 2xx means the video started, 4xx is
+  // the JSON error path. Range: bytes=0-0 forces a 1-byte response so
+  // we never read the full torrent just to discover it's unplayable.
+  // A race guard ensures a late-arriving probe for a stale proxy URL
+  // can't overwrite a newer error state.
+  const probeRef = useRef(0);
+  const handleVideoError = useCallback(() => {
+    const proxyUrl = torrentProxyUrlRef.current;
+    if (!proxyUrl) {
+      handlePlaybackError("This source failed to play.");
+      return;
+    }
+    const probeId = ++probeRef.current;
+    fetch(proxyUrl, { method: "GET", headers: { Range: "bytes=0-0" } })
+      .then((res) => {
+        if (probeId !== probeRef.current) return null;
+        if (res.status < 400) return null;
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) return null;
+        return res.json().catch(() => ({}));
+      })
+      .then((data) => {
+        if (probeId !== probeRef.current || !data) return;
+        const message = typeof data.error === "string" && data.error
+          ? data.error
+          : "This torrent's main video container can't be played in the browser. Open the magnet in VLC or your torrent client.";
+        handlePlaybackError(message);
+      })
+      .catch(() => {
+        if (probeId !== probeRef.current) return;
+        handlePlaybackError("This source failed to play.");
+      });
+  }, [handlePlaybackError]);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !videoUrl) return;
     // Magnet URLs are handled by a separate useEffect (webtorrent streaming)
     // so we must short-circuit the HLS / direct-src setup below.
-    if (isMagnet) return;
-    const effectiveUrl = isHlsUrl(videoUrl)
-      ? (getSidecarUrl(videoUrl) || videoUrl)
-      : videoUrl;
+    if (isMagnet && !usesTorrentProxy) return;
+    const playbackUrl = torrentProxyUrl || videoUrl;
+    const shouldUseHls = isHlsUrl(playbackUrl) || torrentProxyNeedsHls || currentStream?.isHls;
+    const effectiveUrl = shouldUseHls && isHlsUrl(playbackUrl)
+      ? (getSidecarUrl(playbackUrl) || playbackUrl)
+      : playbackUrl;
     const isDisposed = { current: false };
     // The setState calls below all live inside async HLS event callbacks
     // (MANIFEST_PARSED, AUDIO_TRACKS_UPDATED, ERROR, ...) — they fire well
@@ -321,7 +393,7 @@ export default function NeoPlayer({
     video.removeAttribute("src");
 
     // ── HLS path ──────────────────────────────────────────────────────────
-    if (isHlsUrl(videoUrl)) {
+    if (shouldUseHls) {
       // Safari native HLS
       if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = effectiveUrl;
@@ -400,7 +472,7 @@ export default function NeoPlayer({
     }
     // ── Direct MP4/WebM path ──────────────────────────────────────────────
     else {
-      video.src = videoUrl;
+      video.src = effectiveUrl;
       video.load();
       attemptPlay(video, isDisposed);
     }
@@ -416,7 +488,7 @@ export default function NeoPlayer({
       video.removeAttribute("src");
     };
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [videoUrl, retryNonce, attemptPlay, handlePlaybackError, closePopovers, currentStream, isMagnet]);
+  }, [videoUrl, retryNonce, attemptPlay, handlePlaybackError, closePopovers, currentStream, isMagnet, usesTorrentProxy, torrentProxyUrl, torrentProxyNeedsHls]);
 
   // ── reset transient state on source change ─────────────────────────────
   // Lives in a layout effect so the reset is explicitly allowed to call
@@ -440,6 +512,10 @@ export default function NeoPlayer({
     setAudioTrackError(null);
     setTorrentError(null);
     setTorrentStatus(null);
+    // Reset the per-file MSE flag too so the warning overlay doesn't
+    // briefly reference the previous torrent's container before the new
+    // torrent's onFileChange callback fires.
+    setIsPlayingFileMse(true);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [videoUrl, retryNonce, isMagnet]);
 
@@ -459,7 +535,7 @@ export default function NeoPlayer({
     if (!video || !videoUrl) return;
     // Magnet URLs are handled by a separate useEffect (webtorrent streaming)
     // so we must short-circuit the HLS / direct-src setup below.
-    if (isMagnet) return;
+    if (isMagnet && !usesTorrentProxy) return;
 
     // setState calls inside attemptAutoplay() run from the resolved/rejected
     // video.play() promise — they are not synchronous effect body updates.
@@ -498,7 +574,7 @@ export default function NeoPlayer({
     };
     // isHlsUrl is a stable module-level import; isMagnet is required so the
     // effect re-runs when the user switches to/from a magnet stream.
-  }, [videoUrl, isPlaying, playbackError, isMagnet]);
+  }, [videoUrl, isPlaying, playbackError, isMagnet, usesTorrentProxy]);
 
 
 
@@ -709,7 +785,7 @@ export default function NeoPlayer({
   // torrentStatus) is handled by the useLayoutEffect above. This effect
   // only owns the torrent session itself.
   useEffect(() => {
-    if (!isMagnet || !videoUrl) return;
+    if (!isMagnet || usesTorrentProxy || !videoUrl) return;
     const video = videoRef.current;
     if (!video) return;
 
@@ -719,21 +795,29 @@ export default function NeoPlayer({
     // If the torrent resolves metadata but never connects to peers and
     // makes no progress, surface an error instead of spinning forever.
     // The error message tells the user to try a different source or
-    // hand off to an external torrent client (VLC, qBittorrent).
+    // hand off to an external torrent client.
     const progressTimer = window.setTimeout(() => {
       const session = torrentSessionRef.current;
-      // Bail out if the torrent metadata hasn't even resolved yet — a
-      // slow-to-resolve torrent shouldn't be reported as "no peers".
-      if (!session?.torrent) return;
+      if (!session?.torrent) {
+        setTorrentError("Torrent metadata did not resolve — the magnet may be dead or browser peer discovery is blocked.");
+        setIsLoading(false);
+        setPlaybackError("Torrent metadata did not resolve. Try another Torrentio source or open the magnet in your torrent client.");
+        return;
+      }
       const peers = session.torrent.numPeers ?? 0;
       const progress = session.torrent.progress ?? 0;
       if (peers > 0 || progress > 0) return; // already making progress
       setTorrentError("No peers found after 30s — the torrent may be dead or the network is blocking WebRTC.");
       setIsLoading(false);
-      setPlaybackError("No torrent peers found. Try a different source or open the magnet in VLC / qBittorrent.");
+      setPlaybackError("No torrent peers found. Try a different source or open the magnet in your torrent client.");
     }, TORRENT_PROGRESS_TIMEOUT_MS);
 
     session.load(videoUrl, video, {
+      // Stremio protocol hints: fileIdx (zero-based index in the torrent
+      // file list) and isNotWebReady. Both are best-effort — the session
+      // will fall back to its own file picker when they are missing.
+      fileIdx: Number.isInteger(currentStream?.fileIdx) ? currentStream.fileIdx : undefined,
+      isNotWebReady: Boolean(currentStream?.isNotWebReady || currentStream?.behaviorHints?.notWebReady),
       onStatus: (status) => {
         if (!status) return;
         setTorrentStatus(status);
@@ -746,7 +830,11 @@ export default function NeoPlayer({
         const message = err?.message || "Torrent stream failed to start";
         setTorrentError(message);
         setIsLoading(false);
-        setPlaybackError(`${message} — try the external player menu (VLC, qBittorrent).`);
+        // Strip the trailing action prompt from the session message —
+        // the player-level error panel already shows a button to open
+        // the magnet in an external player, so we don't need to repeat
+        // the instruction here.
+        setPlaybackError(message);
       },
       onReady: () => {
         setIsLoading(false);
@@ -755,11 +843,14 @@ export default function NeoPlayer({
       onFileList: (files) => {
         setTorrentFileList(Array.isArray(files) ? files : []);
       },
-      onFileChange: (file) => {
+      onFileChange: (file, _ranked, meta) => {
         if (file?.name) setActiveTorrentFileName(file.name);
         // Switching files restarts the buffer; show the loading overlay
         // until renderTo() calls onReady again.
         setIsLoading(true);
+        // Stash the MSE-compatibility flag so the Files popover can
+        // visually warn the user about non-browser-playable entries.
+        setIsPlayingFileMse(Boolean(meta?.fileIsMse));
       }
     });
 
@@ -770,7 +861,12 @@ export default function NeoPlayer({
         torrentSessionRef.current = null;
       }
     };
-  }, [videoUrl, isMagnet, retryNonce]);
+    // currentStream?.fileIdx / isNotWebReady feed into the load() handler
+    // context, so the effect must re-run when the user picks a different
+    // Torrentio source from the Source popover. videoUrl already changes
+    // on stream switch, so this is more of a lint-satisfier than a
+    // correctness fix, but it keeps exhaustive-deps happy.
+  }, [videoUrl, isMagnet, usesTorrentProxy, retryNonce, currentStream?.fileIdx, currentStream?.isNotWebReady, currentStream?.behaviorHints?.notWebReady]);
 
   const handleSelectTorrentFile = useCallback((file) => {
     if (!file) return;
@@ -844,7 +940,7 @@ export default function NeoPlayer({
           onLoadedMetadata={handleLoadedMetadata}
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
-          onError={() => handlePlaybackError("This source failed to play.")}
+          onError={handleVideoError}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onWaiting={() => setIsLoading(true)}
@@ -878,9 +974,9 @@ export default function NeoPlayer({
                     <span className="src-meta">
                       <span className="src-quality">{getStreamQuality(s)}</span>
                       <span className={`src-audio-badge ${audioNeedsVlc ? "vlc-recommended" : "good-to-go"}`}>
-                        {audioNeedsVlc ? "Use VLC" : "Good to go"}
+                        {audioNeedsVlc ? "Use local player" : "Good to go"}
                       </span>
-                      {playerNeedsVlc && !audioNeedsVlc && <span className="src-player-badge">Use VLC</span>}
+                      {playerNeedsVlc && !audioNeedsVlc && <span className="src-player-badge">Use local player</span>}
                     </span>
                   </button>
                 );
@@ -896,7 +992,7 @@ export default function NeoPlayer({
               <ExternalPlayerMenu
                 stream={currentStream}
                 fallbackTitle={title}
-                menuLabel="Stream in VLC"
+                menuLabel="Open local player"
                 showLabel
                 onNotify={onNotify}
               />
@@ -940,6 +1036,18 @@ export default function NeoPlayer({
         </div>
       )}
 
+      {/* When the picked torrent file isn't MSE-compatible (MKV / AVI
+          are the usual cases) and the session didn't already short-circuit
+          because no MSE sibling exists, gently warn the user in the file
+          picker. The error panel below carries the actionable message. */}
+      {isMagnet && torrentFileList.length > 0 && !isPlayingFileMse && !playbackError && (
+        <div className="torrent-status-overlay" aria-live="polite">
+          <span>
+            {`Browser can't demux ${(activeTorrentFileName?.split(".").pop() || "this").toUpperCase()} — open the magnet in VLC or your torrent app.`}
+          </span>
+        </div>
+      )}
+
       {/* ── header bar ──────────────────────────────────────────────────── */}
       <div className="player-header" style={{ opacity: shouldShowControls ? 1 : 0 }}>
         <div className="player-header-left">
@@ -953,37 +1061,54 @@ export default function NeoPlayer({
           )}
         </div>
 
-        {/* source picker — follows control visibility */}
-        <div className="player-popover-wrap" style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none", transition: "opacity 0.25s" }}>
-          <button onClick={() => setShowSourceMenu((v) => !v)} className="soft-btn accent clickable"><ListVideo size={15} /> Source</button>
-          {showSourceMenu && (
-            <div className="player-popover source-popover" style={{ bottom: "auto", top: "calc(100% + 0.55rem)" }}>
-              {streams.length === 0 && <span className="popover-empty">No alternate sources loaded.</span>}
-              {streams.map((s, i) => (
-                <button key={`${s.url || s.name}-${i}`} className={i === currentStreamIndex ? "active" : ""} disabled={!s.url || hasProxyHeaders(s)} onClick={() => handleSelectStream(s, i)}>
-                  <strong>{getStreamSource(s)}</strong>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 2 }}>
-                    <small>{hasProxyHeaders(s) ? "Needs proxy headers" : getStreamQuality(s)}</small>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* fullscreen button — follows control visibility */}
-        <button onClick={toggleFullscreen} className="icon-control clickable" title="Fullscreen" style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none", transition: "opacity 0.25s" }}>{isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}</button>
-
         <div className="player-title-block">
           <h3>{title}</h3>
           {subtitle && <span>{subtitle}</span>}
+        </div>
+
+        <div className="player-header-right">
+          {/* source picker — follows control visibility */}
+          <div className="player-popover-wrap" style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none", transition: "opacity 0.25s" }}>
+            <button onClick={() => setShowSourceMenu((v) => !v)} className="soft-btn accent clickable"><ListVideo size={15} /> Source</button>
+            {showSourceMenu && (
+              <div className="player-popover sources-popover" style={{ bottom: "auto", top: "calc(100% + 0.55rem)" }}>
+                {streams.length === 0 && <span className="popover-empty">No alternate sources loaded.</span>}
+                {streams.map((s, i) => (
+                  <button key={`${s.url || s.name}-${i}`} className={i === currentStreamIndex ? "active" : ""} disabled={!s.url || hasProxyHeaders(s)} onClick={() => handleSelectStream(s, i)}>
+                    <strong>{getStreamSource(s)}</strong>
+                    <div>
+                      <small>{hasProxyHeaders(s) ? "Needs proxy headers" : getStreamQuality(s)}</small>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={toggleFullscreen}
+            className="icon-control clickable"
+            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none", transition: "opacity 0.25s" }}
+          >
+            {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+          </button>
         </div>
       </div>
 
       {/* ── bottom controls ─────────────────────────────────────────────── */}
       {!isIframe && (
         <div className="player-controls" style={{ opacity: shouldShowControls ? 1 : 0 }}>
-          <input type="range" className="timeline-slider" min={0} max={duration || 100} value={currentTime} onChange={handleScrub} aria-label="Playback timeline" />
+          <input
+            type="range"
+            className="timeline-slider"
+            min={0}
+            max={duration || 100}
+            value={currentTime}
+            onChange={handleScrub}
+            aria-label="Playback timeline"
+            style={{ "--progress": duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}
+          />
 
           <div className="player-control-row">
             <div className="player-control-group">
@@ -995,7 +1120,17 @@ export default function NeoPlayer({
               <button onClick={toggleMute} className="icon-control clickable" title="Mute">
                 {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
               </button>
-              <input type="range" className="timeline-slider volume-slider" min={0} max={1} step={0.05} value={isMuted ? 0 : volume} onChange={handleVolumeChange} aria-label="Volume" />
+              <input
+                type="range"
+                className="timeline-slider volume-slider"
+                min={0}
+                max={1}
+                step={0.05}
+                value={isMuted ? 0 : volume}
+                onChange={handleVolumeChange}
+                aria-label="Volume"
+                style={{ "--volume": `${(isMuted ? 0 : volume) * 100}%` }}
+              />
               <span className="time-display"><strong>{formatTime(currentTime)}</strong> / {formatTime(duration)}</span>
             </div>
 
@@ -1006,9 +1141,9 @@ export default function NeoPlayer({
               {/* Episodes popover */}
               {episodeOptions.length > 0 && (
                 <div className="player-popover-wrap">
-                  <button onClick={() => setShowEpisodeMenu((v) => !v)} className="soft-btn clickable"><Tv size={15} /> Episodes</button>
+                  <button onClick={() => setShowEpisodeMenu((v) => !v)} className="soft-btn clickable"><Tv size={15} /> <span>Episodes</span></button>
                   {showEpisodeMenu && (
-                    <div className="player-popover source-popover">
+                    <div className="player-popover episodes-popover">
                       {episodeOptions.map((entry, i) => (
                         <button key={`${entry.season.seasonNumber}-${entry.episode.episodeNumber}`} className={i === currentEpisodeIndex ? "active" : ""} onClick={() => handleSelectEpisode(entry)}>
                           <strong>S{entry.season.seasonNumber} E{entry.episode.episodeNumber}</strong>
@@ -1033,7 +1168,7 @@ export default function NeoPlayer({
                     Files{activeFileLabel ? `: ${activeFileLabel}` : ""}
                   </button>
                   {showFilesMenu && (
-                    <div className="player-popover source-popover">
+                    <div className="player-popover files-popover">
                       <span className="popover-empty">Select a video file to play</span>
                       {torrentFileList.map((file, index) => {
                         const meta = formatFileOption(file);
@@ -1043,9 +1178,10 @@ export default function NeoPlayer({
                             key={`${file.name}-${index}`}
                             className={isActive ? "active" : ""}
                             onClick={() => handleSelectTorrentFile(file)}
+                            title={meta.name}
                           >
                             <strong>{meta.name}</strong>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 2 }}>
+                            <div>
                               {meta.size && <small>{meta.size}</small>}
                               {index === 0 && <small>· Main</small>}
                               {isActive && <small>· Playing</small>}
@@ -1060,38 +1196,37 @@ export default function NeoPlayer({
 
               {/* Audio popover */}
               <div className="player-popover-wrap">
-                <button onClick={() => setShowAudioMenu((v) => !v)} className="soft-btn clickable">Audio</button>
+                <button onClick={() => setShowAudioMenu((v) => !v)} className="soft-btn clickable"><span>Audio</span></button>
                 {showAudioMenu && (
-                  <div className="player-popover source-popover">
+                  <div className="player-popover audio-popover">
                     {audioTrackError && <span className="popover-empty">{audioTrackError}</span>}
                     {audioTracks.length === 0 ? (
-                      <button className="active" disabled style={{ opacity: 0.82, cursor: "default" }}>
+                      <button className="active" disabled>
                         <strong>Default Audio (Embedded)</strong>
                         <small>Single multiplexed audio track.</small>
                       </button>
                     ) : audioTracks.map((t, trackIndex) => {
                       const meta = getAudioTrackMeta(t, audioCodecSupport);
                       const isPlayable = isAudioCodecPlayable(meta.codec, audioCodecSupport);
+                      const isActive = activeAudioTrack === (t.id ?? trackIndex);
+                      const isDolbyPassthrough = isPlayable && isDolbyAudioCodec(meta.codec);
+                      const badgeClass = !isPlayable
+                        ? "codec-badge codec-unsupported"
+                        : isDolbyPassthrough
+                          ? "codec-badge codec-dolby-passthrough"
+                          : "codec-badge";
                       return (
                         <button
                           key={t.id ?? trackIndex}
-                          className={activeAudioTrack === (t.id ?? trackIndex) ? "active" : ""}
+                          className={isActive ? "active" : ""}
                           disabled={!isPlayable}
                           onClick={() => handleAudioTrackChange(trackIndex)}
                         >
                           <strong>{t.name || `Track ${trackIndex + 1}`}</strong>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 2 }}>
+                          <div>
                             {t.lang && <small>{t.lang}</small>}
                             <small>{meta.label}</small>
-                            <span style={{
-                              fontSize: 10,
-                              color: isPlayable && isDolbyAudioCodec(meta.codec) ? "#8ddcff" : "var(--muted)",
-                              backgroundColor: isPlayable && isDolbyAudioCodec(meta.codec) ? "rgba(42, 190, 255, 0.14)" : "rgba(255, 255, 255, 0.06)",
-                              border: `1px solid ${isPlayable && isDolbyAudioCodec(meta.codec) ? "rgba(42, 190, 255, 0.28)" : "rgba(255, 255, 255, 0.12)"}`,
-                              padding: "1px 4px",
-                              borderRadius: 4,
-                              fontWeight: 700,
-                            }}>{isPlayable ? meta.detail : "Not supported in Chrome"}</span>
+                            <span className={badgeClass}>{isPlayable ? meta.detail : "Not supported in Chrome"}</span>
                           </div>
                         </button>
                       );
@@ -1124,12 +1259,12 @@ export default function NeoPlayer({
       {/* ── shortcuts panel ──────────────────────────────────────────────── */}
       {!isIframe && showShortcuts && (
         <div className="shortcut-panel fade-in">
-          <strong>Keyboard shortcuts</strong>
-          <span>Space: Play/Pause</span>
-          <span>← →: Seek 10s</span>
-          <span>M: Mute</span>
-          <span>F: Fullscreen</span>
-          <span>Esc: Back</span>
+          <h3>Keyboard shortcuts</h3>
+          <span className="shortcut-row"><kbd>Space</kbd> Play / Pause</span>
+          <span className="shortcut-row"><kbd>←</kbd><kbd>→</kbd> Seek 10s</span>
+          <span className="shortcut-row"><kbd>M</kbd> Mute</span>
+          <span className="shortcut-row"><kbd>F</kbd> Fullscreen</span>
+          <span className="shortcut-row"><kbd>Esc</kbd> Back</span>
         </div>
       )}
     </div>

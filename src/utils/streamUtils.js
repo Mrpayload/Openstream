@@ -5,7 +5,13 @@ export const hasProxyHeaders = (stream) =>
   Boolean(stream?.behaviorHints?.proxyHeaders?.request);
 
 export const isBrowserPlayableStream = (stream) => {
-  if (!stream?.url || hasProxyHeaders(stream) || isIframeUrl(stream.url)) return false;
+  if (
+    !stream?.url ||
+    hasProxyHeaders(stream) ||
+    isIframeUrl(stream.url) ||
+    stream.isMagnet ||
+    isMagnetUrl(stream.url)
+  ) return false;
   if (isExternalPlayerRecommended(stream)) return false;
   const audio = checkAudioSupport(stream);
   return audio.supported !== false;
@@ -76,11 +82,9 @@ export const isWebtorrentPlayable = (stream) => {
 //   - torrentio:   magnet-based torrent streams from the Torrentio addon.
 //                  These are NOT directly browser-playable; they must be
 //                  handed off to VLC, qBittorrent, or another torrent client.
-//
-// Priority order: torrentio → iframe → webstreamer, so a stream with multiple
-// flags (e.g. isIframe AND isMagnet) is classified once. A stream is
-// recognised as a Torrentio entry when it carries `source: "torrentio"`,
-// `isMagnet: true`, or its URL is a magnet link.
+//   - streamTorrent: server-backed torrent streams derived from Torrentio
+//                  metadata. These are normal HTTP/HLS player URLs.
+// Priority order: torrentio → iframe → webstreamer
 export const partitionStreams = (streams) => {
   const list = Array.isArray(streams) ? streams : [];
   const iframe = [];

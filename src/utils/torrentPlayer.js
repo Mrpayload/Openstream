@@ -15,6 +15,7 @@
 // evaluation, so load it only when a magnet stream is actually selected.
 
 const VIDEO_EXTENSIONS = /\.(mp4|m4v|mov|webm|mkv|avi|ts|mpeg|mpg|m4p|ogv|3gp)$/i;
+const TORRENT_METADATA_TIMEOUT_MS = 20_000;
 
 // Filename patterns that are almost never the main movie: NFO, sample
 // clips, subtitles, cover art, release metadata, and extras. These are
@@ -52,14 +53,10 @@ const PART_PATTERNS = [
   /\.part(\d+)\.rar$/i,
 ];
 
-// Strip external tracker URLs (and similar peer-source params) from a
-// magnet URI before handing it to WebTorrent. Public WSS trackers
-// embedded in the magnet (e.g. tracker.openbittorrent.com,
-// tracker.files.fm) are blocked from the browser (403 / connection
-// closed), and the `announce` option in bittorrent-tracker is *additive*
-// — it doesn't replace the trackers in the URI. Without stripping,
-// WebTorrent spends its 30s timeout failing to reach them and the
-// local proxy never gets used.
+// Strip browser-incompatible tracker URLs (and similar peer-source params)
+// before handing a magnet URI to WebTorrent. The browser build has no DHT,
+// so WebSocket trackers are required for metadata/peer discovery. Keep ws://
+// and wss:// trackers; remove UDP/HTTP trackers that browsers cannot use.
 const MAGNET_TRACKER_KEYS = new Set([
   "tr",
   "tr.",        // legacy alias seen in some magnets
@@ -77,8 +74,15 @@ const stripMagnetTrackers = (magnetUrl) => {
   const kept = params.filter((p) => {
     const eq = p.indexOf("=");
     if (eq < 0) return true;
-    return !MAGNET_TRACKER_KEYS.has(p.slice(0, eq).toLowerCase());
-  });    return kept.length > 0 ? prefix + kept.join("&") : magnetUrl;
+    const key = p.slice(0, eq).toLowerCase();
+    if (!MAGNET_TRACKER_KEYS.has(key)) return true;
+    if (key === "tr" || key === "tr." || key === "ws.tracker") {
+      const value = decodeURIComponent(p.slice(eq + 1)).toLowerCase();
+      return value.startsWith("ws://") || value.startsWith("wss://");
+    }
+    return false;
+  });
+  return kept.length > 0 ? prefix + kept.join("&") : magnetUrl;
 };
 
 let webTorrentImport;
@@ -92,6 +96,29 @@ const isVideoFile = (file) => {
   if (!file?.name) return false;
   return VIDEO_EXTENSIONS.test(file.name);
 };
+
+// Containers Chrome's MediaSource Extensions pipeline can demux and feed
+// into an HTML5 <video> element. The key ones are MP4-family containers
+// (mp4, m4v, m4p, mov) plus WebM/OGV (VP8/VP9/Opus/Vorbis). TS works
+// because hls.js remuxes it, but raw MSE playback of TS in WebTorrent is
+// iffy; treat it as "may work" rather than guaranteed.
+//
+// MKV / AVI are the most common containers in torrent releases but have
+// no native demuxer in Chrome. Calling `file.renderTo()` on an MKV will
+// stall or error without producing frames, which is the primary cause of
+// the "Torrentio link not playing" symptom. We surface that clearly
+// upstream and prefer MP4/WebM siblings when both are present.
+const MSE_CONTAINER_PATTERN = /\.(mp4|m4v|m4p|mov|webm|ogv)$/i;
+const isMseContainer = (file) =>
+  Boolean(file?.name && MSE_CONTAINER_PATTERN.test(file.name));
+
+// Re-export from the shared, runtime-agnostic helper. We `import` it
+// (not just `export { … } from …`) so the same binding is usable
+// locally below — `export { x } from "y"` re-exports the symbol but
+// does NOT create a local binding, which would crash the call site in
+// `TorrentStreamSession.load()` at runtime.
+import { getMagnetFileIndex } from "./magnet.js";
+export { getMagnetFileIndex };
 
 const isJunkFile = (file) => {
   if (!file?.name) return true;
@@ -119,8 +146,12 @@ const getFileSize = (file) => {
 
 // Score a file by "is this the main movie?" likelihood. Higher wins.
 //   size dominates: the main video is almost always the largest file
-//   .mp4/.m4v/.mov are preferred over .mkv (browser-native)
-//   .webm beats .mkv in the rare case there's both
+//   .mp4/.m4v/.mov are strongly preferred (browser-native via MSE)
+//   .webm/.ogv are next (also MSE-playable in Chrome)
+//   .ts is iffy in raw MSE but works via hls.js
+//   .mkv is heavily penalised: Chrome can't demux MKV in MSE, so an MKV
+//   sibling always loses to a smaller MP4/WebM unless it is the *only*
+//   video in the torrent
 //   sample/extras/featurettes are heavily penalised
 //   later parts (CD2, Part2) are mildly penalised so part 1 wins ties
 const scoreFile = (file) => {
@@ -135,9 +166,9 @@ const scoreFile = (file) => {
   let containerScore = 0;
   if (/\.(mp4|m4v|m4p|mov)$/i.test(name)) containerScore += 10;
   else if (/\.(webm|ogv)$/i.test(name)) containerScore += 6;
-  else if (/\.(mkv)$/i.test(name)) containerScore += 4;
   else if (/\.(ts)$/i.test(name)) containerScore += 2;
-  else if (/\.(avi|mpg|mpeg|3gp)$/i.test(name)) containerScore += 1;
+  else if (/\.(mkv)$/i.test(name)) containerScore -= 4; // Chrome MSE can't demux MKV
+  else if (/\.(avi|mpg|mpeg|3gp)$/i.test(name)) containerScore -= 2;
 
   let penalty = 0;
   const part = getPartNumber(name);
@@ -165,6 +196,24 @@ export const pickVideoFile = (files) => {
   if (!Array.isArray(files) || files.length === 0) return null;
   const ranked = listVideoFiles(files);
   return ranked[0] || null;
+};
+
+// True when the torrent has at least one MSE-compatible video file. Used
+// by the player to short-circuit browser playback and surface a "use the
+// external player" error early instead of waiting for renderTo to fail.
+export const hasMseCompatibleVideo = (files) =>
+  Array.isArray(files) && files.some(isMseContainer);
+
+// Pick a file by an explicit zero-based index inside the torrent's file
+// list. Honours the Stremio `fileIdx` field / magnet `so=` parameter. The
+// index refers to the original torrent.files order (not the score-ranked
+// order), matching how Stremio addons and the BitTorrent extension
+// define it. Returns null when the index is out of range or missing.
+export const pickFileByIndex = (files, index) => {
+  if (!Array.isArray(files) || !Number.isInteger(index)) return null;
+  const file = files[index];
+  if (!file || !isVideoFile(file) || isJunkFile(file)) return null;
+  return file;
 };
 
 const formatBytes = (bytes) => {
@@ -203,6 +252,7 @@ export default class TorrentStreamSession {
     this.videoFiles = [];
     this.destroyed = false;
     this.handlers = {};
+    this.metadataTimer = null;
   }
 
   load(magnetUrl, videoElement, handlers = {}) {
@@ -217,6 +267,13 @@ export default class TorrentStreamSession {
     this.handlers = handlers;
     this.destroyed = false;
     this.videoElement = videoElement;
+    // Optional stream context: lets the caller (NeoPlayer) pass the
+    // Stremio `fileIdx` and `isNotWebReady` flags so we can honour the
+    // addon's file choice and short-circuit when the file is known to
+    // be unplayable in the browser. Both are optional — fallbacks below
+    // cover the missing-info case.
+    const fileIdxFromStream = Number.isInteger(handlers.fileIdx) ? handlers.fileIdx : null;
+    const isNotWebReady = Boolean(handlers.isNotWebReady);
 
     loadWebTorrent().then((WebTorrent) => {
       if (this.destroyed) return;
@@ -256,10 +313,20 @@ export default class TorrentStreamSession {
         // `announce` option is additive and doesn't suppress the
         // trackers in the magnet URI itself.
         const cleanedMagnet = stripMagnetTrackers(magnetUrl);
-        client.add(cleanedMagnet, { tracker: { announce: wsTrackers } }, (torrent) => {
+        this.metadataTimer = globalThis.setTimeout?.(() => {
+          if (this.destroyed || this.torrent) return;
+          const error = new Error("Torrent metadata timed out — no tracker or DHT response.");
+          handlers.onError?.(error);
+          this.cleanup();
+        }, TORRENT_METADATA_TIMEOUT_MS) || null;
+        client.add(cleanedMagnet, { announce: wsTrackers }, (torrent) => {
           if (this.destroyed || this.client !== client) {
             try { torrent.destroy(); } catch { /* noop */ }
             return;
+          }
+          if (this.metadataTimer) {
+            globalThis.clearTimeout?.(this.metadataTimer);
+            this.metadataTimer = null;
           }
           this.torrent = torrent;
 
@@ -271,13 +338,56 @@ export default class TorrentStreamSession {
           // the "Files" popover is populated the moment the torrent resolves.
           handlers.onFileList?.(ranked);
 
-          const file = pickVideoFile(torrent.files);
+          // Decide which file to play. Priority:
+          //   1. The Stremio-supplied fileIdx on the stream (or magnet `so=`)
+          //   2. The score-ranked best fit (which prefers MSE-compatible
+          //      containers so an MP4 sibling beats a larger MKV)
+          const magnetFileIdx = getMagnetFileIndex(magnetUrl);
+          const fileIdx = fileIdxFromStream ?? magnetFileIdx;
+          const explicitFile = fileIdx !== null ? pickFileByIndex(torrent.files, fileIdx) : null;
+          const file = explicitFile || pickVideoFile(torrent.files);
+
           if (!file) {
             handlers.onError?.(new Error("Torrent has no playable files"));
             return;
           }
           this.file = file;
-          handlers.onFileChange?.(file, ranked);
+
+          // When the picked file's container isn't MSE-compatible (MKV /
+          // AVI are the common cases) and there is *no* MSE-compatible
+          // sibling in the torrent, surface a clear, actionable error so
+          // the user knows to use the Magnet / external-player button
+          // instead of staring at a loading spinner. We only hard-fail on
+          // `isNotWebReady` when the entire torrent is unplayable; if
+          // there is an MP4/WebM sibling the user can pick it from the
+          // Files popover.
+          //
+          // The isNotWebReady branch fires FIRST so the more specific
+          // "the addon told you this isn't browser-playable" message
+          // wins when both conditions apply. The generic "only contains
+          // MKV files" message is the fallback for when the addon
+          // didn't flag the stream but the torrent is still unplayable.
+          const fileIsMse = isMseContainer(file);
+          const anyMse = hasMseCompatibleVideo(torrent.files);
+          if (isNotWebReady && !anyMse) {
+            handlers.onError?.(new Error(
+              "The Torrentio addon marked this stream as not web-ready, and this torrent has no MSE-compatible files. Open the magnet in VLC or your torrent client."
+            ));
+            return;
+          }
+          if (!fileIsMse && !anyMse) {
+            const ext = file.name.split(".").pop()?.toUpperCase() || "this";
+            handlers.onError?.(new Error(
+              `This torrent only contains ${ext} files, which Chrome cannot play in the browser. Open the magnet in your desktop torrent client or VLC.`
+            ));
+            return;
+          }
+
+          // onFileChange contract: (file, rankedFiles, meta?)
+          //   meta.fileIsMse — true when the chosen file is in an MSE-
+          //     demuxable container. The UI uses this to show a warning
+          //     and the dev proxy uses it to skip unsupported ranges.
+          handlers.onFileChange?.(file, ranked, { fileIsMse });
 
           const emitStatus = (done = false) => handlers.onStatus?.({
             peers: torrent.numPeers,
@@ -305,8 +415,12 @@ export default class TorrentStreamSession {
           this.renderActiveFile();
         });
       } catch (err) {
+        if (this.metadataTimer) {
+          globalThis.clearTimeout?.(this.metadataTimer);
+          this.metadataTimer = null;
+        }
         console.error("[TorrentStream] client.add threw:", err);
-        handlers.onError?.(new Error("Invalid torrent identifier — try the external player menu (VLC, qBittorrent)."));
+        handlers.onError?.(new Error("Invalid torrent identifier — try the external player menu or magnet handler."));
       }
     }).catch((err) => {
       if (this.destroyed) return;
@@ -355,16 +469,32 @@ export default class TorrentStreamSession {
 
   // Switch to a different file within the same torrent. Caller passes a
   // WebTorrent file object (the same one returned by onFileList). No-op
-  // if the file is already active.
+  // if the file is already active. The onFileChange contract is
+  // (file, rankedFiles, meta?) — see the call site in load() for the
+  // shape of `meta`; the same shape is emitted here so listeners that
+  // depend on `meta.fileIsMse` (e.g. the Files popover warning) stay in
+  // sync when the user manually picks a different file.
   selectFile(file) {
     if (!file || file === this.file) return;
+    // Validate BEFORE mutating state so a rejected pick is a true no-op
+    // and doesn't leave this.file pointing at an un-rendered file.
+    if (!isMseContainer(file)) {
+      this.handlers.onError?.(new Error(
+        `${file.name} is in a container Chrome cannot play in the browser. Open the magnet in VLC or your torrent client.`
+      ));
+      return;
+    }
     this.file = file;
-    this.handlers.onFileChange?.(file, this.videoFiles);
+    this.handlers.onFileChange?.(file, this.videoFiles, { fileIsMse: true });
     this.renderActiveFile();
   }
 
   cleanup() {
     this.destroyed = true;
+    if (this.metadataTimer) {
+      globalThis.clearTimeout?.(this.metadataTimer);
+      this.metadataTimer = null;
+    }
     if (this.renderedFile) {
       try {
         this.renderedFile.removeAllListeners?.();
