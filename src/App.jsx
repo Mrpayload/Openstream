@@ -1,5 +1,5 @@
 import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, ChevronUp, Film, Heart, Info, Loader2, Play, RefreshCw, Search, SlidersHorizontal, Star, Volume2, VolumeX, X } from "lucide-react";
+import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, ChevronUp, Film, Heart, Info, Loader2, Play, RefreshCw, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import { genresList, movies as fallbackMovies } from "./data/movies";
 import { fetchEzvidapiStream, fetchFlixhqStream, fetchMediafusionStream, fetchSmplstreamStream, fetchStreams, fetchTorrentioStream } from "./services/streamApi";
 import { discoverTmdbCatalogItems, fetchTmdbSeasonEpisodes, fetchTmdbSeasons, hasTmdbCredentials, hydrateCatalogFromTmdb, searchTmdb } from "./services/tmdbApi";
@@ -37,8 +37,7 @@ const closeSoundContext = () => {
   }
 };
 
-const playSound = (type, enabled) => {
-  if (!enabled) return;
+const playSound = (type) => {
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
@@ -600,6 +599,7 @@ export default function App() {
   const [catalogStatus, setCatalogStatus] = useState(hasTmdbCredentials ? "refreshing" : "fallback");
   const catalogRefreshRef = useRef(Promise.resolve(fallbackMovies));
   const searchInputRef = useRef(null);
+  const searchResultsRef = useRef(null);
   const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All");
@@ -609,7 +609,6 @@ export default function App() {
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState(getStoredRecentSearches);
   const [watchList, setWatchList] = useState(getStoredWatchList);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState("browse");
   const [heroIndex, setHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
@@ -644,11 +643,6 @@ export default function App() {
   useEffect(() => () => {
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
   }, []);
-
-  useEffect(() => {
-    if (!soundEnabled) closeSoundContext();
-    return closeSoundContext;
-  }, [soundEnabled]);
 
   const refreshCatalog = async ({ expand = true } = {}) => {
     if (!hasTmdbCredentials) {
@@ -756,6 +750,19 @@ export default function App() {
 
     return () => window.clearTimeout(timeoutId);
   }, [searchInput]);
+
+  useEffect(() => {
+    if (!searchTerm) return;
+    const node = searchResultsRef.current;
+    if (!node) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(() => {
+      node.scrollIntoView({
+        behavior: reducedMotion ? "auto" : "smooth",
+        block: "start",
+      });
+    });
+  }, [searchTerm]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -890,7 +897,7 @@ export default function App() {
 
   const toggleWatchList = (movieId, e) => {
     if (e) e.stopPropagation();
-    playSound("pop", soundEnabled);
+    playSound("pop");
 
     const updated = watchList.includes(movieId)
       ? watchList.filter((id) => id !== movieId)
@@ -1006,7 +1013,7 @@ export default function App() {
     const playable = playableOverride || getDefaultPlayable(movie);
     if (!playable) return;
 
-    playSound("pop", soundEnabled);
+    playSound("pop");
     setSourceMovieRef(movie);
     setSelectedMovie(null);
     setStreamRequest(playable);
@@ -1014,7 +1021,7 @@ export default function App() {
   };
 
   const openDetails = async (movie) => {
-    playSound("pop", soundEnabled);
+    playSound("pop");
     setSelectedMovie(movie);
     setSelectedSeasonIndex(0);
     setHydratedMovie(movie);
@@ -1206,8 +1213,10 @@ export default function App() {
         </button>
 
         <nav className="header-nav">
-          <button className={activeTab === "browse" ? "active" : ""} onClick={() => setActiveTab("browse")}>Home</button>
-          <button className={activeTab === "favorites" ? "active" : ""} onClick={() => setActiveTab("favorites")}>My List</button>
+          <button className={activeTab === "favorites" ? "active" : ""} onClick={() => setActiveTab("favorites")} aria-label="My List">
+            <Heart size={16} aria-hidden="true" />
+            <span>My List</span>
+          </button>
         </nav>
 
         <button
@@ -1242,10 +1251,6 @@ export default function App() {
             </button>
           )}
         </label>
-
-        <button className="icon-btn clickable" onClick={() => setSoundEnabled(!soundEnabled)} aria-label="Toggle sound">
-          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-        </button>
       </header>
 
       <AdBlocker />
@@ -1669,7 +1674,7 @@ export default function App() {
               </div>
 
               {searchTerm || selectedGenre !== "All" || selectedType !== "all" || selectedYearRange !== "all" || selectedRating !== "all" ? (
-                <section className="media-section" key="browse-search">
+                <section className="media-section" key="browse-search" ref={searchResultsRef}>
                   <div className="section-heading">
                     <h2>Browse Results</h2>
                     <span>{combinedResults.length} titles{isTmdbSearching ? " · Searching TMDB..." : ""}</span>
