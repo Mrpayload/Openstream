@@ -945,6 +945,9 @@ export default function NeoPlayer({
             // they do we want to drop the loading overlay immediately. The
             // timeout-based error path below handles the never-loads case.
             setIsLoading(false);
+            // Assume playing so the auto-hide timer kicks in — cross-origin
+            // iframes can't report play/pause state.
+            setIsPlaying(true);
           }}
         />
       ) : (
@@ -1266,7 +1269,7 @@ export default function NeoPlayer({
               {!isIframe && <button onClick={() => setShowShortcuts((v) => !v)} className="icon-control clickable" title="Keyboard shortcuts"><Keyboard size={18} /></button>}
               {!isIframe && <button onClick={() => setIsTheaterMode((v) => !v)} className="icon-control clickable" title="Theater mode"><Tv size={18} /></button>}
               {!isIframe && document.pictureInPictureEnabled && <button onClick={togglePip} className="icon-control clickable" title="Picture in Picture"><PictureInPicture size={18} color={isPip ? "var(--accent-hover)" : undefined} /></button>}
-              <button onClick={toggleFullscreen} className="icon-control clickable" title="Fullscreen">{isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}</button>
+
             </div>
           </div>
         </div>
