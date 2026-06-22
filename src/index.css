@@ -728,6 +728,9 @@ button {
   position: relative; min-height: calc(100vh - 60px);
   background: var(--bg-main);
 }
+@supports (min-height: 100dvh) {
+  .stream-shell { min-height: calc(100dvh - 60px); }
+}
 
 .player-wrap {
   width: 100%; max-width: 1100px; margin: 0 auto;
@@ -1294,7 +1297,7 @@ button {
 }
 .app-toast span { flex: 1; }
 .app-toast-close {
-  display: grid; place-items: center; width: 22px; height: 22px;
+  display: grid; place-items: center; width: 44px; height: 44px;
   background: none; border: none; color: var(--text-secondary);
   cursor: pointer; border-radius: 50%; flex-shrink: 0;
   transition: background 120ms ease, color 120ms ease;
@@ -1353,7 +1356,7 @@ button {
   text-underline-offset: 3px; font-weight: 600;
 }
 .adblocker-banner-close {
-  display: grid; place-items: center; width: 22px; height: 22px;
+  display: grid; place-items: center; width: 44px; height: 44px;
   background: none; border: none; color: var(--text-secondary);
   cursor: pointer; border-radius: 50%; flex-shrink: 0;
   transition: background 120ms ease, color 120ms ease;
@@ -1767,6 +1770,9 @@ button {
 .neo-player.theater-mode { aspect-ratio: unset; max-height: 90vh; border-radius: 0; }
 
 .neo-player.fullscreen { aspect-ratio: unset; width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; }
+@supports (min-height: 100dvh) {
+  .neo-player.fullscreen { height: 100dvh; max-height: 100dvh; }
+}
 
 .player-error-panel {
   position: absolute; inset: 0; z-index: 20;
@@ -2209,6 +2215,9 @@ button {
     font-size: 0.95rem;
     flex: 0 1 auto;
     min-width: 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
   .brand-title-line {
     font-size: 0.92rem;
@@ -2349,12 +2358,12 @@ button {
   .genre-strip button {
     padding: 0.45rem 0.85rem;
     font-size: 0.82rem;
-    min-height: 36px;
+    min-height: 44px;
   }
   .advanced-search-toggle {
     padding: 0.45rem 0.75rem;
     font-size: 0.82rem;
-    min-height: 36px;
+    min-height: 44px;
   }
   .filter-select-wrapper {
     padding: 0.4rem 0.6rem;
@@ -2367,7 +2376,7 @@ button {
   .filter-reset-btn {
     padding: 0.45rem 0.75rem;
     font-size: 0.82rem;
-    min-height: 36px;
+    min-height: 44px;
   }
   .recent-searches {
     overflow-x: auto;
@@ -2380,6 +2389,7 @@ button {
     flex: 0 0 auto;
     padding: 0.3rem 0.6rem;
     font-size: 0.72rem;
+    min-height: 40px;
   }
 
   /* ── Search results (browse) ───────────────────────── */
@@ -2425,6 +2435,9 @@ button {
     border: none;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  @supports (max-height: 100dvh) {
+    .detail-panel { max-height: 100dvh; }
   }
   .detail-backdrop-img {
     height: 50vh;
@@ -2495,7 +2508,7 @@ button {
   .season-tab {
     padding: 0.5rem 0.95rem;
     font-size: 0.8rem;
-    min-height: 38px;
+    min-height: 44px;
   }
 
   /* ── Now playing panel ─────────────────────────────── */
@@ -2566,6 +2579,9 @@ button {
     border-radius: 0;
     border: none;
   }
+  @supports (max-height: 100dvh) {
+    .stream-picker-panel { max-height: 100dvh; }
+  }
   .stream-picker-header {
     padding: 1rem;
     gap: 0.6rem;
@@ -2589,8 +2605,8 @@ button {
   .stream-picker-state h3 { font-size: 0.9rem; }
   .stream-picker-state p { font-size: 0.82rem; }
   .stream-picker-close {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
   }
 
   /* ── AdBlocker: tooltip wider on mobile, banner stacks ─ */
@@ -2632,6 +2648,24 @@ button {
     padding: 0.6rem 1rem;
     font-size: 0.85rem;
   }
+
+  /* ── Touch feedback (:active) ─────────────────────── */
+  .poster-card:active { transform: scale(0.96); opacity: 0.88; transition: transform 60ms ease, opacity 60ms ease; }
+  .search-result-card:active { transform: scale(0.97); opacity: 0.88; transition: transform 60ms ease, opacity 60ms ease; }
+  .hero-actions .primary-btn:active,
+  .hero-actions .secondary-btn:active,
+  .hero-actions .ghost-btn:active { opacity: 0.75; transform: scale(0.96); transition: opacity 60ms ease, transform 60ms ease; }
+  .genre-strip button:active { opacity: 0.7; transition: opacity 60ms ease; }
+  .header-nav button:active { opacity: 0.7; transition: opacity 60ms ease; }
+  .season-tab:active { opacity: 0.7; transition: opacity 60ms ease; }
+  .episode-card:active { opacity: 0.85; transition: opacity 60ms ease; }
+  .stream-option:active { opacity: 0.85; transform: scale(0.98); transition: opacity 60ms ease, transform 60ms ease; }
+
+  /* ── Prevent long-press text selection on interactive elements ── */
+  button, a, [role="button"], .poster-card, .search-result-card, .episode-card, .stream-option {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 
 /* ── Very small phones (iPhone SE 1st gen / older Galaxy A class) ── */
@@ -2640,8 +2674,8 @@ button {
   .brand { font-size: 0.78rem; }
   .brand-title-line { font-size: 0.78rem; letter-spacing: 0.01em; }
   .brand-subtitle { display: none; }
-  .header-nav button { padding: 0.45rem 0.55rem; font-size: 0.75rem; min-height: 40px; }
-  .refresh-btn, .icon-btn { min-width: 40px; min-height: 40px; width: 40px; height: 40px; }
+  .header-nav button { padding: 0.45rem 0.55rem; font-size: 0.75rem; min-height: 44px; }
+  .refresh-btn, .icon-btn { min-width: 44px; min-height: 44px; width: 44px; height: 44px; }
   .search-shell { height: 38px; padding: 0.35rem 0.55rem; }
   .search-shell input { font-size: 0.95rem; }
   .hero-panel { min-height: 420px; }
@@ -2659,14 +2693,14 @@ button {
   .poster-copy p { font-size: 0.54rem; }
   .media-section { padding: 0.6rem 0.55rem; }
   .filter-groups { padding: 0.45rem 0.55rem; gap: 0.4rem; }
-  .genre-strip button { padding: 0.4rem 0.7rem; font-size: 0.72rem; min-height: 34px; }
-  .advanced-search-toggle { padding: 0.4rem 0.6rem; font-size: 0.72rem; min-height: 34px; }
+  .genre-strip button { padding: 0.4rem 0.7rem; font-size: 0.72rem; min-height: 44px; }
+  .advanced-search-toggle { padding: 0.4rem 0.6rem; font-size: 0.72rem; min-height: 44px; }
   .filter-select-wrapper { padding: 0.35rem 0.5rem; font-size: 0.72rem; }
-  .filter-reset-btn { padding: 0.4rem 0.6rem; font-size: 0.72rem; min-height: 34px; }
+  .filter-reset-btn { padding: 0.4rem 0.6rem; font-size: 0.72rem; min-height: 44px; }
   .now-playing-panel { padding: 0.55rem; }
   .search-result-card { padding: 0.6rem; }
   .search-result-card img { height: 150px; }
-  .search-result-actions button { min-height: 36px; font-size: 0.68rem; padding: 0.5rem 0.7rem; }
+  .search-result-actions button { min-height: 44px; font-size: 0.68rem; padding: 0.5rem 0.7rem; }
   .detail-content { margin-top: 26vh; padding: 1rem 0.85rem 0.85rem; }
   .detail-poster { width: 100px; }
   .detail-copy h2 { font-size: 1.2rem; }

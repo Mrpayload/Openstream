@@ -678,7 +678,18 @@ export default function App() {
         });
         const updatedAt = new Date().toISOString();
 
-        setCatalog(nextCatalog);
+        setCatalog((prevCatalog) => {
+          const prevSeasonsMap = new Map();
+          for (const item of prevCatalog) {
+            if (item.seasons?.some((s) => s.episodes?.length > 0)) {
+              prevSeasonsMap.set(item.tmdbId, item.seasons);
+            }
+          }
+          return nextCatalog.map((item) => {
+            const hydratedSeasons = prevSeasonsMap.get(item.tmdbId);
+            return hydratedSeasons ? { ...item, seasons: hydratedSeasons } : item;
+          });
+        });
         setCatalogStatus("refreshed");
         localStorage.setItem("openstream_catalog_updated_at_v1", updatedAt);
 
