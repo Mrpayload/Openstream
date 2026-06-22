@@ -658,23 +658,10 @@ button {
 .search-clear:hover { color: var(--text-primary); }
 
 @media (max-width: 760px) {
-  .site-header {
-    flex-wrap: wrap;
-    gap: 0.65rem;
-  }
-
-  .search-shell {
-    order: 10;
-    flex: 1 1 calc(100% - 48px);
-    width: auto;
-    max-width: none;
-    margin-left: 0;
-  }
-
-  .site-header > .icon-btn {
-    order: 11;
-    margin-left: auto;
-  }
+  /* Header is single-row; comprehensive rules live in the @media (max-width: 760px)
+     block near the bottom of the file (responsive overrides section). This block
+     remains for backward compatibility but no longer overrides the layout. */
+  .search-hint { display: none; }
 }
 
 /* --- Search Results Dropdown --- */
@@ -2205,71 +2192,171 @@ button {
     /* adblocker pill is fixed-positioned and overlays content */
   }
 
-  /* ── Header: stack into two rows, big touch targets ─── */
+  /* ── Header: single-row, no overlap ─────────────── */
   .site-header {
-    padding: 0.55rem 0.85rem;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    padding: 0.5rem 0.7rem;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+    align-items: center;
   }
   .brand {
     font-size: 0.95rem;
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     min-width: 0;
-    min-height: 44px;
+    min-height: 40px;
     display: flex;
     align-items: center;
+    gap: 0.4rem;
+    overflow: hidden;
   }
   .brand-title-line {
-    font-size: 0.92rem;
-    letter-spacing: 0.02em;
-  }
-  .brand-subtitle {
-    font-size: 0.58rem;
-    max-width: 180px;
+    font-size: 0.78rem;
+    letter-spacing: 0;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .brand-subtitle {
+    display: none;
+  }
+  .brand-text-wrap {
+    min-width: 0;
+    overflow: hidden;
+  }
   .header-nav {
-    order: 4;
+    order: 0;
     width: auto;
-    margin-left: auto;
+    margin-left: 0;
+    flex: 0 1 auto;
+    display: flex;
+    gap: 0.25rem;
   }
   .header-nav button {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.82rem;
-    min-height: 36px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.78rem;
+    min-height: 38px;
+    min-width: 0;
+    white-space: nowrap;
+    position: relative;
+    transition: color 120ms ease;
+  }
+  .header-nav button.active {
+    color: var(--text-primary);
+  }
+  .header-nav button.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 1px;
   }
   .refresh-btn {
-    order: 5;
-    min-width: 44px;
-    min-height: 44px;
+    order: 0;
+    flex: 0 0 auto;
+    min-width: 38px;
+    min-height: 38px;
+    height: 38px;
+    width: 38px;
     padding: 0;
     justify-content: center;
+    transition: opacity 60ms ease, transform 60ms ease, color 120ms ease, border-color 120ms ease;
   }
   .refresh-btn span {
     display: none; /* icon-only on mobile */
   }
+  .refresh-btn:active {
+    opacity: 0.7;
+    transform: scale(0.92);
+  }
   .icon-btn {
-    order: 6;
-    min-width: 44px;
-    min-height: 44px;
-    width: 44px;
-    height: 44px;
+    order: 0;
+    flex: 0 0 auto;
+    min-width: 38px;
+    min-height: 38px;
+    width: 38px;
+    height: 38px;
+    transition: opacity 60ms ease, transform 60ms ease, color 120ms ease, border-color 120ms ease;
   }
-  .header-nav button {
-    min-height: 44px;
+  .icon-btn:active {
+    opacity: 0.7;
+    transform: scale(0.92);
   }
+  /* Search: collapses to icon-only, expands on focus */
   .search-shell {
-    order: 10;
-    flex: 1 1 100%;
-    width: 100%;
-    max-width: 100%;
+    order: 0;
+    flex: 0 0 auto;
+    width: 38px;
+    max-width: none;
     margin-left: 0;
-    height: 42px;
-    padding: 0.45rem 0.75rem;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    transition: width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                min-width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                padding 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                background 120ms ease,
+                border-color 120ms ease,
+                opacity 60ms ease,
+                transform 60ms ease;
+    overflow: hidden;
+  }
+  .search-shell:focus-within {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 140px;
+    padding: 0.4rem 0.6rem;
+    background: rgba(255,255,255,0.06);
+    border-color: var(--border-soft);
+  }
+  .search-shell:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  .search-shell:focus-within:active {
+    transform: none;
   }
   .search-shell input {
+    flex: 1 1 auto;
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    opacity: 0;
     font-size: 1rem; /* >=16px prevents iOS Safari auto-zoom on focus */
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    transition: width 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 150ms ease;
+  }
+  .search-shell:focus-within input {
+    width: 100%;
+    opacity: 1;
+    padding: 0;
+  }
+  .search-shell input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+  }
+  .search-shell svg {
+    flex-shrink: 0;
+  }
+  .search-hint {
+    display: none; /* hint clutter on mobile */
+  }
+  .search-clear {
+    flex-shrink: 0;
   }
 
   /* ── Hero panel: shorter on mobile ──────────────────── */
@@ -2723,10 +2810,15 @@ button {
 
 /* ── Small phones (iPhone SE / Galaxy A class) ── */
 @media (max-width: 480px) {
-  .site-header { padding: 0.5rem 0.7rem; }
-  .brand { font-size: 0.85rem; }
-  .brand-title-line { font-size: 0.85rem; }
+  .site-header { padding: 0.45rem 0.6rem; gap: 0.3rem; }
+  .brand { font-size: 0.85rem; gap: 0.3rem; }
+  .brand-title-line { font-size: 0.72rem; }
   .brand-subtitle { display: none; }
+  .header-nav button { padding: 0.35rem 0.5rem; font-size: 0.72rem; min-height: 36px; }
+  .refresh-btn { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+  .icon-btn { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+  .search-shell { width: 34px; min-width: 34px; height: 34px; }
+  .search-shell:focus-within { min-width: 120px; }
   .hero-copy h1 { font-size: 1.65rem; }
   .hero-copy .meta-line { gap: 0.3rem; font-size: 0.75rem; }
   .hero-copy .meta-line span { padding: 0.2rem 0.45rem; font-size: 0.68rem; }
