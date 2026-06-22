@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle, Copy, ExternalLink, Loader2, Magnet, RotateCcw, X, Play } from "lucide-react";
 import { motion } from "framer-motion";
 import {
-  checkAudioSupport, copyToClipboard, getStreamFormat, getStreamQuality, hasProxyHeaders, isBrowserPlayableStream,
+  checkAudioSupport, copyToClipboard, getAudioFileFormat, getStreamFormat, getStreamQuality, hasProxyHeaders, isAudioOnlyStream, isBrowserPlayableStream,
   isIframeUrl, isMagnetUrl, partitionStreams
 } from "../utils/streamUtils";
 import { useSwipeDownDismiss } from "../hooks/useSwipeDownDismiss";
@@ -271,6 +271,9 @@ export default function StreamPicker({
                       {isConfigLink ? "Torrentio configure" : `${title} · #${index + 1}`}
                       {stream.size && <span className="quality-badge auto">[{stream.size}]</span>}
                       <span className={`quality-badge ${quality === "Auto" ? "auto" : ""}`}>[{isConfigLink ? "Configure" : quality}]</span>
+                      {isAudioOnlyStream(stream) && (
+                        <span className="quality-badge audio">{getAudioFileFormat(stream.url)}</span>
+                      )}
                     </strong>
                     <small>
                       ({isBlocked

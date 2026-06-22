@@ -31,6 +31,7 @@ export const getStreamQuality = (stream) => {
 export const getStreamFormat = (stream) => {
   if (stream?.url?.includes(".m3u8")) return "HLS";
   if (stream?.url?.includes(".mp4")) return "MP4";
+  if (isAudioOnlyStream(stream)) return getAudioFileFormat(stream.url);
   return "Stream";
 };
 
@@ -62,6 +63,45 @@ export const isIframeUrl = (url) => {
 export const isMagnetUrl = (url) => {
   if (!url) return false;
   return /^magnet:\?/i.test(url);
+};
+
+const AUDIO_EXTENSIONS = /\.(mp3|m4a|aac|flac|ogg|oga|opus|wav|wma|alac|aiff|ape|caf)(\?|$)/i;
+
+const AUDIO_MIME_PREFIX = "audio/";
+
+export const isAudioOnlyUrl = (url) => {
+  if (!url) return false;
+  return AUDIO_EXTENSIONS.test(url);
+};
+
+export const isAudioOnlyStream = (stream) => {
+  if (!stream?.url) return false;
+  if (stream.mimeType?.startsWith(AUDIO_MIME_PREFIX)) return true;
+  if (stream.contentType?.startsWith(AUDIO_MIME_PREFIX)) return true;
+  return isAudioOnlyUrl(stream.url);
+};
+
+const AUDIO_FORMAT_MAP = {
+  mp3: "MP3",
+  m4a: "M4A",
+  aac: "AAC",
+  flac: "FLAC",
+  ogg: "OGG",
+  oga: "OGA",
+  opus: "Opus",
+  wav: "WAV",
+  wma: "WMA",
+  alac: "ALAC",
+  aiff: "AIFF",
+  ape: "APE",
+  caf: "CAF",
+};
+
+export const getAudioFileFormat = (url) => {
+  if (!url) return "Audio";
+  const match = url.match(AUDIO_EXTENSIONS);
+  if (!match) return "Audio";
+  return AUDIO_FORMAT_MAP[match[1].toLowerCase()] || "Audio";
 };
 
 // True when the stream is a magnet that we should attempt to play in the

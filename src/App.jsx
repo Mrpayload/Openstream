@@ -859,7 +859,8 @@ export default function App() {
       return { previous: null, next: null, movie: null };
     }
 
-    const movie = catalog.find((item) => item.tmdbId === currentlyPlaying.tmdbId && item.type === "series");
+    const movie = catalog.find((item) => item.tmdbId === currentlyPlaying.tmdbId && item.type === "series")
+      || sourceMovieRef;
     const episodes = movie?.seasons?.flatMap((season) => season.episodes.map((episode) => ({ season, episode }))) || [];
     const index = episodes.findIndex(({ season, episode }) => (
       season.seasonNumber === currentlyPlaying.seasonNumber && episode.episodeNumber === currentlyPlaying.episodeNumber
@@ -872,7 +873,7 @@ export default function App() {
       currentIndex: index,
       movie
     };
-  }, [catalog, currentlyPlaying]);
+  }, [catalog, currentlyPlaying, sourceMovieRef]);
 
   const isInitialCatalogReady = catalogStatus !== "refreshing" && !isTmdbLoading && !categoriesLoading && catalog.length > 0;
 
@@ -1013,6 +1014,9 @@ export default function App() {
         const hydrated = await hydrateSeasonsForItem(movie);
         setHydratedMovie(hydrated);
         setSelectedMovie(hydrated);
+        setCatalog((prev) => prev.map((item) =>
+          item.tmdbId === movie.tmdbId ? { ...item, seasons: hydrated.seasons } : item
+        ));
       } catch (error) {
         console.warn("Season hydration failed:", error);
       } finally {
@@ -1038,6 +1042,9 @@ export default function App() {
       setHydratedMovie(updated);
       setSelectedMovie(updated);
       saveToSeasonsCache(movie.tmdbId, updatedSeasons);
+      setCatalog((prev) => prev.map((item) =>
+        item.tmdbId === movie.tmdbId ? { ...item, seasons: updatedSeasons } : item
+      ));
     } catch (err) {
       console.warn(`Failed to fetch episodes for season ${season.seasonNumber}:`, err);
     } finally {

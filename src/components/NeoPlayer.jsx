@@ -6,13 +6,14 @@ import {
 } from "lucide-react";
 import {
   checkAudioSupport, getAudioCodecLabel, getBrowserAudioCodecSupport, getSidecarUrl,
-  getStreamQuality, getStreamSource, hasProxyHeaders, isDolbyAudioCodec,
+  getStreamQuality, getStreamSource, hasProxyHeaders, isAudioOnlyStream, isAudioOnlyUrl, isDolbyAudioCodec,
   isExternalPlayerRecommended, isHlsUrl, isIframeUrl, isMagnetUrl, isWebtorrentPlayable,
   normalizeAudioCodec,
   isAudioCodecPlayable
 } from "../utils/streamUtils";
 import TorrentStreamSession, { formatBytes, formatTorrentStatus } from "../utils/torrentPlayer";
 import ExternalPlayerMenu from "./ExternalPlayerMenu";
+import AudioPlayer from "./AudioPlayer";
 
 const formatTime = (secs) => {
   if (!Number.isFinite(secs)) return "00:00";
@@ -196,6 +197,11 @@ export default function NeoPlayer({
 
   const shouldShowControls = controlsVisible || !isPlaying || isLoading || playbackError;
   const audioCodecSupport = getBrowserAudioCodecSupport();
+  const isAudioOnly = useMemo(() => {
+    if (currentStream && isAudioOnlyStream(currentStream)) return true;
+    if (videoUrl && !isIframe && !isMagnet) return isAudioOnlyUrl(videoUrl);
+    return false;
+  }, [videoUrl, currentStream, isIframe, isMagnet]);
 
   // ── derived flags ───────────────────────────────────────────────────────
 
@@ -917,8 +923,16 @@ export default function NeoPlayer({
         overflow: "hidden",
       }}
     >
-      {/* ── video / iframe ──────────────────────────────────────────────── */}
-      {isIframe ? (
+      {/* ── audio player ──────────────────────────────────────────────────── */}
+      {isAudioOnly ? (
+        <AudioPlayer
+          videoUrl={videoUrl}
+          title={title}
+          subtitle={subtitle}
+          onClose={onClose}
+          onNotify={onNotify}
+        />
+      ) : isIframe ? (
         <iframe
           src={videoUrl}
           title={title ? `${title} stream` : "Embedded stream"}
@@ -1049,7 +1063,7 @@ export default function NeoPlayer({
       )}
 
       {/* ── header bar ──────────────────────────────────────────────────── */}
-      <div className="player-header" style={{ opacity: shouldShowControls ? 1 : 0 }}>
+      {!isAudioOnly && <div className="player-header" style={{ opacity: shouldShowControls ? 1 : 0 }}>
         <div className="player-header-left">
           <button onClick={onClose} className="soft-btn accent clickable"><ArrowLeft size={14} /> Back</button>
           {!isIframe && currentStream && (
@@ -1094,52 +1108,55 @@ export default function NeoPlayer({
             {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* ── bottom controls ─────────────────────────────────────────────── */}
-      {!isIframe && (
+      {!isAudioOnly && (
         <div className="player-controls" style={{ opacity: shouldShowControls ? 1 : 0 }}>
-          <input
-            type="range"
-            className="timeline-slider"
-            min={0}
-            max={duration || 100}
-            value={currentTime}
-            onChange={handleScrub}
-            aria-label="Playback timeline"
-            style={{ "--progress": duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}
-          />
+          {!isIframe && (
+            <input
+              type="range"
+              className="timeline-slider"
+              min={0}
+              max={duration || 100}
+              value={currentTime}
+              onChange={handleScrub}
+              aria-label="Playback timeline"
+              style={{ "--progress": duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}
+            />
+          )}
 
           <div className="player-control-row">
-            <div className="player-control-group">
-              <button onClick={togglePlay} className="soft-btn primary clickable round-control" aria-label="Play or pause">
-                {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-              </button>
-              <button onClick={() => skipTime(-10)} className="icon-control clickable" title="Rewind 10s">-10s</button>
-              <button onClick={() => skipTime(10)} className="icon-control clickable" title="Skip 10s">+10s</button>
-              <button onClick={toggleMute} className="icon-control clickable" title="Mute">
-                {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-              </button>
-              <input
-                type="range"
-                className="timeline-slider volume-slider"
-                min={0}
-                max={1}
-                step={0.05}
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                aria-label="Volume"
-                style={{ "--volume": `${(isMuted ? 0 : volume) * 100}%` }}
-              />
-              <span className="time-display"><strong>{formatTime(currentTime)}</strong> / {formatTime(duration)}</span>
-            </div>
+            {!isIframe && (
+              <div className="player-control-group">
+                <button onClick={togglePlay} className="soft-btn primary clickable round-control" aria-label="Play or pause">
+                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                </button>
+                <button onClick={() => skipTime(-10)} className="icon-control clickable" title="Rewind 10s">-10s</button>
+                <button onClick={() => skipTime(10)} className="icon-control clickable" title="Skip 10s">+10s</button>
+                <button onClick={toggleMute} className="icon-control clickable" title="Mute">
+                  {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                </button>
+                <input
+                  type="range"
+                  className="timeline-slider volume-slider"
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  aria-label="Volume"
+                  style={{ "--volume": `${(isMuted ? 0 : volume) * 100}%` }}
+                />
+                <span className="time-display"><strong>{formatTime(currentTime)}</strong> / {formatTime(duration)}</span>
+              </div>
+            )}
 
             <div className="player-control-group right-controls">
-              {onPreviousEpisode && <button onClick={onPreviousEpisode} className="soft-btn clickable"><SkipBack size={14} /> Prev</button>}
-              {onNextEpisode && <button onClick={onNextEpisode} className="soft-btn clickable">Next <SkipForward size={14} /></button>}
+              {!isIframe && onPreviousEpisode && <button onClick={onPreviousEpisode} className="soft-btn clickable"><SkipBack size={14} /> Prev</button>}
+              {!isIframe && onNextEpisode && <button onClick={onNextEpisode} className="soft-btn clickable">Next <SkipForward size={14} /></button>}
 
-              {/* Episodes popover */}
-              {episodeOptions.length > 0 && (
+              {!isIframe && episodeOptions.length > 0 && (
                 <div className="player-popover-wrap">
                   <button onClick={() => setShowEpisodeMenu((v) => !v)} className="soft-btn clickable"><Tv size={15} /> <span>Episodes</span></button>
                   {showEpisodeMenu && (
@@ -1155,9 +1172,6 @@ export default function NeoPlayer({
                 </div>
               )}
 
-              {/* Files popover (magnet streams only) — pick a different
-                  video file from a multi-file torrent. Hidden when the
-                  torrent only has one playable video file. */}
               {isMagnet && torrentFileList.length > 1 && (
                 <div className="player-popover-wrap">
                   <button
@@ -1194,62 +1208,64 @@ export default function NeoPlayer({
                 </div>
               )}
 
-              {/* Audio popover */}
-              <div className="player-popover-wrap">
-                <button onClick={() => setShowAudioMenu((v) => !v)} className="soft-btn clickable"><span>Audio</span></button>
-                {showAudioMenu && (
-                  <div className="player-popover audio-popover">
-                    {audioTrackError && <span className="popover-empty">{audioTrackError}</span>}
-                    {audioTracks.length === 0 ? (
-                      <button className="active" disabled>
-                        <strong>Default Audio (Embedded)</strong>
-                        <small>Single multiplexed audio track.</small>
-                      </button>
-                    ) : audioTracks.map((t, trackIndex) => {
-                      const meta = getAudioTrackMeta(t, audioCodecSupport);
-                      const isPlayable = isAudioCodecPlayable(meta.codec, audioCodecSupport);
-                      const isActive = activeAudioTrack === (t.id ?? trackIndex);
-                      const isDolbyPassthrough = isPlayable && isDolbyAudioCodec(meta.codec);
-                      const badgeClass = !isPlayable
-                        ? "codec-badge codec-unsupported"
-                        : isDolbyPassthrough
-                          ? "codec-badge codec-dolby-passthrough"
-                          : "codec-badge";
-                      return (
-                        <button
-                          key={t.id ?? trackIndex}
-                          className={isActive ? "active" : ""}
-                          disabled={!isPlayable}
-                          onClick={() => handleAudioTrackChange(trackIndex)}
-                        >
-                          <strong>{t.name || `Track ${trackIndex + 1}`}</strong>
-                          <div>
-                            {t.lang && <small>{t.lang}</small>}
-                            <small>{meta.label}</small>
-                            <span className={badgeClass}>{isPlayable ? meta.detail : "Not supported in Chrome"}</span>
-                          </div>
+              {!isIframe && (
+                <div className="player-popover-wrap">
+                  <button onClick={() => setShowAudioMenu((v) => !v)} className="soft-btn clickable"><span>Audio</span></button>
+                  {showAudioMenu && (
+                    <div className="player-popover audio-popover">
+                      {audioTrackError && <span className="popover-empty">{audioTrackError}</span>}
+                      {audioTracks.length === 0 ? (
+                        <button className="active" disabled>
+                          <strong>Default Audio (Embedded)</strong>
+                          <small>Single multiplexed audio track.</small>
                         </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                      ) : audioTracks.map((t, trackIndex) => {
+                        const meta = getAudioTrackMeta(t, audioCodecSupport);
+                        const isPlayable = isAudioCodecPlayable(meta.codec, audioCodecSupport);
+                        const isActive = activeAudioTrack === (t.id ?? trackIndex);
+                        const isDolbyPassthrough = isPlayable && isDolbyAudioCodec(meta.codec);
+                        const badgeClass = !isPlayable
+                          ? "codec-badge codec-unsupported"
+                          : isDolbyPassthrough
+                            ? "codec-badge codec-dolby-passthrough"
+                            : "codec-badge";
+                        return (
+                          <button
+                            key={t.id ?? trackIndex}
+                            className={isActive ? "active" : ""}
+                            disabled={!isPlayable}
+                            onClick={() => handleAudioTrackChange(trackIndex)}
+                          >
+                            <strong>{t.name || `Track ${trackIndex + 1}`}</strong>
+                            <div>
+                              {t.lang && <small>{t.lang}</small>}
+                              <small>{meta.label}</small>
+                              <span className={badgeClass}>{isPlayable ? meta.detail : "Not supported in Chrome"}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
-              {/* Speed popover */}
-              <div className="player-popover-wrap">
-                <button onClick={() => setShowSpeedMenu((v) => !v)} className="soft-btn clickable">{playbackSpeed}x</button>
-                {showSpeedMenu && (
-                  <div className="player-popover speed-popover">
-                    {PLAYBACK_SPEEDS.map((s) => (
-                      <button key={s} className={playbackSpeed === s ? "active" : ""} onClick={() => changeSpeed(s)}>{s}x</button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {!isIframe && (
+                <div className="player-popover-wrap">
+                  <button onClick={() => setShowSpeedMenu((v) => !v)} className="soft-btn clickable">{playbackSpeed}x</button>
+                  {showSpeedMenu && (
+                    <div className="player-popover speed-popover">
+                      {PLAYBACK_SPEEDS.map((s) => (
+                        <button key={s} className={playbackSpeed === s ? "active" : ""} onClick={() => changeSpeed(s)}>{s}x</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-              <button onClick={() => setShowShortcuts((v) => !v)} className="icon-control clickable" title="Keyboard shortcuts"><Keyboard size={18} /></button>
-              <button onClick={() => setIsTheaterMode((v) => !v)} className="icon-control clickable" title="Theater mode"><Tv size={18} /></button>
-              {document.pictureInPictureEnabled && <button onClick={togglePip} className="icon-control clickable" title="Picture in Picture"><PictureInPicture size={18} color={isPip ? "var(--accent-hover)" : undefined} /></button>}
+              {!isIframe && <button onClick={() => setShowShortcuts((v) => !v)} className="icon-control clickable" title="Keyboard shortcuts"><Keyboard size={18} /></button>}
+              {!isIframe && <button onClick={() => setIsTheaterMode((v) => !v)} className="icon-control clickable" title="Theater mode"><Tv size={18} /></button>}
+              {!isIframe && document.pictureInPictureEnabled && <button onClick={togglePip} className="icon-control clickable" title="Picture in Picture"><PictureInPicture size={18} color={isPip ? "var(--accent-hover)" : undefined} /></button>}
               <button onClick={toggleFullscreen} className="icon-control clickable" title="Fullscreen">{isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}</button>
             </div>
           </div>
