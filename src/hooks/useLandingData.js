@@ -13,12 +13,16 @@ import {
 const CATEGORY_TTL_MS = 6 * 60 * 60 * 1000;
 const STORAGE_KEY = "openstream_category_cache_v1";
 
+const CATEGORY_KEYS = ["bollywood", "mollywood", "anime", "mostPopular", "topRated", "newReleases", "comingSoon"];
+
 const getStoredCache = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Date.now() - parsed.updatedAt > CATEGORY_TTL_MS) return null;
+    const hasData = CATEGORY_KEYS.some(k => Array.isArray(parsed[k]) && parsed[k].length > 0);
+    if (!hasData) return null;
     return parsed;
   } catch {
     return null;
@@ -83,13 +87,17 @@ export function useLandingData() {
         setNewReleases(newRel);
         setComingSoon(coming);
 
-        saveToCache("bollywood", bolly);
-        saveToCache("mollywood", molly);
-        saveToCache("anime", anim);
-        saveToCache("mostPopular", popular);
-        saveToCache("topRated", top);
-        saveToCache("newReleases", newRel);
-        saveToCache("comingSoon", coming);
+        const saveIfNonEmpty = (key, data) => {
+          if (Array.isArray(data) && data.length > 0) saveToCache(key, data);
+        };
+
+        saveIfNonEmpty("bollywood", bolly);
+        saveIfNonEmpty("mollywood", molly);
+        saveIfNonEmpty("anime", anim);
+        saveIfNonEmpty("mostPopular", popular);
+        saveIfNonEmpty("topRated", top);
+        saveIfNonEmpty("newReleases", newRel);
+        saveIfNonEmpty("comingSoon", coming);
       } catch (err) {
         if (!cancelled) setError(err);
       } finally {
