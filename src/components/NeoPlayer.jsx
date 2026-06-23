@@ -1144,7 +1144,7 @@ export default function NeoPlayer({
 
       {/* ── bottom controls ─────────────────────────────────────────────── */}
       {!isAudioOnly && (
-        <div className="player-controls" style={{ opacity: shouldShowControls ? 1 : 0 }}>
+        <div className="player-controls" style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none" }}>
           {!isIframe && (
             <input
               type="range"
