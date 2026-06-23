@@ -2059,7 +2059,7 @@ button {
 }
 
 .iframe-hint-bar {
-  position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 0.5rem; left: 50%; transform: translateX(-50%);
   z-index: 12; display: flex; align-items: center; gap: 0.4rem;
   padding: 0.4rem 0.85rem; border-radius: 9999px;
   background: rgba(0, 0, 0, 0.72); color: rgba(255, 255, 255, 0.8);
@@ -2631,15 +2631,15 @@ button {
 
   /* ── Player (NeoPlayer) ────────────────────────────── */
   .player-wrap { margin-bottom: 0.85rem; }
-  .neo-player { aspect-ratio: 16 / 9; }
+  .neo-player { aspect-ratio: 3 / 2; }
   .player-header {
-    padding: 0.55rem 0.65rem;
+    padding: 0.4rem 0.5rem;
     gap: 0.35rem;
     flex-wrap: wrap;
   }
   .player-title-block h3 { font-size: 0.92rem; }
   .player-title-block span { font-size: 0.7rem; }
-  .player-controls { padding: 0.65rem; padding-top: 1.5rem; }
+  .player-controls { padding: 0.45rem; padding-top: 1rem; }
   .player-control-row {
     flex-wrap: wrap;
     gap: 0.4rem;
@@ -2654,8 +2654,8 @@ button {
     min-height: 44px;
   }
   .timeline-slider { height: 5px; }
-  .player-center-play { width: 64px; height: 64px; }
-  .player-center-play svg { width: 32px; height: 32px; }
+  .player-center-play { width: 52px; height: 52px; }
+  .player-center-play svg { width: 26px; height: 26px; }
   .player-popover {
     min-width: 220px;
     max-width: 90vw;
@@ -2796,6 +2796,7 @@ button {
   .filter-select-wrapper { padding: 0.35rem 0.5rem; font-size: 0.72rem; }
   .filter-reset-btn { padding: 0.4rem 0.6rem; font-size: 0.72rem; min-height: 44px; }
   .now-playing-panel { padding: 0.55rem; }
+  .neo-player { aspect-ratio: 3 / 2; }
   .search-result-card { padding: 0.6rem; }
   .search-result-card img { height: 150px; }
   .search-result-actions button { min-height: 44px; font-size: 0.68rem; padding: 0.5rem 0.7rem; }

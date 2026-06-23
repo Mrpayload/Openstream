@@ -195,7 +195,9 @@ export default function NeoPlayer({
   const [showFilesMenu, setShowFilesMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showIframeHint, setShowIframeHint] = useState(false);
+  const [iframeGateActive, setIframeGateActive] = useState(false);
   const iframeHintTimerRef = useRef(null);
+  const iframeGateTimerRef = useRef(null);
 
   const shouldShowControls = controlsVisible || !isPlaying || isLoading || playbackError;
   const audioCodecSupport = getBrowserAudioCodecSupport();
@@ -794,13 +796,21 @@ export default function NeoPlayer({
   useLayoutEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     window.clearTimeout(iframeHintTimerRef.current);
+    window.clearTimeout(iframeGateTimerRef.current);
     if (!isIframe) {
       setShowIframeHint(false);
+      setIframeGateActive(false);
       return;
     }
+    // Activate the click gate for 3 seconds to absorb first-click popups
+    setIframeGateActive(true);
+    iframeGateTimerRef.current = window.setTimeout(() => setIframeGateActive(false), 3000);
     setShowIframeHint(true);
     iframeHintTimerRef.current = window.setTimeout(() => setShowIframeHint(false), 4000);
-    return () => { window.clearTimeout(iframeHintTimerRef.current); };
+    return () => {
+      window.clearTimeout(iframeHintTimerRef.current);
+      window.clearTimeout(iframeGateTimerRef.current);
+    };
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [isIframe, videoUrl]);
 
@@ -952,6 +962,22 @@ export default function NeoPlayer({
         />
       ) : isIframe ? (
         <>
+        {/* Click gate: intercepts all clicks for the first 3 seconds so the
+            embed server's popup ads fire on this overlay instead of the iframe.
+            After the gate period the overlay is removed entirely. */}
+        {iframeGateActive && (
+          <div
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 5,
+              cursor: "pointer",
+              background: "transparent",
+            }}
+            aria-label="Click gate active — popups blocked"
+          />
+        )}
         <iframe
           src={videoUrl}
           title={title ? `${title} stream` : "Embedded stream"}
@@ -960,12 +986,7 @@ export default function NeoPlayer({
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           referrerPolicy="no-referrer-when-downgrade"
           onLoad={() => {
-            // Cross-origin iframes may not fire load on 404 pages, but when
-            // they do we want to drop the loading overlay immediately. The
-            // timeout-based error path below handles the never-loads case.
             setIsLoading(false);
-            // Assume playing so the auto-hide timer kicks in — cross-origin
-            // iframes can't report play/pause state.
             setIsPlaying(true);
           }}
         />

@@ -5,6 +5,18 @@
 // is shared by App.jsx (initial stream fetch) and any UI that wants to know
 // which URL patterns to recognize as embed/iframe.
 
+// In development, route embed URLs through the proxy so the guard script
+// can block popups. In production, use the direct URL (no proxy available).
+const PROXY_PREFIX = "/api/embed-proxy?url=";
+
+const proxyUrl = (url) => {
+  // Only proxy in dev (Vite dev server serves /api/embed-proxy)
+  if (typeof window !== "undefined" && window.location?.port === "5173") {
+    return PROXY_PREFIX + encodeURIComponent(url);
+  }
+  return url;
+};
+
 const FALLBACK_EMBED_PLAYERS = [
   {
     id: "vidsrc-embed",
@@ -77,7 +89,7 @@ export const buildFallbackStreamList = (playable) => {
   if (!playable?.tmdbId) return [];
 
   return FALLBACK_EMBED_PLAYERS.map((player) => ({
-    url: buildUrl(player, playable),
+    url: proxyUrl(buildUrl(player, playable)),
     name: player.label,
     title: player.title,
     behaviorHints: {},
@@ -86,19 +98,23 @@ export const buildFallbackStreamList = (playable) => {
   }));
 };
 
-// Test/utility helper: identify whether a URL belongs to one of the registered
+// Test/utility helper: identify whether a URL belongs one of the registered
 // fallback embed players. Useful for StreamPicker badges or NeoPlayer to detect
 // when a stream must be rendered inside an <iframe>.
 export const isFallbackEmbedUrl = (url) => {
   if (!url) return false;
+  // Also match proxied URLs
+  const raw = url.includes(PROXY_PREFIX)
+    ? decodeURIComponent(url.split(PROXY_PREFIX)[1] || "")
+    : url;
   return FALLBACK_EMBED_PLAYERS.some((player) => {
     if (typeof player.build === "function") {
       // Match dynamic builders by known domain patterns
-      if (player.id === "superembed") return url.includes("multiembed.mov");
-      if (player.id === "vidlink") return url.includes("vidlink.pro");
+      if (player.id === "superembed") return raw.includes("multiembed.mov");
+      if (player.id === "vidlink") return raw.includes("vidlink.pro");
       return false;
     }
-    return url.startsWith(player.baseMovie) || url.startsWith(player.baseTv);
+    return raw.startsWith(player.baseMovie) || raw.startsWith(player.baseTv);
   });
 };
 
