@@ -1014,9 +1014,9 @@ describe("buildFallbackStreamList", () => {
   const movie = { tmdbId: 324857, streamType: "movie" };
   const episode = { tmdbId: 66732, streamType: "series", seasonNumber: 1, episodeNumber: 1 };
 
-  it("returns five entries for a movie", () => {
+  it("returns four entries for a movie", () => {
     const streams = buildFallbackStreamList(movie);
-    expect(streams).toHaveLength(5);
+    expect(streams).toHaveLength(4);
     expect(streams.every((s) => s.isIframe)).toBe(true);
   });
 
@@ -1050,12 +1050,11 @@ describe("isFallbackEmbedUrl", () => {
 });
 
 describe("FALLBACK_EMBED_PLAYER_IDS", () => {
-  it("exposes the five registered ids", () => {
+  it("exposes the four registered ids", () => {
     expect(FALLBACK_EMBED_PLAYER_IDS).toEqual([
       "vidsrc-embed",
       "vidlink",
       "vidsrc-me",
-      "vsembed",
       "superembed",
     ]);
   });

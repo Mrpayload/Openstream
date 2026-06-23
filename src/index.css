@@ -2058,6 +2058,24 @@ button {
   transition: opacity 200ms ease;
 }
 
+.iframe-hint-bar {
+  position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%);
+  z-index: 12; display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.85rem; border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.72); color: rgba(255, 255, 255, 0.8);
+  font-size: 12px; font-family: var(--font-sans);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  animation: iframeHintFade 4s ease forwards;
+  cursor: pointer; pointer-events: auto;
+  white-space: nowrap;
+}
+.iframe-hint-bar:hover { background: rgba(0, 0, 0, 0.85); }
+@keyframes iframeHintFade {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
 .player-timeline {
   display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;
 }

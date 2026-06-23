@@ -37,16 +37,8 @@ const FALLBACK_EMBED_PLAYERS = [
     note: "updated from vidsrc.me"
   },
   {
-    id: "vsembed",
-    label: "VS Embed (Server 4)",
-    title: "Embedded player via vsembed.ru (AAC Audio & Subtitles)",
-    baseMovie: "https://vsembed.ru/embed/movie",
-    baseTv: "https://vsembed.ru/embed/tv",
-    note: "latest mirror domain"
-  },
-  {
     id: "superembed",
-    label: "SuperEmbed (Server 5)",
+    label: "SuperEmbed (Server 4)",
     title: "Embedded player via streamingnow.mov (10+ servers, subtitles, auto quality)",
     // SuperEmbed uses a single endpoint with query params
     build: (playable) => {

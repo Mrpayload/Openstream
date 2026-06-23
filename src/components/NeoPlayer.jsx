@@ -194,6 +194,8 @@ export default function NeoPlayer({
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [showFilesMenu, setShowFilesMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showIframeHint, setShowIframeHint] = useState(false);
+  const iframeHintTimerRef = useRef(null);
 
   const shouldShowControls = controlsVisible || !isPlaying || isLoading || playbackError;
   const audioCodecSupport = getBrowserAudioCodecSupport();
@@ -786,6 +788,22 @@ export default function NeoPlayer({
     };
   }, []);
 
+  // iframe hint: show a brief "use the player inside" message when in iframe mode
+  // Uses useLayoutEffect (allowed for transient state resets) so the hint
+  // appears synchronously with the iframe swap.
+  useLayoutEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    window.clearTimeout(iframeHintTimerRef.current);
+    if (!isIframe) {
+      setShowIframeHint(false);
+      return;
+    }
+    setShowIframeHint(true);
+    iframeHintTimerRef.current = window.setTimeout(() => setShowIframeHint(false), 4000);
+    return () => { window.clearTimeout(iframeHintTimerRef.current); };
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [isIframe, videoUrl]);
+
   // ── WebTorrent / magnet streaming ──────────────────────────────────────
   // The transient state reset (isLoading, playbackError, torrentError,
   // torrentStatus) is handled by the useLayoutEffect above. This effect
@@ -933,13 +951,14 @@ export default function NeoPlayer({
           onNotify={onNotify}
         />
       ) : isIframe ? (
+        <>
         <iframe
           src={videoUrl}
           title={title ? `${title} stream` : "Embedded stream"}
           style={{ width: "100%", height: "100%", border: 0 }}
           allowFullScreen
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          referrerPolicy="origin"
+          referrerPolicy="no-referrer-when-downgrade"
           onLoad={() => {
             // Cross-origin iframes may not fire load on 404 pages, but when
             // they do we want to drop the loading overlay immediately. The
@@ -950,6 +969,16 @@ export default function NeoPlayer({
             setIsPlaying(true);
           }}
         />
+        {showIframeHint && (
+          <button
+            className="iframe-hint-bar"
+            onClick={() => setShowIframeHint(false)}
+          >
+            <Play size={13} />
+            <span>Use the player controls inside the video to play &amp; seek</span>
+          </button>
+        )}
+        </>
       ) : (
         <video
           ref={videoRef}
@@ -1159,7 +1188,10 @@ export default function NeoPlayer({
               {!isIframe && onPreviousEpisode && <button onClick={onPreviousEpisode} className="soft-btn clickable"><SkipBack size={14} /> Prev</button>}
               {!isIframe && onNextEpisode && <button onClick={onNextEpisode} className="soft-btn clickable">Next <SkipForward size={14} /></button>}
 
-              {!isIframe && episodeOptions.length > 0 && (
+              {isIframe && onPreviousEpisode && <button onClick={onPreviousEpisode} className="soft-btn clickable"><SkipBack size={14} /> Prev</button>}
+              {isIframe && onNextEpisode && <button onClick={onNextEpisode} className="soft-btn clickable">Next <SkipForward size={14} /></button>}
+
+              {episodeOptions.length > 0 && (
                 <div className="player-popover-wrap">
                   <button onClick={() => setShowEpisodeMenu((v) => !v)} className="soft-btn clickable"><Tv size={15} /> <span>Episodes</span></button>
                   {showEpisodeMenu && (
@@ -1168,6 +1200,25 @@ export default function NeoPlayer({
                         <button key={`${entry.season.seasonNumber}-${entry.episode.episodeNumber}`} className={i === currentEpisodeIndex ? "active" : ""} onClick={() => handleSelectEpisode(entry)}>
                           <strong>S{entry.season.seasonNumber} E{entry.episode.episodeNumber}</strong>
                           <small>{entry.episode.title}</small>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isIframe && (
+                <div className="player-popover-wrap" style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none", transition: "opacity 0.25s" }}>
+                  <button onClick={() => setShowSourceMenu((v) => !v)} className="soft-btn clickable"><ListVideo size={15} /> Source</button>
+                  {showSourceMenu && (
+                    <div className="player-popover sources-popover" style={{ bottom: "auto", top: "calc(100% + 0.55rem)" }}>
+                      {streams.length === 0 && <span className="popover-empty">No alternate sources loaded.</span>}
+                      {streams.map((s, i) => (
+                        <button key={`${s.url || s.name}-${i}`} className={i === currentStreamIndex ? "active" : ""} disabled={!s.url || hasProxyHeaders(s)} onClick={() => handleSelectStream(s, i)}>
+                          <strong>{getStreamSource(s)}</strong>
+                          <div>
+                            <small>{hasProxyHeaders(s) ? "Needs proxy headers" : getStreamQuality(s)}</small>
+                          </div>
                         </button>
                       ))}
                     </div>
