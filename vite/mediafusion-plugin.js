@@ -15,15 +15,16 @@
 //
 // Response: { streams: [{ url, name, title, isHls, source }] }
 
-const MEDIAFUSION_BASE = process.env.VITE_MEDIAFUSION_URL
-  || "https://mediafusion.elfhosted.com";
+import { loadEnv } from "vite";
 
+const MEDIAFUSION_BASE_DEFAULT = "https://mediafusion.elfhosted.com";
+
+let MEDIAFUSION_BASE = MEDIAFUSION_BASE_DEFAULT;
 const MEDIAFUSION_TIMEOUT_MS = 18_000;
 const TMDB_TIMEOUT_MS = 8_000;
 
-// TMDB credentials — available server-side because VITE_ vars are inlined
-const TMDB_ACCESS_TOKEN = process.env.VITE_TMDB_ACCESS_TOKEN;
-const TMDB_API_KEY = process.env.VITE_TMDB_API_KEY;
+let TMDB_ACCESS_TOKEN = "";
+let TMDB_API_KEY = "";
 
 // Simple in-memory cache for TMDB → IMDb ID lookups
 const imdbCache = new Map();
@@ -169,6 +170,12 @@ const normalizeStream = (raw) => {
 export default function mediafusionPlugin() {
   return {
     name: "mediafusion-plugin",
+    configResolved(config) {
+      const env = loadEnv(config.mode, config.envDir || process.cwd(), "");
+      TMDB_ACCESS_TOKEN = env.VITE_TMDB_ACCESS_TOKEN || "";
+      TMDB_API_KEY = env.VITE_TMDB_API_KEY || "";
+      if (env.VITE_MEDIAFUSION_URL) MEDIAFUSION_BASE = env.VITE_MEDIAFUSION_URL;
+    },
     configureServer(server) {
       server.middlewares.use("/api/mediafusion/stream", async (req, res) => {
         try {

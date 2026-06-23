@@ -939,7 +939,7 @@ export default function NeoPlayer({
           style={{ width: "100%", height: "100%", border: 0 }}
           allowFullScreen
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          referrerPolicy={videoUrl?.includes("vidlink") ? "origin" : "no-referrer"}
+          referrerPolicy="origin"
           onLoad={() => {
             // Cross-origin iframes may not fire load on 404 pages, but when
             // they do we want to drop the loading overlay immediately. The

@@ -1014,9 +1014,9 @@ describe("buildFallbackStreamList", () => {
   const movie = { tmdbId: 324857, streamType: "movie" };
   const episode = { tmdbId: 66732, streamType: "series", seasonNumber: 1, episodeNumber: 1 };
 
-  it("returns six entries for a movie", () => {
+  it("returns five entries for a movie", () => {
     const streams = buildFallbackStreamList(movie);
-    expect(streams).toHaveLength(6);
+    expect(streams).toHaveLength(5);
     expect(streams.every((s) => s.isIframe)).toBe(true);
   });
 
@@ -1031,16 +1031,16 @@ describe("buildFallbackStreamList", () => {
     expect(buildFallbackStreamList(null)).toEqual([]);
   });
 
-  it("uses vidsrc-embed.ru as the first source", () => {
+  it("uses vsembed.ru as the first source", () => {
     const streams = buildFallbackStreamList(movie);
-    expect(streams[0].url).toContain("vidsrc-embed.ru");
+    expect(streams[0].url).toContain("vsembed.ru");
   });
 });
 
 describe("isFallbackEmbedUrl", () => {
   it("matches registered player URLs", () => {
-    expect(isFallbackEmbedUrl("https://vidsrc-embed.ru/embed/movie?tmdb=1")).toBe(true);
-    expect(isFallbackEmbedUrl("https://www.2embed.cc/embed/123")).toBe(true);
+    expect(isFallbackEmbedUrl("https://vsembed.ru/embed/movie?tmdb=1")).toBe(true);
+    expect(isFallbackEmbedUrl("https://vidsrcme.ru/embed/movie?tmdb=1")).toBe(true);
   });
 
   it("returns false for unrelated URLs", () => {
@@ -1050,14 +1050,13 @@ describe("isFallbackEmbedUrl", () => {
 });
 
 describe("FALLBACK_EMBED_PLAYER_IDS", () => {
-  it("exposes the six registered ids", () => {
+  it("exposes the five registered ids", () => {
     expect(FALLBACK_EMBED_PLAYER_IDS).toEqual([
       "vidsrc-embed",
+      "vidlink",
       "vidsrc-me",
       "vsembed",
       "superembed",
-      "2embed",
-      "vidlink",
     ]);
   });
 });

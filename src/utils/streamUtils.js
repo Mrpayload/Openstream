@@ -116,7 +116,7 @@ export const isWebtorrentPlayable = (stream) => {
 
 // Split a mixed list of streams into the three groups shown in StreamPicker:
 //   - iframe:      embed players that must be rendered inside an <iframe>
-//                  (vidsrc-embed, vsembed, multiembed, 2embed, vidlink, ...)
+//                  (vidsrc-embed, vsembed, multiembed, vidlink, ...)
 //   - webstreamer: direct, browser-playable sources (FlixHQ, ezvidapi,
 //                  SmashyStream, MediaFusion, webstreamrMBG, ...)
 //   - torrentio:   magnet-based torrent streams from the Torrentio addon.

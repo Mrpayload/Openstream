@@ -9,52 +9,14 @@ const FALLBACK_EMBED_PLAYERS = [
   {
     id: "vidsrc-embed",
     label: "VidSrc Embed (Server 1)",
-    title: "Embedded player via vidsrc-embed.ru (AAC Audio & Subtitles)",
-    baseMovie: "https://vidsrc-embed.ru/embed/movie",
-    baseTv: "https://vidsrc-embed.ru/embed/tv",
-    note: "migrated from vidsrcme.ru"
-  },
-  {
-    id: "vidsrc-me",
-    label: "VidSrc.me (Server 2)",
-    title: "Embedded player via vidsrc.me (Stereo/AAC Audio)",
-    baseMovie: "https://vidsrc.me/embed/movie",
-    baseTv: "https://vidsrc.me/embed/tv",
-    note: "legacy embed domain (may redirect)"
-  },
-  {
-    id: "vsembed",
-    label: "VS Embed (Server 3)",
     title: "Embedded player via vsembed.ru (AAC Audio & Subtitles)",
     baseMovie: "https://vsembed.ru/embed/movie",
     baseTv: "https://vsembed.ru/embed/tv",
-    note: "latest mirror domain"
-  },
-  {
-    id: "superembed",
-    label: "SuperEmbed (Server 4)",
-    title: "Embedded player via multiembed.mov (10+ servers, subtitles, auto quality)",
-    // SuperEmbed uses a single endpoint with query params
-    build: (playable) => {
-      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
-      const params = new URLSearchParams({ video_id: id, tmdb: "1" });
-      if (isTvPlayable(playable)) {
-        params.set("s", String(playable.seasonNumber));
-        params.set("e", String(playable.episodeNumber));
-      }
-      return `https://multiembed.mov/?${params.toString()}`;
-    }
-  },
-  {
-    id: "2embed",
-    label: "2embed (Server 5)",
-    title: "Embedded player via 2embed.cc (TMDB-based, multiple servers)",
-    baseMovie: "https://www.2embed.cc/embed",
-    baseTv: "https://www.2embed.cc/embedtv"
+    note: "migrated from vidsrc-embed.ru"
   },
   {
     id: "vidlink",
-    label: "VidLink (Server 6)",
+    label: "VidLink (Server 2)",
     title: "Embedded player via vidlink.pro (subtitles, auto quality, progress tracking)",
     // VidLink uses path segments rather than query params
     build: (playable) => {
@@ -64,6 +26,37 @@ const FALLBACK_EMBED_PLAYERS = [
         return `https://vidlink.pro/tv/${id}/${playable.seasonNumber}/${playable.episodeNumber}?${autoplay}`;
       }
       return `https://vidlink.pro/movie/${id}?${autoplay}`;
+    }
+  },
+  {
+    id: "vidsrc-me",
+    label: "VidSrc.me (Server 3)",
+    title: "Embedded player via vidsrcme.ru (Stereo/AAC Audio)",
+    baseMovie: "https://vidsrcme.ru/embed/movie",
+    baseTv: "https://vidsrcme.ru/embed/tv",
+    note: "updated from vidsrc.me"
+  },
+  {
+    id: "vsembed",
+    label: "VS Embed (Server 4)",
+    title: "Embedded player via vsembed.ru (AAC Audio & Subtitles)",
+    baseMovie: "https://vsembed.ru/embed/movie",
+    baseTv: "https://vsembed.ru/embed/tv",
+    note: "latest mirror domain"
+  },
+  {
+    id: "superembed",
+    label: "SuperEmbed (Server 5)",
+    title: "Embedded player via streamingnow.mov (10+ servers, subtitles, auto quality)",
+    // SuperEmbed uses a single endpoint with query params
+    build: (playable) => {
+      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
+      const params = new URLSearchParams({ video_id: id, tmdb: "1" });
+      if (isTvPlayable(playable)) {
+        params.set("s", String(playable.seasonNumber));
+        params.set("e", String(playable.episodeNumber));
+      }
+      return `https://multiembed.mov/?${params.toString()}`;
     }
   }
 ];
