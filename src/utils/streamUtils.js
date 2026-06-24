@@ -13,6 +13,7 @@ export const isBrowserPlayableStream = (stream) => {
     isMagnetUrl(stream.url)
   ) return false;
   if (isExternalPlayerRecommended(stream)) return false;
+  if (stream.isHls || isHlsUrl(stream.url)) return true;
   const audio = checkAudioSupport(stream);
   return audio.supported !== false;
 };

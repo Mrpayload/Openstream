@@ -1,5 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Maximize, Minimize } from "lucide-react";
+import Hls from "hls.js";
+
+const isDirectHlsUrl = (url) => {
+  if (!url) return false;
+  try {
+    return new URL(url).pathname.toLowerCase().endsWith(".m3u8");
+  } catch {
+    return url.toLowerCase().includes(".m3u8");
+  }
+};
 
 export default function NeoPlayer({
   videoUrl,
@@ -10,14 +20,56 @@ export default function NeoPlayer({
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [iframeGateActive, setIframeGateActive] = useState(true);
+  const [hlsReady, setHlsReady] = useState(false);
+  const [hlsError, setHlsError] = useState(null);
 
   const containerRef = useRef(null);
+  const videoRef = useRef(null);
+  const hlsRef = useRef(null);
   const hideTimerRef = useRef(null);
   const revealRafRef = useRef(0);
   const iframeGateTimerRef = useRef(null);
 
+  const isDirect = useMemo(() => isDirectHlsUrl(videoUrl), [videoUrl]);
+
   useEffect(() => {
-    setIframeGateActive(true);
+    if (!isDirect || !videoRef.current || !videoUrl) return;
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+    setHlsReady(false);
+    setHlsError(null);
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hlsRef.current = hls;
+      hls.loadSource(videoUrl);
+      hls.attachMedia(videoRef.current);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => setHlsReady(true));
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) {
+          setHlsError("HLS playback failed");
+          console.warn("[NeoPlayer] HLS fatal error:", data);
+        }
+      });
+    } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+      videoRef.current.src = videoUrl;
+      setHlsReady(true);
+    } else {
+      setHlsError("HLS not supported in this browser");
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [videoUrl, isDirect]);
+
+  useEffect(() => {
+    queueMicrotask(() => setIframeGateActive(true));
     iframeGateTimerRef.current = setTimeout(() => setIframeGateActive(false), 3000);
     return () => clearTimeout(iframeGateTimerRef.current);
   }, [videoUrl]);
@@ -38,6 +90,13 @@ export default function NeoPlayer({
     } else {
       document.exitFullscreen?.();
     }
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) v.play().catch(() => {});
+    else v.pause();
   }, []);
 
   useEffect(() => {
@@ -68,51 +127,112 @@ export default function NeoPlayer({
       onTouchStart={revealControls}
       style={{ backgroundColor: "#000", overflow: "hidden" }}
     >
-      {iframeGateActive && (
-        <div
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          style={{
-            position: "absolute", inset: 0, zIndex: 5,
-            cursor: "pointer", background: "transparent",
-          }}
-          aria-label="Click gate active"
-        />
-      )}
-
-      <iframe
-        src={videoUrl}
-        title={title ? `${title} stream` : "Embedded stream"}
-        style={{ width: "100%", height: "100%", border: 0 }}
-        allowFullScreen
-        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-        referrerPolicy="no-referrer-when-downgrade"
-      />
-
-      <div
-        className="player-header"
-        style={{ opacity: controlsVisible ? 1 : 0 }}
-      >
-        <div className="player-header-left">
-          <button onClick={onClose} className="soft-btn accent clickable">
-            <ArrowLeft size={14} /> Back
-          </button>
-        </div>
-
-        <div className="player-title-block">
-          <h3>{title}</h3>
-          {subtitle && <span>{subtitle}</span>}
-        </div>
-
-        <div className="player-header-right">
-          <button
-            onClick={toggleFullscreen}
-            className="icon-control clickable"
-            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+      {isDirect ? (
+        <>
+          <video
+            ref={videoRef}
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            onClick={togglePlay}
+            controls={false}
+            playsInline
+          />
+          {!hlsReady && !hlsError && (
+            <div
+              style={{
+                position: "absolute", inset: 0, display: "flex",
+                alignItems: "center", justifyContent: "center",
+                color: "#888", fontSize: "14px", pointerEvents: "none",
+              }}
+            >
+              Loading HLS stream...
+            </div>
+          )}
+          {hlsError && (
+            <div
+              style={{
+                position: "absolute", inset: 0, display: "flex",
+                alignItems: "center", justifyContent: "center",
+                color: "#f44", fontSize: "14px", pointerEvents: "none",
+              }}
+            >
+              {hlsError}
+            </div>
+          )}
+          <div
+            className="player-header"
+            style={{ opacity: controlsVisible ? 1 : 0 }}
           >
-            {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-          </button>
-        </div>
-      </div>
+            <div className="player-header-left">
+              <button onClick={onClose} className="soft-btn accent clickable">
+                <ArrowLeft size={14} /> Back
+              </button>
+            </div>
+
+            <div className="player-title-block">
+              <h3>{title}</h3>
+              {subtitle && <span>{subtitle}</span>}
+            </div>
+
+            <div className="player-header-right">
+              <button
+                onClick={toggleFullscreen}
+                className="icon-control clickable"
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              >
+                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              </button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {iframeGateActive && (
+            <div
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              style={{
+                position: "absolute", inset: 0, zIndex: 5,
+                cursor: "pointer", background: "transparent",
+              }}
+              aria-label="Click gate active"
+            />
+          )}
+
+          <iframe
+            src={videoUrl}
+            title={title ? `${title} stream` : "Embedded stream"}
+            style={{ width: "100%", height: "100%", border: 0 }}
+            allowFullScreen
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+
+          <div
+            className="player-header"
+            style={{ opacity: controlsVisible ? 1 : 0 }}
+          >
+            <div className="player-header-left">
+              <button onClick={onClose} className="soft-btn accent clickable">
+                <ArrowLeft size={14} /> Back
+              </button>
+            </div>
+
+            <div className="player-title-block">
+              <h3>{title}</h3>
+              {subtitle && <span>{subtitle}</span>}
+            </div>
+
+            <div className="player-header-right">
+              <button
+                onClick={toggleFullscreen}
+                className="icon-control clickable"
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+              >
+                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

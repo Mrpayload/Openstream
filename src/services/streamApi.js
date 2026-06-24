@@ -190,6 +190,51 @@ export const fetchTorrentioStream = async (playable) => {
 // Calls the local Vite dev middleware at /api/mediafusion/stream (see vite/mediafusion-plugin.js).
 // MediaFusion is a Stremio addon aggregator that returns m3u8/mp4 streams.
 // It converts TMDB IDs to IMDb IDs server-side, then queries a public MediaFusion instance.
+const VIDLINK_EXTRACT_TIMEOUT_MS = 12_000;
+
+export const fetchVidlinkStream = async (playable) => {
+  if (!playable?.tmdbId) return null;
+
+  const params = new URLSearchParams({
+    tmdbId: String(playable.tmdbId),
+    type: playable.streamType || "movie",
+  });
+  if (playable.streamType === "series" || playable.streamType === "tv") {
+    if (playable.seasonNumber) params.set("season", String(playable.seasonNumber));
+    if (playable.episodeNumber) params.set("episode", String(playable.episodeNumber));
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), VIDLINK_EXTRACT_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(`/api/extract/vidlink?${params.toString()}`, { signal: controller.signal });
+    if (!response.ok) {
+      console.warn(`[vidlink] ${response.status}: ${(await response.text()).slice(0, 120)}`);
+      return null;
+    }
+
+    const data = await response.json();
+    if (!data?.url) return null;
+
+    return {
+      url: data.url,
+      name: "VidLink Direct",
+      title: "Direct HLS from VidLink · extracted server-side",
+      behaviorHints: {},
+      isHls: true,
+      source: "vidlink"
+    };
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      console.warn("[vidlink] proxy error:", error.message || error);
+    }
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 export const fetchMediafusionStream = async (playable) => {
   if (!playable?.tmdbId) return null;
 

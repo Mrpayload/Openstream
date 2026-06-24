@@ -19,18 +19,9 @@ const proxyUrl = (url) => {
 
 const FALLBACK_EMBED_PLAYERS = [
   {
-    id: "vidsrc-embed",
-    label: "VidSrc Embed (Server 1)",
-    title: "Embedded player via vsembed.ru (AAC Audio & Subtitles)",
-    baseMovie: "https://vsembed.ru/embed/movie",
-    baseTv: "https://vsembed.ru/embed/tv",
-    note: "migrated from vidsrc-embed.ru"
-  },
-  {
     id: "vidlink",
-    label: "VidLink (Server 2)",
+    label: "VidLink (Server 1)",
     title: "Embedded player via vidlink.pro (subtitles, auto quality, progress tracking)",
-    // VidLink uses path segments rather than query params
     build: (playable) => {
       const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
       const autoplay = "autoplay=true&nextbutton=true";
@@ -39,6 +30,14 @@ const FALLBACK_EMBED_PLAYERS = [
       }
       return `https://vidlink.pro/movie/${id}?${autoplay}`;
     }
+  },
+  {
+    id: "vidsrc-embed",
+    label: "VidSrc Embed (Server 2)",
+    title: "Embedded player via vsembed.ru (AAC Audio & Subtitles)",
+    baseMovie: "https://vsembed.ru/embed/movie",
+    baseTv: "https://vsembed.ru/embed/tv",
+    note: "migrated from vidsrc-embed.ru"
   },
   {
     id: "vidsrc-me",
@@ -52,7 +51,6 @@ const FALLBACK_EMBED_PLAYERS = [
     id: "superembed",
     label: "SuperEmbed (Server 4)",
     title: "Embedded player via streamingnow.mov (10+ servers, subtitles, auto quality)",
-    // SuperEmbed uses a single endpoint with query params
     build: (playable) => {
       const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
       const params = new URLSearchParams({ video_id: id, tmdb: "1" });

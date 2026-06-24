@@ -1,7 +1,7 @@
 import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, ChevronUp, Film, Heart, Info, Loader2, Play, RefreshCw, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import { genresList, movies as fallbackMovies } from "./data/movies";
-import { fetchEzvidapiStream, fetchFlixhqStream, fetchMediafusionStream, fetchSmplstreamStream, fetchStreams, fetchTorrentioStream } from "./services/streamApi";
+import { fetchEzvidapiStream, fetchFlixhqStream, fetchMediafusionStream, fetchSmplstreamStream, fetchStreams, fetchTorrentioStream, fetchVidlinkStream } from "./services/streamApi";
 import { discoverTmdbCatalogItems, fetchTmdbSeasonEpisodes, fetchTmdbSeasons, hasTmdbCredentials, hydrateCatalogFromTmdb, searchTmdb } from "./services/tmdbApi";
 import { getStreamLabel, hasProxyHeaders, isBrowserPlayableStream, isMagnetUrl } from "./utils/streamUtils";
 import { useLandingData } from "./hooks/useLandingData";
@@ -967,7 +967,7 @@ export default function App() {
     // Fetch API streams in the background and merge them in as they arrive.
     // Uses allSettled so a single slow/hanging API doesn't block the others.
     try {
-      const [webStreamResult, flixhqResult, ezvidResult, smplResult, mediafusionResult, torrentioResult] = await Promise.allSettled([
+      const [webStreamResult, flixhqResult, ezvidResult, smplResult, mediafusionResult, torrentioResult, vidlinkExtractResult] = await Promise.allSettled([
         fetchStreams(
           playable.streamType,
           playable.tmdbId,
@@ -978,7 +978,8 @@ export default function App() {
         fetchEzvidapiStream(playable),
         fetchSmplstreamStream(playable),
         fetchMediafusionStream(playable),
-        fetchTorrentioStream(playable)
+        fetchTorrentioStream(playable),
+        fetchVidlinkStream(playable)
       ]);
 
       const unwrap = (result) => result.status === "fulfilled" ? result.value : null;
@@ -1000,7 +1001,8 @@ export default function App() {
       const smplStreams = Array.isArray(smplstreamStreams) ? smplstreamStreams : smplstreamStreams ? [smplstreamStreams] : [];
       const mfStreams = Array.isArray(mediafusionStreams) ? mediafusionStreams : [];
       const torrentioStreams = Array.isArray(torrentioStreamsRaw) ? torrentioStreamsRaw : [];
-      const apiStreams = [...flixhqStreams, ...ezvidStreams, ...smplStreams, ...mfStreams, ...(data.streams || [])];
+      const vidlinkDirectStream = unwrap(vidlinkExtractResult);
+      const apiStreams = [...(vidlinkDirectStream ? [vidlinkDirectStream] : []), ...flixhqStreams, ...ezvidStreams, ...smplStreams, ...mfStreams, ...(data.streams || [])];
 
       if (torrentioStreams.length > 0) {
         showToast(`Torrentio · ${torrentioStreams.length} magnet${torrentioStreams.length === 1 ? "" : "s"} ready`, "info");
