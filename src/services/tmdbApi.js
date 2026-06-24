@@ -69,16 +69,39 @@ export async function fetchTmdbDetails(item) {
   const releaseDate = details.release_date || details.first_air_date || "";
   const genres = details.genres?.map((genre) => genre.name).filter(Boolean);
 
-  return {
+  const base = {
     ...item,
     title,
     rating: details.vote_average ? Number(details.vote_average.toFixed(1)) : item.rating,
     year: releaseDate ? releaseDate.slice(0, 4) : item.year,
-    duration: details.runtime ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}m` : item.duration,
     genres: genres?.length ? genres : item.genres,
     description: details.overview || item.description,
     posterUrl: getImageUrl(details.poster_path, "w500") || item.posterUrl,
-    backdropUrl: getImageUrl(details.backdrop_path, "w1280") || item.backdropUrl
+    backdropUrl: getImageUrl(details.backdrop_path, "w1280") || item.backdropUrl,
+    tagline: details.tagline || item.tagline || undefined,
+    voteCount: details.vote_count || item.voteCount || undefined,
+    originalLanguage: details.original_language || item.originalLanguage || undefined,
+  };
+
+  if (item.tmdbMediaType === "tv") {
+    const runtime = details.episode_run_time?.[0];
+    return {
+      ...base,
+      duration: runtime ? `${runtime} min` : item.duration,
+      status: details.status || item.status || undefined,
+      network: details.networks?.[0]?.name || item.network || undefined,
+      totalSeasons: details.number_of_seasons || item.totalSeasons || undefined,
+      totalEpisodes: details.number_of_episodes || item.totalEpisodes || undefined,
+      lastAirDate: details.last_air_date || item.lastAirDate || undefined,
+      inProduction: details.in_production ?? item.inProduction ?? undefined,
+      creator: details.created_by?.map((c) => c.name).filter(Boolean).join(", ") || item.creator,
+      originCountry: details.origin_country?.join(", ") || item.originCountry || undefined,
+    };
+  }
+
+  return {
+    ...base,
+    duration: details.runtime ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}m` : item.duration,
   };
 }
 
@@ -147,7 +170,6 @@ export async function normalizeTmdbCandidate(candidate) {
   };
 
   const detailed = await fetchTmdbDetails(baseItem);
-  const genres = normalizeGenres(detailed.genres);
   const normalizedType = detailed.type;
 
   return {
@@ -157,12 +179,16 @@ export async function normalizeTmdbCandidate(candidate) {
     streamType: normalizedType,
     streamId: normalizedType === "movie" ? buildStreamId(normalizedType, detailed.tmdbId) : undefined,
     videoUrl: normalizedType === "movie" ? SAMPLE_MOVIE_URL : undefined,
-    genres,
-    vibe: pickVibe(genres),
-    isAutoAdded: true,
-    addedAt: baseItem.addedAt,
     seasons: normalizedType === "series" ? [] : undefined,
-    needsSeasonHydration: normalizedType === "series"
+    needsSeasonHydration: normalizedType === "series",
+    tagline: detailed.tagline || undefined,
+    status: detailed.status || undefined,
+    network: detailed.network || undefined,
+    totalSeasons: detailed.totalSeasons || undefined,
+    totalEpisodes: detailed.totalEpisodes || undefined,
+    lastAirDate: detailed.lastAirDate || undefined,
+    inProduction: detailed.inProduction ?? undefined,
+    originCountry: detailed.originCountry || undefined,
   };
 }
 

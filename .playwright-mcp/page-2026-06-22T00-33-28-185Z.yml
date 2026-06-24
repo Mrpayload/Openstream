@@ -1,0 +1,138 @@
+- generic [ref=e2]:
+  - generic "Openstream loading screen" [ref=e3]:
+    - generic:
+      - generic: ▓▒░ INITIALIZING OPEN STREAM ░▒▓
+      - generic: "[ESC] TO SKIP"
+    - generic:
+      - generic: LIVE • CH.404 • 24/7
+      - generic: ~ 0xA2 • 0xB1 • 0xC0
+      - generic: SIGNAL ACQUIRED
+      - generic: "NODES ONLINE: 0000"
+    - main [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic: ┌
+          - generic: ┐
+          - generic: └
+          - generic: ┘
+          - generic [ref=e8]: /
+          - generic [ref=e9]: ">"
+          - generic [ref=e10]: █
+        - generic [ref=e11]:
+          - generic "open stream" [ref=e12]:
+            - generic [ref=e13]: o
+            - generic [ref=e14]: p
+            - generic [ref=e15]: e
+            - generic [ref=e16]: "n"
+            - generic [ref=e18]: s
+            - generic [ref=e19]: t
+            - generic [ref=e20]: r
+            - generic [ref=e21]: e
+            - generic [ref=e22]: a
+            - generic [ref=e23]: m
+          - generic [ref=e24]:
+            - text: your freedom to stream free
+            - generic [ref=e25]: _
+      - generic [ref=e26]: // CLICK ANYWHERE TO BROADCAST • MOVE CURSOR OVER THE GRID
+    - generic:
+      - img
+    - generic [ref=e28]: ">> CHANNEL 404 // NO LOGIN REQUIRED>> NO ALGORITHM. NO ADS. NO TRACKING.>> 1,337 ACTIVE NODES>> STREAM ANYWHERE. OWN EVERYWHERE.>> BITRATE: ∞ KBPS>> WAITING FOR TMDB SIGNAL"
+  - link "Skip to content" [ref=e29] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e30]:
+    - button "┌ ┐ └ ┘ > | █ Openstream Your freedom to stream free" [ref=e31] [cursor=pointer]:
+      - generic [ref=e34]:
+        - generic: ┌
+        - generic: ┐
+        - generic: └
+        - generic: ┘
+        - generic [ref=e35]: ">"
+        - generic [ref=e36]: "|"
+        - generic [ref=e37]: █
+      - generic [ref=e38]:
+        - generic "Openstream" [ref=e39]:
+          - generic [ref=e40]: O
+          - generic [ref=e42]: p
+          - generic [ref=e44]: e
+          - generic [ref=e46]: "n"
+          - generic [ref=e48]: s
+          - generic [ref=e50]: t
+          - generic [ref=e52]: r
+          - generic [ref=e54]: e
+          - generic [ref=e56]: a
+          - generic [ref=e58]: m
+          - generic [ref=e59]: _
+        - generic [ref=e60]: Your freedom to stream free
+    - navigation [ref=e61]:
+      - button "Home" [ref=e62] [cursor=pointer]
+      - button "My List" [ref=e63] [cursor=pointer]
+    - button "Refreshing" [disabled] [ref=e64]:
+      - img [ref=e65]
+      - generic [ref=e70]: Refreshing
+    - generic [ref=e71]:
+      - img [ref=e72]
+      - textbox / [ref=e75]:
+        - /placeholder: Search title, cast, genre, year...
+      - generic: /
+    - button "Toggle sound" [ref=e76] [cursor=pointer]:
+      - img [ref=e77]
+  - generic [ref=e81]:
+    - generic [ref=e82]:
+      - img [ref=e83]
+      - generic [ref=e85]:
+        - text: For
+        - strong [ref=e86]: complete popup and ad blocking
+        - text: ", install"
+        - link "uBlock Origin" [ref=e87] [cursor=pointer]:
+          - /url: https://github.com/gorhill/uBlock
+          - text: uBlock Origin
+          - img [ref=e88]
+        - text: — open-source, lightweight, and blocks ads, pop-ups, overlays, and trackers.
+    - button [ref=e92] [cursor=pointer]:
+      - img [ref=e93]
+  - generic [ref=e96] [cursor=pointer]:
+    - img [ref=e97]
+    - generic [ref=e100]: "0"
+  - main [ref=e101]:
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - img "Stranger Things backdrop" [ref=e104]
+        - generic [ref=e107]:
+          - text: Featured Now
+          - heading "Stranger Things" [level=1] [ref=e108]
+          - generic [ref=e109]:
+            - generic [ref=e110]: "9.2"
+            - generic [ref=e111]: "2024"
+            - generic [ref=e112]: TV Show
+            - generic [ref=e113]: Sci-Fi / Horror
+          - paragraph [ref=e114]: When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl with telekinetic powers.
+          - generic [ref=e115]:
+            - button "Play" [ref=e116] [cursor=pointer]:
+              - img [ref=e117]
+              - text: Play
+            - button "Details" [ref=e119] [cursor=pointer]
+            - button "My List" [ref=e120] [cursor=pointer]:
+              - img [ref=e121]
+              - text: My List
+          - generic [ref=e125]: Refreshing TMDB catalog...
+      - region "Refreshing TMDB details" [ref=e126]
+      - generic [ref=e139]:
+        - generic "Genre filters" [ref=e140]:
+          - button "All" [ref=e141] [cursor=pointer]
+          - button "Action" [ref=e142] [cursor=pointer]
+          - button "Sci-Fi" [ref=e143] [cursor=pointer]
+          - button "Horror" [ref=e144] [cursor=pointer]
+          - button "Drama" [ref=e145] [cursor=pointer]
+          - button "Comedy" [ref=e146] [cursor=pointer]
+          - button "Mystery" [ref=e147] [cursor=pointer]
+          - button "Animation" [ref=e148] [cursor=pointer]
+          - button "Thriller" [ref=e149] [cursor=pointer]
+          - button "Romance" [ref=e150] [cursor=pointer]
+          - button "Adventure" [ref=e151] [cursor=pointer]
+        - generic "Advanced search filters" [ref=e152]:
+          - button "Advanced Search" [ref=e153] [cursor=pointer]:
+            - img [ref=e154]
+            - text: Advanced Search
+            - img [ref=e155]
+          - button "Reset" [ref=e157] [cursor=pointer]
+      - region "Loading category data" [ref=e159]

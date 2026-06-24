@@ -180,7 +180,21 @@ const hydrateSeasonsForItem = async (item) => {
   }
 
   saveToSeasonsCache(item.tmdbId, seasons);
-  return { ...item, seasons, needsSeasonHydration: false };
+
+  // Merge additional series metadata from the TMDB TV detail response
+  const meta = {
+    status: tmdbData.status || item.status || undefined,
+    network: tmdbData.networks?.[0]?.name || item.network || undefined,
+    totalSeasons: tmdbData.number_of_seasons || item.totalSeasons || seasons.length,
+    totalEpisodes: tmdbData.number_of_episodes || item.totalEpisodes || undefined,
+    lastAirDate: tmdbData.last_air_date || item.lastAirDate || undefined,
+    inProduction: tmdbData.in_production ?? item.inProduction ?? undefined,
+    originCountry: tmdbData.origin_country?.join(", ") || item.originCountry || undefined,
+    creator: tmdbData.created_by?.map((c) => c.name).filter(Boolean).join(", ") || item.creator,
+    tagline: tmdbData.tagline || item.tagline || undefined,
+  };
+
+  return { ...item, ...meta, seasons, needsSeasonHydration: false };
 };
 
 const IMAGE_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 750'%3E%3Crect width='500' height='750' fill='%230C0C0C'/%3E%3Ccircle cx='250' cy='290' r='78' fill='%23222222' opacity='.72'/%3E%3Cpath d='M222 254v72l72-36z' fill='%23FFFFFF'/%3E%3Ctext x='250' y='430' text-anchor='middle' fill='%23888888' font-family='Arial,sans-serif' font-size='28' font-weight='700'%3EPoster unavailable%3C/text%3E%3C/svg%3E";
@@ -1398,18 +1412,56 @@ export default function App() {
                       <div className="player-detail-copy">
                         <span className="eyebrow">{typeLabel(nowPlayingMovie.type)}</span>
                         <h2>{nowPlayingMovie.title}</h2>
+                        {nowPlayingMovie.tagline && (
+                          <span className="tagline">&ldquo;{nowPlayingMovie.tagline}&rdquo;</span>
+                        )}
                         <div className="meta-line">
                           <span><Star size={14} fill="currentColor" /> {nowPlayingMovie.rating || "--"}</span>
                           <span><Calendar size={14} /> {nowPlayingMovie.year}</span>
+                          {nowPlayingMovie.duration && <span>{nowPlayingMovie.duration}</span>}
                           <span>{nowPlayingMovie.genres?.slice(0, 3).join(" / ")}</span>
                         </div>
                         <p>{nowPlayingMovie.description}</p>
                         <div className="detail-meta-grid">
                           <span>Creator</span>
                           <strong>{nowPlayingMovie.creator || "Unknown"}</strong>
+                          {nowPlayingMovie.network && (
+                            <>
+                              <span>Network</span>
+                              <strong>{nowPlayingMovie.network}</strong>
+                            </>
+                          )}
                           <span>Cast</span>
                           <strong>{nowPlayingMovie.cast?.slice(0, 4).join(", ") || "Not listed"}</strong>
                         </div>
+                        {isSeries && (nowPlayingMovie.status || nowPlayingMovie.totalSeasons || nowPlayingMovie.totalEpisodes) && (
+                          <div className="detail-meta-grid series-meta">
+                            {nowPlayingMovie.status && (
+                              <>
+                                <span>Status</span>
+                                <strong>{nowPlayingMovie.status}</strong>
+                              </>
+                            )}
+                            {nowPlayingMovie.totalSeasons && (
+                              <>
+                                <span>Seasons</span>
+                                <strong>{nowPlayingMovie.totalSeasons}</strong>
+                              </>
+                            )}
+                            {nowPlayingMovie.totalEpisodes && (
+                              <>
+                                <span>Episodes</span>
+                                <strong>{nowPlayingMovie.totalEpisodes}</strong>
+                              </>
+                            )}
+                            {nowPlayingMovie.originCountry && (
+                              <>
+                                <span>Country</span>
+                                <strong>{nowPlayingMovie.originCountry}</strong>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 

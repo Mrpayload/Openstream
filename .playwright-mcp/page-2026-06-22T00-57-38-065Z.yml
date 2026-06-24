@@ -1,0 +1,797 @@
+- generic [ref=e2]:
+  - generic "Openstream loading screen" [ref=e3]:
+    - generic:
+      - generic: ▓▒░ INITIALIZING OPEN STREAM ░▒▓
+      - generic: "[ESC] TO SKIP"
+    - generic:
+      - generic: LIVE • CH.404 • 24/7
+      - generic: ~ 0xA2 • 0xB1 • 0xC0
+      - generic: SIGNAL ACQUIRED
+      - generic: "NODES ONLINE: 0000"
+    - main [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic: ┌
+          - generic: ┐
+          - generic: └
+          - generic: ┘
+          - generic [ref=e8]: /
+          - generic [ref=e9]: ">"
+          - generic [ref=e10]: █
+        - generic [ref=e11]:
+          - generic "open stream" [ref=e12]:
+            - generic [ref=e13]: o
+            - generic [ref=e14]: p
+            - generic [ref=e15]: e
+            - generic [ref=e16]: "n"
+            - generic [ref=e18]: s
+            - generic [ref=e19]: t
+            - generic [ref=e20]: r
+            - generic [ref=e21]: e
+            - generic [ref=e22]: a
+            - generic [ref=e23]: m
+          - generic [ref=e24]:
+            - text: your freedom to stream free
+            - generic [ref=e25]: _
+      - generic [ref=e26]: // CLICK ANYWHERE TO BROADCAST • MOVE CURSOR OVER THE GRID
+    - generic:
+      - img
+    - generic [ref=e28]: ">> CHANNEL 404 // NO LOGIN REQUIRED>> NO ALGORITHM. NO ADS. NO TRACKING.>> 1,337 ACTIVE NODES>> STREAM ANYWHERE. OWN EVERYWHERE.>> BITRATE: ∞ KBPS>> WAITING FOR TMDB SIGNAL"
+  - link "Skip to content" [ref=e29] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e30]:
+    - button "┌ ┐ └ ┘ × ⋮ █ Openstream Your freedom to stream free" [ref=e31] [cursor=pointer]:
+      - generic [ref=e34]:
+        - generic: ┌
+        - generic: ┐
+        - generic: └
+        - generic: ┘
+        - generic [ref=e35]: ×
+        - generic [ref=e36]: ⋮
+        - generic [ref=e37]: █
+      - generic [ref=e38]:
+        - generic "Openstream" [ref=e39]:
+          - generic [ref=e40]: O
+          - generic [ref=e42]: p
+          - generic [ref=e44]: e
+          - generic [ref=e46]: "n"
+          - generic [ref=e48]: s
+          - generic [ref=e50]: t
+          - generic [ref=e52]: r
+          - generic [ref=e54]: e
+          - generic [ref=e56]: a
+          - generic [ref=e58]: m
+          - generic [ref=e59]: _
+        - generic [ref=e60]: Your freedom to stream free
+    - navigation [ref=e61]:
+      - button "Home" [ref=e62] [cursor=pointer]
+      - button "My List" [ref=e63] [cursor=pointer]
+    - button "Refreshing" [disabled] [ref=e64]:
+      - img [ref=e65]
+      - generic [ref=e70]: Refreshing
+    - generic [ref=e71]:
+      - img [ref=e72]
+      - textbox / [ref=e75]:
+        - /placeholder: Search title, cast, genre, year...
+      - generic: /
+    - button "Toggle sound" [ref=e76] [cursor=pointer]:
+      - img [ref=e77]
+  - generic [ref=e81]:
+    - generic [ref=e82]:
+      - img [ref=e83]
+      - generic [ref=e85]:
+        - text: For
+        - strong [ref=e86]: complete popup and ad blocking
+        - text: ", install"
+        - link "uBlock Origin" [ref=e87] [cursor=pointer]:
+          - /url: https://github.com/gorhill/uBlock
+          - text: uBlock Origin
+          - img [ref=e88]
+        - text: — open-source, lightweight, and blocks ads, pop-ups, overlays, and trackers.
+    - button [ref=e92] [cursor=pointer]:
+      - img [ref=e93]
+  - generic [ref=e96] [cursor=pointer]:
+    - img [ref=e97]
+    - generic [ref=e100]: "0"
+  - main [ref=e101]:
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - img "Stranger Things backdrop" [ref=e104]
+        - generic [ref=e107]:
+          - text: Featured Now
+          - heading "Stranger Things" [level=1] [ref=e108]
+          - generic [ref=e109]:
+            - generic [ref=e110]: "9.2"
+            - generic [ref=e111]: "2024"
+            - generic [ref=e112]: TV Show
+            - generic [ref=e113]: Sci-Fi / Horror
+          - paragraph [ref=e114]: When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl with telekinetic powers.
+          - generic [ref=e115]:
+            - button "Play" [ref=e116] [cursor=pointer]:
+              - img [ref=e117]
+              - text: Play
+            - button "Details" [ref=e119] [cursor=pointer]
+            - button "My List" [ref=e120] [cursor=pointer]:
+              - img [ref=e121]
+              - text: My List
+          - generic [ref=e125]: Refreshing TMDB catalog...
+      - region "Refreshing TMDB details" [ref=e126]
+      - generic [ref=e139]:
+        - generic "Genre filters" [ref=e140]:
+          - button "All" [ref=e141] [cursor=pointer]
+          - button "Action" [ref=e142] [cursor=pointer]
+          - button "Sci-Fi" [ref=e143] [cursor=pointer]
+          - button "Horror" [ref=e144] [cursor=pointer]
+          - button "Drama" [ref=e145] [cursor=pointer]
+          - button "Comedy" [ref=e146] [cursor=pointer]
+          - button "Mystery" [ref=e147] [cursor=pointer]
+          - button "Animation" [ref=e148] [cursor=pointer]
+          - button "Thriller" [ref=e149] [cursor=pointer]
+          - button "Romance" [ref=e150] [cursor=pointer]
+          - button "Adventure" [ref=e151] [cursor=pointer]
+        - generic "Advanced search filters" [ref=e152]:
+          - button "Advanced Search" [ref=e153] [cursor=pointer]:
+            - img [ref=e154]
+            - text: Advanced Search
+            - img [ref=e155]
+          - button "Reset" [ref=e157] [cursor=pointer]
+      - generic [ref=e158]:
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - heading "Trending" [level=2] [ref=e161]
+            - generic [ref=e162]: What's popular right now
+          - generic [ref=e163]:
+            - generic [ref=e164]:
+              - heading "Most Popular" [level=2] [ref=e165]
+              - generic [ref=e166]: 12 titles
+            - generic [ref=e167]:
+              - button "Open details for Obsession" [ref=e168] [cursor=pointer]:
+                - img "Obsession poster" [ref=e169]
+                - button "Toggle favorite" [ref=e170]:
+                  - img [ref=e171]
+                - generic [ref=e173]:
+                  - heading "Obsession" [level=3] [ref=e174]
+                  - paragraph [ref=e175]: 7.9 · 2026 · Movie
+              - button "Open details for Michael" [ref=e176] [cursor=pointer]:
+                - img "Michael poster" [ref=e177]
+                - button "Toggle favorite" [ref=e178]:
+                  - img [ref=e179]
+                - generic [ref=e181]:
+                  - heading "Michael" [level=3] [ref=e182]
+                  - paragraph [ref=e183]: 8.7 · 2026 · Movie
+              - button "Open details for Mortal Kombat II" [ref=e184] [cursor=pointer]:
+                - img "Mortal Kombat II poster" [ref=e185]
+                - button "Toggle favorite" [ref=e186]:
+                  - img [ref=e187]
+                - generic [ref=e189]:
+                  - heading "Mortal Kombat II" [level=3] [ref=e190]
+                  - paragraph [ref=e191]: 8 · 2026 · Movie
+              - button "Open details for Cocktail 2" [ref=e192] [cursor=pointer]:
+                - img "Cocktail 2 poster" [ref=e193]
+                - button "Toggle favorite" [ref=e194]:
+                  - img [ref=e195]
+                - generic [ref=e197]:
+                  - heading "Cocktail 2" [level=3] [ref=e198]
+                  - paragraph [ref=e199]: 7 · 2026 · Movie
+              - button "Open details for Madness" [ref=e200] [cursor=pointer]:
+                - img "Madness poster" [ref=e201]
+                - button "Toggle favorite" [ref=e202]:
+                  - img [ref=e203]
+                - generic [ref=e205]:
+                  - heading "Madness" [level=3] [ref=e206]
+                  - paragraph [ref=e207]: 5 · 1980 · Movie
+              - button "Open details for Bhooth Bangla" [ref=e208] [cursor=pointer]:
+                - img "Bhooth Bangla poster" [ref=e209]
+                - button "Toggle favorite" [ref=e210]:
+                  - img [ref=e211]
+                - generic [ref=e213]:
+                  - heading "Bhooth Bangla" [level=3] [ref=e214]
+                  - paragraph [ref=e215]: 5.6 · 2026 · Movie
+              - button "Open details for Salitan" [ref=e216] [cursor=pointer]:
+                - img "Salitan poster" [ref=e217]
+                - button "Toggle favorite" [ref=e218]:
+                  - img [ref=e219]
+                - generic [ref=e221]:
+                  - heading "Salitan" [level=3] [ref=e222]
+                  - paragraph [ref=e223]: 4 · 2024 · Movie
+              - button "Open details for Karuppu" [ref=e224] [cursor=pointer]:
+                - img "Karuppu poster" [ref=e225]
+                - button "Toggle favorite" [ref=e226]:
+                  - img [ref=e227]
+                - generic [ref=e229]:
+                  - heading "Karuppu" [level=3] [ref=e230]
+                  - paragraph [ref=e231]: 6.7 · 2026 · Movie
+              - button "Open details for Toy Story 5" [ref=e232] [cursor=pointer]:
+                - img "Toy Story 5 poster" [ref=e233]
+                - button "Toggle favorite" [ref=e234]:
+                  - img [ref=e235]
+                - generic [ref=e237]:
+                  - heading "Toy Story 5" [level=3] [ref=e238]
+                  - paragraph [ref=e239]: 7.4 · 2026 · Movie
+              - button "Open details for Your Heart Will Be Broken" [ref=e240] [cursor=pointer]:
+                - img "Your Heart Will Be Broken poster" [ref=e241]
+                - button "Toggle favorite" [ref=e242]:
+                  - img [ref=e243]
+                - generic [ref=e245]:
+                  - heading "Your Heart Will Be Broken" [level=3] [ref=e246]
+                  - paragraph [ref=e247]: 7 · 2026 · Movie
+              - button "Open details for Peddi" [ref=e248] [cursor=pointer]:
+                - img "Peddi poster" [ref=e249]
+                - button "Toggle favorite" [ref=e250]:
+                  - img [ref=e251]
+                - generic [ref=e253]:
+                  - heading "Peddi" [level=3] [ref=e254]
+                  - paragraph [ref=e255]: 6.2 · 2026 · Movie
+              - button "Open details for Disclosure Day" [ref=e256] [cursor=pointer]:
+                - img "Disclosure Day poster" [ref=e257]
+                - button "Toggle favorite" [ref=e258]:
+                  - img [ref=e259]
+                - generic [ref=e261]:
+                  - heading "Disclosure Day" [level=3] [ref=e262]
+                  - paragraph [ref=e263]: 6.7 · 2026 · Movie
+        - generic [ref=e264]:
+          - generic [ref=e265]:
+            - heading "Top Rated" [level=2] [ref=e266]
+            - generic [ref=e267]: Highest rated movies
+          - generic [ref=e268]:
+            - generic [ref=e269]:
+              - heading "Top Rated" [level=2] [ref=e270]
+              - generic [ref=e271]: 12 titles
+            - generic [ref=e272]:
+              - button "Open details for Swapped" [ref=e273] [cursor=pointer]:
+                - img "Swapped poster" [ref=e274]
+                - generic [ref=e275]: Top01
+                - button "Toggle favorite" [ref=e276]:
+                  - img [ref=e277]
+                - generic [ref=e279]:
+                  - heading "Swapped" [level=3] [ref=e280]
+                  - paragraph [ref=e281]: 9 · 2026 · Movie
+              - button "Open details for The Shawshank Redemption" [ref=e282] [cursor=pointer]:
+                - img "The Shawshank Redemption poster" [ref=e283]
+                - generic [ref=e284]: Top02
+                - button "Toggle favorite" [ref=e285]:
+                  - img [ref=e286]
+                - generic [ref=e288]:
+                  - heading "The Shawshank Redemption" [level=3] [ref=e289]
+                  - paragraph [ref=e290]: 8.7 · 1994 · Movie
+              - button "Open details for The Godfather" [ref=e291] [cursor=pointer]:
+                - img "The Godfather poster" [ref=e292]
+                - generic [ref=e293]: Top03
+                - button "Toggle favorite" [ref=e294]:
+                  - img [ref=e295]
+                - generic [ref=e297]:
+                  - heading "The Godfather" [level=3] [ref=e298]
+                  - paragraph [ref=e299]: 8.7 · 1972 · Movie
+              - button "Open details for Project Hail Mary" [ref=e300] [cursor=pointer]:
+                - img "Project Hail Mary poster" [ref=e301]
+                - generic [ref=e302]: Top04
+                - button "Toggle favorite" [ref=e303]:
+                  - img [ref=e304]
+                - generic [ref=e306]:
+                  - heading "Project Hail Mary" [level=3] [ref=e307]
+                  - paragraph [ref=e308]: 8.7 · 2026 · Movie
+              - button "Open details for Michael" [ref=e309] [cursor=pointer]:
+                - img "Michael poster" [ref=e310]
+                - generic [ref=e311]: Top05
+                - button "Toggle favorite" [ref=e312]:
+                  - img [ref=e313]
+                - generic [ref=e315]:
+                  - heading "Michael" [level=3] [ref=e316]
+                  - paragraph [ref=e317]: 8.7 · 2026 · Movie
+              - button "Open details for The Godfather Part II" [ref=e318] [cursor=pointer]:
+                - img "The Godfather Part II poster" [ref=e319]
+                - generic [ref=e320]: Top06
+                - button "Toggle favorite" [ref=e321]:
+                  - img [ref=e322]
+                - generic [ref=e324]:
+                  - heading "The Godfather Part II" [level=3] [ref=e325]
+                  - paragraph [ref=e326]: 8.6 · 1974 · Movie
+              - button "Open details for Schindler's List" [ref=e327] [cursor=pointer]:
+                - img "Schindler's List poster" [ref=e328]
+                - generic [ref=e329]: Top07
+                - button "Toggle favorite" [ref=e330]:
+                  - img [ref=e331]
+                - generic [ref=e333]:
+                  - heading "Schindler's List" [level=3] [ref=e334]
+                  - paragraph [ref=e335]: 8.6 · 1993 · Movie
+              - button "Open details for Remarkably Bright Creatures" [ref=e336] [cursor=pointer]:
+                - img "Remarkably Bright Creatures poster" [ref=e337]
+                - generic [ref=e338]: Top08
+                - button "Toggle favorite" [ref=e339]:
+                  - img [ref=e340]
+                - generic [ref=e342]:
+                  - heading "Remarkably Bright Creatures" [level=3] [ref=e343]
+                  - paragraph [ref=e344]: 8.6 · 2026 · Movie
+              - button "Open details for 12 Angry Men" [ref=e345] [cursor=pointer]:
+                - img "12 Angry Men poster" [ref=e346]
+                - generic [ref=e347]: Top09
+                - button "Toggle favorite" [ref=e348]:
+                  - img [ref=e349]
+                - generic [ref=e351]:
+                  - heading "12 Angry Men" [level=3] [ref=e352]
+                  - paragraph [ref=e353]: 8.6 · 1957 · Movie
+              - button "Open details for Spirited Away" [ref=e354] [cursor=pointer]:
+                - img "Spirited Away poster" [ref=e355]
+                - generic [ref=e356]: Top10
+                - button "Toggle favorite" [ref=e357]:
+                  - img [ref=e358]
+                - generic [ref=e360]:
+                  - heading "Spirited Away" [level=3] [ref=e361]
+                  - paragraph [ref=e362]: 8.5 · 2001 · Movie
+              - button "Open details for The Dark Knight" [ref=e363] [cursor=pointer]:
+                - img "The Dark Knight poster" [ref=e364]
+                - generic [ref=e365]: Top11
+                - button "Toggle favorite" [ref=e366]:
+                  - img [ref=e367]
+                - generic [ref=e369]:
+                  - heading "The Dark Knight" [level=3] [ref=e370]
+                  - paragraph [ref=e371]: 8.5 · 2008 · Movie
+              - button "Open details for Dilwale Dulhania Le Jayenge" [ref=e372] [cursor=pointer]:
+                - img "Dilwale Dulhania Le Jayenge poster" [ref=e373]
+                - generic [ref=e374]: Top12
+                - button "Toggle favorite" [ref=e375]:
+                  - img [ref=e376]
+                - generic [ref=e378]:
+                  - heading "Dilwale Dulhania Le Jayenge" [level=3] [ref=e379]
+                  - paragraph [ref=e380]: 8.5 · 1995 · Movie
+        - generic [ref=e381]:
+          - generic [ref=e382]:
+            - heading "New Releases" [level=2] [ref=e383]
+            - generic [ref=e384]: Last 30 days
+          - generic [ref=e385]:
+            - generic [ref=e386]:
+              - heading "New Releases" [level=2] [ref=e387]
+              - generic [ref=e388]: 12 titles
+            - generic [ref=e389]:
+              - button "Open details for Cocktail 2" [ref=e390] [cursor=pointer]:
+                - img "Cocktail 2 poster" [ref=e391]
+                - button "Toggle favorite" [ref=e392]:
+                  - img [ref=e393]
+                - generic [ref=e395]:
+                  - heading "Cocktail 2" [level=3] [ref=e396]
+                  - paragraph [ref=e397]: 7 · 2026 · Movie
+              - button "Open details for Toy Story 5" [ref=e398] [cursor=pointer]:
+                - img "Toy Story 5 poster" [ref=e399]
+                - button "Toggle favorite" [ref=e400]:
+                  - img [ref=e401]
+                - generic [ref=e403]:
+                  - heading "Toy Story 5" [level=3] [ref=e404]
+                  - paragraph [ref=e405]: 7.4 · 2026 · Movie
+              - button "Open details for Peddi" [ref=e406] [cursor=pointer]:
+                - img "Peddi poster" [ref=e407]
+                - button "Toggle favorite" [ref=e408]:
+                  - img [ref=e409]
+                - generic [ref=e411]:
+                  - heading "Peddi" [level=3] [ref=e412]
+                  - paragraph [ref=e413]: 6.2 · 2026 · Movie
+              - button "Open details for Disclosure Day" [ref=e414] [cursor=pointer]:
+                - img "Disclosure Day poster" [ref=e415]
+                - button "Toggle favorite" [ref=e416]:
+                  - img [ref=e417]
+                - generic [ref=e419]:
+                  - heading "Disclosure Day" [level=3] [ref=e420]
+                  - paragraph [ref=e421]: 6.7 · 2026 · Movie
+              - 'button "Open details for Your Fault: London" [ref=e422] [cursor=pointer]':
+                - 'img "Your Fault: London poster" [ref=e423]'
+                - button "Toggle favorite" [ref=e424]:
+                  - img [ref=e425]
+                - generic [ref=e427]:
+                  - 'heading "Your Fault: London" [level=3] [ref=e428]'
+                  - paragraph [ref=e429]: 7.7 · 2026 · Movie
+              - button "Open details for Hai Jawani Toh Ishq Hona Hai" [ref=e430] [cursor=pointer]:
+                - img "Hai Jawani Toh Ishq Hona Hai poster" [ref=e431]
+                - button "Toggle favorite" [ref=e432]:
+                  - img [ref=e433]
+                - generic [ref=e435]:
+                  - heading "Hai Jawani Toh Ishq Hona Hai" [level=3] [ref=e436]
+                  - paragraph [ref=e437]: 5.5 · 2026 · Movie
+              - button "Open details for The Furious" [ref=e438] [cursor=pointer]:
+                - img "The Furious poster" [ref=e439]
+                - button "Toggle favorite" [ref=e440]:
+                  - img [ref=e441]
+                - generic [ref=e443]:
+                  - heading "The Furious" [level=3] [ref=e444]
+                  - paragraph [ref=e445]: 7.7 · 2026 · Movie
+              - button "Open details for Main Vaapas Aaunga" [ref=e446] [cursor=pointer]:
+                - img "Main Vaapas Aaunga poster" [ref=e447]
+                - button "Toggle favorite" [ref=e448]:
+                  - img [ref=e449]
+                - generic [ref=e451]:
+                  - heading "Main Vaapas Aaunga" [level=3] [ref=e452]
+                  - paragraph [ref=e453]: 4 · 2026 · Movie
+              - button "Open details for Backrooms" [ref=e454] [cursor=pointer]:
+                - img "Backrooms poster" [ref=e455]
+                - button "Toggle favorite" [ref=e456]:
+                  - img [ref=e457]
+                - generic [ref=e459]:
+                  - heading "Backrooms" [level=3] [ref=e460]
+                  - paragraph [ref=e461]: 6.9 · 2026 · Movie
+              - button "Open details for Husbands in Action" [ref=e462] [cursor=pointer]:
+                - img "Husbands in Action poster" [ref=e463]
+                - button "Toggle favorite" [ref=e464]:
+                  - img [ref=e465]
+                - generic [ref=e467]:
+                  - heading "Husbands in Action" [level=3] [ref=e468]
+                  - paragraph [ref=e469]: 6.5 · 2026 · Movie
+              - button "Open details for Masters of the Universe" [ref=e470] [cursor=pointer]:
+                - img "Masters of the Universe poster" [ref=e471]
+                - button "Toggle favorite" [ref=e472]:
+                  - img [ref=e473]
+                - generic [ref=e475]:
+                  - heading "Masters of the Universe" [level=3] [ref=e476]
+                  - paragraph [ref=e477]: 7.2 · 2026 · Movie
+              - button "Open details for Voicemails for Isabelle" [ref=e478] [cursor=pointer]:
+                - img "Voicemails for Isabelle poster" [ref=e479]
+                - button "Toggle favorite" [ref=e480]:
+                  - img [ref=e481]
+                - generic [ref=e483]:
+                  - heading "Voicemails for Isabelle" [level=3] [ref=e484]
+                  - paragraph [ref=e485]: 7.7 · 2026 · Movie
+        - generic [ref=e486]:
+          - generic [ref=e487]:
+            - heading "Coming Soon" [level=2] [ref=e488]
+            - generic [ref=e489]: Upcoming releases
+          - generic [ref=e490]:
+            - generic [ref=e491]:
+              - heading "Coming Soon" [level=2] [ref=e492]
+              - generic [ref=e493]: 12 titles
+            - generic [ref=e494]:
+              - 'button "Open details for Spider-Man: Brand New Day" [ref=e495] [cursor=pointer]':
+                - 'img "Spider-Man: Brand New Day poster" [ref=e496]'
+                - button "Toggle favorite" [ref=e497]:
+                  - img [ref=e498]
+                - generic [ref=e500]:
+                  - 'heading "Spider-Man: Brand New Day" [level=3] [ref=e501]'
+                  - paragraph [ref=e502]: "-- · 2026 · Movie"
+              - 'button "Open details for Avatar Aang: The Last Airbender" [ref=e503] [cursor=pointer]':
+                - 'img "Avatar Aang: The Last Airbender poster" [ref=e504]'
+                - button "Toggle favorite" [ref=e505]:
+                  - img [ref=e506]
+                - generic [ref=e508]:
+                  - 'heading "Avatar Aang: The Last Airbender" [level=3] [ref=e509]'
+                  - paragraph [ref=e510]: "-- · 2026 · Movie"
+              - button "Open details for Supergirl" [ref=e511] [cursor=pointer]:
+                - img "Supergirl poster" [ref=e512]
+                - button "Toggle favorite" [ref=e513]:
+                  - img [ref=e514]
+                - generic [ref=e516]:
+                  - heading "Supergirl" [level=3] [ref=e517]
+                  - paragraph [ref=e518]: 4.1 · 2026 · Movie
+              - button "Open details for The Odyssey" [ref=e519] [cursor=pointer]:
+                - img "The Odyssey poster" [ref=e520]
+                - button "Toggle favorite" [ref=e521]:
+                  - img [ref=e522]
+                - generic [ref=e524]:
+                  - heading "The Odyssey" [level=3] [ref=e525]
+                  - paragraph [ref=e526]: "-- · 2026 · Movie"
+              - button "Open details for The Cat in the Hat" [ref=e527] [cursor=pointer]:
+                - img "The Cat in the Hat poster" [ref=e528]
+                - button "Toggle favorite" [ref=e529]:
+                  - img [ref=e530]
+                - generic [ref=e532]:
+                  - heading "The Cat in the Hat" [level=3] [ref=e533]
+                  - paragraph [ref=e534]: "-- · 2026 · Movie"
+              - button "Open details for Minions & Monsters" [ref=e535] [cursor=pointer]:
+                - img "Minions & Monsters poster" [ref=e536]
+                - button "Toggle favorite" [ref=e537]:
+                  - img [ref=e538]
+                - generic [ref=e540]:
+                  - heading "Minions & Monsters" [level=3] [ref=e541]
+                  - paragraph [ref=e542]: 9.5 · 2026 · Movie
+              - button "Open details for Shrek 5" [ref=e543] [cursor=pointer]:
+                - img "Shrek 5 poster" [ref=e544]
+                - button "Toggle favorite" [ref=e545]:
+                  - img [ref=e546]
+                - generic [ref=e548]:
+                  - heading "Shrek 5" [level=3] [ref=e549]
+                  - paragraph [ref=e550]: "-- · 2027 · Movie"
+              - button "Open details for Fast Forever" [ref=e551] [cursor=pointer]:
+                - img "Fast Forever poster" [ref=e552]
+                - button "Toggle favorite" [ref=e553]:
+                  - img [ref=e554]
+                - generic [ref=e556]:
+                  - heading "Fast Forever" [level=3] [ref=e557]
+                  - paragraph [ref=e558]: "-- · 2028 · Movie"
+              - button "Open details for Moana" [ref=e559] [cursor=pointer]:
+                - img "Moana poster" [ref=e560]
+                - button "Toggle favorite" [ref=e561]:
+                  - img [ref=e562]
+                - generic [ref=e564]:
+                  - heading "Moana" [level=3] [ref=e565]
+                  - paragraph [ref=e566]: "-- · 2026 · Movie"
+              - 'button "Open details for Avengers: Doomsday" [ref=e567] [cursor=pointer]':
+                - 'img "Avengers: Doomsday poster" [ref=e568]'
+                - button "Toggle favorite" [ref=e569]:
+                  - img [ref=e570]
+                - generic [ref=e572]:
+                  - 'heading "Avengers: Doomsday" [level=3] [ref=e573]'
+                  - paragraph [ref=e574]: "-- · 2026 · Movie"
+              - button "Open details for Evil Dead Burn" [ref=e575] [cursor=pointer]:
+                - img "Evil Dead Burn poster" [ref=e576]
+                - button "Toggle favorite" [ref=e577]:
+                  - img [ref=e578]
+                - generic [ref=e580]:
+                  - heading "Evil Dead Burn" [level=3] [ref=e581]
+                  - paragraph [ref=e582]: "-- · 2026 · Movie"
+              - button "Open details for From the Ashes" [ref=e583] [cursor=pointer]:
+                - img "From the Ashes poster" [ref=e584]
+                - button "Toggle favorite" [ref=e585]:
+                  - img [ref=e586]
+                - generic [ref=e588]:
+                  - heading "From the Ashes" [level=3] [ref=e589]
+                  - paragraph [ref=e590]: "-- · 2027 · Movie"
+        - generic [ref=e591]:
+          - generic [ref=e592]:
+            - heading "Regional" [level=2] [ref=e593]
+            - generic [ref=e594]: Bollywood & Mollywood
+          - generic [ref=e595]:
+            - generic [ref=e596]:
+              - heading "Bollywood" [level=2] [ref=e597]
+              - generic [ref=e598]: 12 titles
+            - generic [ref=e599]:
+              - button "Open details for Cocktail 2" [ref=e600] [cursor=pointer]:
+                - img "Cocktail 2 poster" [ref=e601]
+                - button "Toggle favorite" [ref=e602]:
+                  - img [ref=e603]
+                - generic [ref=e605]:
+                  - heading "Cocktail 2" [level=3] [ref=e606]
+                  - paragraph [ref=e607]: 7 · 2026 · Movie
+              - button "Open details for Bhooth Bangla" [ref=e608] [cursor=pointer]:
+                - img "Bhooth Bangla poster" [ref=e609]
+                - button "Toggle favorite" [ref=e610]:
+                  - img [ref=e611]
+                - generic [ref=e613]:
+                  - heading "Bhooth Bangla" [level=3] [ref=e614]
+                  - paragraph [ref=e615]: 5.5 · 2026 · Movie
+              - button "Open details for Hai Jawani Toh Ishq Hona Hai" [ref=e616] [cursor=pointer]:
+                - img "Hai Jawani Toh Ishq Hona Hai poster" [ref=e617]
+                - button "Toggle favorite" [ref=e618]:
+                  - img [ref=e619]
+                - generic [ref=e621]:
+                  - heading "Hai Jawani Toh Ishq Hona Hai" [level=3] [ref=e622]
+                  - paragraph [ref=e623]: 5.5 · 2026 · Movie
+              - button "Open details for Main Vaapas Aaunga" [ref=e624] [cursor=pointer]:
+                - img "Main Vaapas Aaunga poster" [ref=e625]
+                - button "Toggle favorite" [ref=e626]:
+                  - img [ref=e627]
+                - generic [ref=e629]:
+                  - heading "Main Vaapas Aaunga" [level=3] [ref=e630]
+                  - paragraph [ref=e631]: 4 · 2026 · Movie
+              - 'button "Open details for Dhurandhar: The Revenge" [ref=e632] [cursor=pointer]':
+                - 'img "Dhurandhar: The Revenge poster" [ref=e633]'
+                - button "Toggle favorite" [ref=e634]:
+                  - img [ref=e635]
+                - generic [ref=e637]:
+                  - 'heading "Dhurandhar: The Revenge" [level=3] [ref=e638]'
+                  - paragraph [ref=e639]: 7.3 · 2026 · Movie
+              - button "Open details for Bandar" [ref=e640] [cursor=pointer]:
+                - img "Bandar poster" [ref=e641]
+                - button "Toggle favorite" [ref=e642]:
+                  - img [ref=e643]
+                - generic [ref=e645]:
+                  - heading "Bandar" [level=3] [ref=e646]
+                  - paragraph [ref=e647]: 7 · 2026 · Movie
+              - 'button "Open details for Haunted 3D: Echoes of the Past" [ref=e648] [cursor=pointer]':
+                - 'img "Haunted 3D: Echoes of the Past poster" [ref=e649]'
+                - button "Toggle favorite" [ref=e650]:
+                  - img [ref=e651]
+                - generic [ref=e653]:
+                  - 'heading "Haunted 3D: Echoes of the Past" [level=3] [ref=e654]'
+                  - paragraph [ref=e655]: 10 · 2026 · Movie
+              - button "Open details for Bharat Bhhagya Viddhaata" [ref=e656] [cursor=pointer]:
+                - img "Bharat Bhhagya Viddhaata poster" [ref=e657]
+                - button "Toggle favorite" [ref=e658]:
+                  - img [ref=e659]
+                - generic [ref=e661]:
+                  - heading "Bharat Bhhagya Viddhaata" [level=3] [ref=e662]
+                  - paragraph [ref=e663]: "-- · 2026 · Movie"
+              - button "Open details for Maa Behen" [ref=e664] [cursor=pointer]:
+                - img "Maa Behen poster" [ref=e665]
+                - button "Toggle favorite" [ref=e666]:
+                  - img [ref=e667]
+                - generic [ref=e669]:
+                  - heading "Maa Behen" [level=3] [ref=e670]
+                  - paragraph [ref=e671]: 6.7 · 2026 · Movie
+              - button "Open details for Dhurandhar" [ref=e672] [cursor=pointer]:
+                - img "Dhurandhar poster" [ref=e673]
+                - button "Toggle favorite" [ref=e674]:
+                  - img [ref=e675]
+                - generic [ref=e677]:
+                  - heading "Dhurandhar" [level=3] [ref=e678]
+                  - paragraph [ref=e679]: 7.2 · 2025 · Movie
+              - button "Open details for Governor" [ref=e680] [cursor=pointer]:
+                - img "Governor poster" [ref=e681]
+                - button "Toggle favorite" [ref=e682]:
+                  - img [ref=e683]
+                - generic [ref=e685]:
+                  - heading "Governor" [level=3] [ref=e686]
+                  - paragraph [ref=e687]: 6 · 2026 · Movie
+              - button "Open details for GGS - Ganteng-Ganteng Sange" [ref=e688] [cursor=pointer]:
+                - img "GGS - Ganteng-Ganteng Sange poster" [ref=e689]
+                - button "Toggle favorite" [ref=e690]:
+                  - img [ref=e691]
+                - generic [ref=e693]:
+                  - heading "GGS - Ganteng-Ganteng Sange" [level=3] [ref=e694]
+                  - paragraph [ref=e695]: 6.1 · 2023 · Movie
+          - generic [ref=e696]:
+            - generic [ref=e697]:
+              - heading "Mollywood" [level=2] [ref=e698]
+              - generic [ref=e699]: 12 titles
+            - generic [ref=e700]:
+              - button "Open details for Dridam" [ref=e701] [cursor=pointer]:
+                - img "Dridam poster" [ref=e702]
+                - button "Toggle favorite" [ref=e703]:
+                  - img [ref=e704]
+                - generic [ref=e706]:
+                  - heading "Dridam" [level=3] [ref=e707]
+                  - paragraph [ref=e708]: 5.3 · 2026 · Movie
+              - button "Open details for Athiradi" [ref=e709] [cursor=pointer]:
+                - img "Athiradi poster" [ref=e710]
+                - button "Toggle favorite" [ref=e711]:
+                  - img [ref=e712]
+                - generic [ref=e714]:
+                  - heading "Athiradi" [level=3] [ref=e715]
+                  - paragraph [ref=e716]: 7.2 · 2026 · Movie
+              - button "Open details for Drishyam 3" [ref=e717] [cursor=pointer]:
+                - img "Drishyam 3 poster" [ref=e718]
+                - button "Toggle favorite" [ref=e719]:
+                  - img [ref=e720]
+                - generic [ref=e722]:
+                  - heading "Drishyam 3" [level=3] [ref=e723]
+                  - paragraph [ref=e724]: 7.3 · 2026 · Movie
+              - button "Open details for Patriot" [ref=e725] [cursor=pointer]:
+                - img "Patriot poster" [ref=e726]
+                - button "Toggle favorite" [ref=e727]:
+                  - img [ref=e728]
+                - generic [ref=e730]:
+                  - heading "Patriot" [level=3] [ref=e731]
+                  - paragraph [ref=e732]: 7.1 · 2026 · Movie
+              - button "Open details for Sambhavam Adhyayam Onnu" [ref=e733] [cursor=pointer]:
+                - img "Sambhavam Adhyayam Onnu poster" [ref=e734]
+                - button "Toggle favorite" [ref=e735]:
+                  - img [ref=e736]
+                - generic [ref=e738]:
+                  - heading "Sambhavam Adhyayam Onnu" [level=3] [ref=e739]
+                  - paragraph [ref=e740]: 6.4 · 2026 · Movie
+              - button "Open details for Vaazha II" [ref=e741] [cursor=pointer]:
+                - img "Vaazha II poster" [ref=e742]
+                - button "Toggle favorite" [ref=e743]:
+                  - img [ref=e744]
+                - generic [ref=e746]:
+                  - heading "Vaazha II" [level=3] [ref=e747]
+                  - paragraph [ref=e748]: 7.3 · 2026 · Movie
+              - 'button "Open details for Lokah Chapter 1: Chandra" [ref=e749] [cursor=pointer]':
+                - 'img "Lokah Chapter 1: Chandra poster" [ref=e750]'
+                - button "Toggle favorite" [ref=e751]:
+                  - img [ref=e752]
+                - generic [ref=e754]:
+                  - 'heading "Lokah Chapter 1: Chandra" [level=3] [ref=e755]'
+                  - paragraph [ref=e756]: 7.2 · 2025 · Movie
+              - button "Open details for Kattalan" [ref=e757] [cursor=pointer]:
+                - img "Kattalan poster" [ref=e758]
+                - button "Toggle favorite" [ref=e759]:
+                  - img [ref=e760]
+                - generic [ref=e762]:
+                  - heading "Kattalan" [level=3] [ref=e763]
+                  - paragraph [ref=e764]: 7.1 · 2026 · Movie
+              - 'button "Open details for RDX: Robert Dony Xavier" [ref=e765] [cursor=pointer]':
+                - 'img "RDX: Robert Dony Xavier poster" [ref=e766]'
+                - button "Toggle favorite" [ref=e767]:
+                  - img [ref=e768]
+                - generic [ref=e770]:
+                  - 'heading "RDX: Robert Dony Xavier" [level=3] [ref=e771]'
+                  - paragraph [ref=e772]: 6.7 · 2023 · Movie
+              - button "Open details for Marco" [ref=e773] [cursor=pointer]:
+                - img "Marco poster" [ref=e774]
+                - button "Toggle favorite" [ref=e775]:
+                  - img [ref=e776]
+                - generic [ref=e778]:
+                  - heading "Marco" [level=3] [ref=e779]
+                  - paragraph [ref=e780]: 6.5 · 2024 · Movie
+              - button "Open details for Balan - The Boy" [ref=e781] [cursor=pointer]:
+                - img "Balan - The Boy poster" [ref=e782]
+                - button "Toggle favorite" [ref=e783]:
+                  - img [ref=e784]
+                - generic [ref=e786]:
+                  - heading "Balan - The Boy" [level=3] [ref=e787]
+                  - paragraph [ref=e788]: "-- · 2026 · Movie"
+              - button "Open details for Irul" [ref=e789] [cursor=pointer]:
+                - img "Irul poster" [ref=e790]
+                - button "Toggle favorite" [ref=e791]:
+                  - img [ref=e792]
+                - generic [ref=e794]:
+                  - heading "Irul" [level=3] [ref=e795]
+                  - paragraph [ref=e796]: 5.6 · 2021 · Movie
+        - generic [ref=e797]:
+          - generic [ref=e798]:
+            - heading "Anime" [level=2] [ref=e799]
+            - generic [ref=e800]: Animated series & films
+          - generic [ref=e801]:
+            - generic [ref=e802]:
+              - heading "Anime" [level=2] [ref=e803]
+              - generic [ref=e804]: 12 titles
+            - generic [ref=e805]:
+              - button "Open details for Toy Story 5" [ref=e806] [cursor=pointer]:
+                - img "Toy Story 5 poster" [ref=e807]
+                - button "Toggle favorite" [ref=e808]:
+                  - img [ref=e809]
+                - generic [ref=e811]:
+                  - heading "Toy Story 5" [level=3] [ref=e812]
+                  - paragraph [ref=e813]: 7.4 · 2026 · Movie
+              - button "Open details for The Super Mario Galaxy Movie" [ref=e814] [cursor=pointer]:
+                - img "The Super Mario Galaxy Movie poster" [ref=e815]
+                - button "Toggle favorite" [ref=e816]:
+                  - img [ref=e817]
+                - generic [ref=e819]:
+                  - heading "The Super Mario Galaxy Movie" [level=3] [ref=e820]
+                  - paragraph [ref=e821]: 8.2 · 2026 · Movie
+              - button "Open details for Swapped" [ref=e822] [cursor=pointer]:
+                - img "Swapped poster" [ref=e823]
+                - button "Toggle favorite" [ref=e824]:
+                  - img [ref=e825]
+                - generic [ref=e827]:
+                  - heading "Swapped" [level=3] [ref=e828]
+                  - paragraph [ref=e829]: 9 · 2026 · Movie
+              - button "Open details for Hoppers" [ref=e830] [cursor=pointer]:
+                - img "Hoppers poster" [ref=e831]
+                - button "Toggle favorite" [ref=e832]:
+                  - img [ref=e833]
+                - generic [ref=e835]:
+                  - heading "Hoppers" [level=3] [ref=e836]
+                  - paragraph [ref=e837]: 8.2 · 2026 · Movie
+              - button "Open details for Toy Story" [ref=e838] [cursor=pointer]:
+                - img "Toy Story poster" [ref=e839]
+                - button "Toggle favorite" [ref=e840]:
+                  - img [ref=e841]
+                - generic [ref=e843]:
+                  - heading "Toy Story" [level=3] [ref=e844]
+                  - paragraph [ref=e845]: 8 · 1995 · Movie
+              - 'button "Open details for Demon Slayer: Kimetsu no Yaiba Infinity Castle" [ref=e846] [cursor=pointer]':
+                - 'img "Demon Slayer: Kimetsu no Yaiba Infinity Castle poster" [ref=e847]'
+                - button "Toggle favorite" [ref=e848]:
+                  - img [ref=e849]
+                - generic [ref=e851]:
+                  - 'heading "Demon Slayer: Kimetsu no Yaiba Infinity Castle" [level=3] [ref=e852]'
+                  - paragraph [ref=e853]: 7.7 · 2025 · Movie
+              - button "Open details for GOAT" [ref=e854] [cursor=pointer]:
+                - img "GOAT poster" [ref=e855]
+                - button "Toggle favorite" [ref=e856]:
+                  - img [ref=e857]
+                - generic [ref=e859]:
+                  - heading "GOAT" [level=3] [ref=e860]
+                  - paragraph [ref=e861]: 8.1 · 2026 · Movie
+              - button "Open details for Toy Story 4" [ref=e862] [cursor=pointer]:
+                - img "Toy Story 4 poster" [ref=e863]
+                - button "Toggle favorite" [ref=e864]:
+                  - img [ref=e865]
+                - generic [ref=e867]:
+                  - heading "Toy Story 4" [level=3] [ref=e868]
+                  - paragraph [ref=e869]: 7.5 · 2019 · Movie
+              - button "Open details for Zootopia 2" [ref=e870] [cursor=pointer]:
+                - img "Zootopia 2 poster" [ref=e871]
+                - button "Toggle favorite" [ref=e872]:
+                  - img [ref=e873]
+                - generic [ref=e875]:
+                  - heading "Zootopia 2" [level=3] [ref=e876]
+                  - paragraph [ref=e877]: 7.7 · 2025 · Movie
+              - 'button "Open details for Avatar Aang: The Last Airbender" [ref=e878] [cursor=pointer]':
+                - 'img "Avatar Aang: The Last Airbender poster" [ref=e879]'
+                - button "Toggle favorite" [ref=e880]:
+                  - img [ref=e881]
+                - generic [ref=e883]:
+                  - 'heading "Avatar Aang: The Last Airbender" [level=3] [ref=e884]'
+                  - paragraph [ref=e885]: "-- · 2026 · Movie"
+              - button "Open details for Ne Zha 2" [ref=e886] [cursor=pointer]:
+                - img "Ne Zha 2 poster" [ref=e887]
+                - button "Toggle favorite" [ref=e888]:
+                  - img [ref=e889]
+                - generic [ref=e891]:
+                  - heading "Ne Zha 2" [level=3] [ref=e892]
+                  - paragraph [ref=e893]: 8.2 · 2025 · Movie
+              - button "Open details for Toy Story 2" [ref=e894] [cursor=pointer]:
+                - img "Toy Story 2 poster" [ref=e895]
+                - button "Toggle favorite" [ref=e896]:
+                  - img [ref=e897]
+                - generic [ref=e899]:
+                  - heading "Toy Story 2" [level=3] [ref=e900]
+                  - paragraph [ref=e901]: 7.6 · 1999 · Movie

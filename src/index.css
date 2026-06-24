@@ -801,6 +801,11 @@ button {
 }
 .player-detail-copy .detail-meta-grid span { color: var(--text-muted); }
 .player-detail-copy .detail-meta-grid strong { color: var(--text-primary); font-weight: 500; }
+.player-detail-copy .detail-meta-grid.series-meta { margin-top: 0.35rem; }
+.player-detail-copy .tagline {
+  font-size: var(--fs-xs); font-style: italic; color: var(--text-muted);
+  margin: 0.1rem 0 0.2rem;
+}
 
 .now-playing-badge {
   display: inline-flex; align-items: center; gap: 0.3rem;
@@ -1761,7 +1766,7 @@ button {
 }
 
 /* --- CinePlayer Component --- */
-.neo-player { position: relative; }
+.neo-player { position: relative; aspect-ratio: 16 / 9; max-height: 85vh; }
 
 .neo-player.theater-mode { aspect-ratio: unset; max-height: 90vh; border-radius: 0; }
 
@@ -2072,13 +2077,9 @@ button {
 
 .player-controls {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
-  padding: 1rem; padding-top: 2rem;
+  padding: 1rem 1.5rem; padding-top: 2.25rem;
   background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
   transition: opacity 200ms ease;
-  /* Promote to its own GPU layer so opacity transitions stay smooth even
-     while the timeline slider is repainting at ~60fps. will-change is
-     scoped to the controls layer — the rest of the player keeps the
-     default composite behaviour. */
   will-change: opacity, transform;
   transform: translateZ(0);
 }
@@ -2088,9 +2089,9 @@ button {
   display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;
 }
 .time-display {
-  font-size: var(--fs-xs); color: var(--text-muted);
+  font-size: 0.75rem; color: var(--text-muted);
   font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap;
-  min-width: 45px;
+  min-width: 50px;
 }
 .player-timeline-wrap {
   position: relative; flex: 1; display: flex; align-items: center;
@@ -2114,7 +2115,7 @@ button {
   border-radius: 3px; outline: none; cursor: pointer;
   transition: height 120ms ease;
 }
-.timeline-slider:hover { height: 8px; }
+.timeline-slider:hover { height: 10px; }
 .timeline-slider::-webkit-slider-thumb {
   -webkit-appearance: none; width: 16px; height: 16px;
   border-radius: 50%; background: #FFF; border: none; cursor: pointer;
