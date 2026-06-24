@@ -1317,18 +1317,7 @@ export default function App() {
                 videoUrl={currentlyPlaying.videoUrl}
                 title={currentlyPlaying.title}
                 subtitle={currentlyPlaying.subtitle}
-                streams={currentlyPlaying.streams || []}
-                currentStream={currentlyPlaying.stream}
-                currentStreamIndex={currentlyPlaying.streamIndex}
-                playbackKey={currentlyPlaying.playbackKey}
                 onClose={() => { setCurrentlyPlaying(null); setSourceMovieRef(null); }}
-                onSelectStream={switchPlayerStream}
-                onPlaybackError={playFallbackStream}
-                episodeOptions={currentEpisodeNavigation.episodes || []}
-                currentEpisodeIndex={currentEpisodeNavigation.currentIndex}
-                onSelectEpisode={playEpisodeFromPlayer}
-                onPreviousEpisode={currentEpisodeNavigation.previous ? () => playAdjacentEpisode("previous") : null}
-                onNextEpisode={currentEpisodeNavigation.next ? () => playAdjacentEpisode("next") : null}
               />
             </motion.section>
           )}
