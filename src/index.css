@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+/* ── Typography: Google Fonts are preloaded via index.html <link>.
+   Don't re-@import here — the duplicate fetch blocks first paint. ── */
 
 :root {
   --font-main: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -716,14 +717,14 @@ button {
 }
 
 .player-wrap {
-  width: 100%; max-width: 1100px; margin: 0 auto;
+  width: 100%; max-width: 1400px; margin: 0 auto;
   position: relative; z-index: 50;
   background: #000; margin-bottom: 1.5rem;
 }
 
 /* --- Now Playing Panel --- */
 .now-playing-panel {
-  width: 100%; max-width: 1100px; margin: 0 auto;
+  width: 100%; max-width: 1400px; margin: 0 auto;
   padding: 1.5rem; background: var(--bg-card);
   border-radius: var(--radius-md);
 }
@@ -1476,6 +1477,12 @@ button {
   width: 100%; max-width: 600px; max-height: 80vh;
   overflow-y: auto; background: #060606; border-radius: var(--radius-lg);
   border: 1px solid var(--border-soft);
+  /* The panel is a grid child of `.stream-picker-backdrop` (display: grid;
+     place-items: center). Without `min-width: 0`, grid items default to
+     min-width: auto (= max-content), so a wide child like
+     `.stream-picker-tabs` would push the panel past max-width:100% on
+     mobile, causing the picker to overflow the viewport by ~109px. */
+  min-width: 0;
 }
 .stream-picker-header {
   display: flex; align-items: flex-start; justify-content: space-between;
@@ -1516,6 +1523,12 @@ button {
   transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
   position: relative; top: 1px;
   white-space: nowrap;
+  /* Tabs sit inside `.stream-picker-tabs` (display: flex; overflow-x: auto).
+     Without `min-width: 0`, the tab inherits min-width: auto which equals
+     its min-content (= full text width due to white-space: nowrap).
+     Setting this to 0 lets the flex container size itself to the parent
+     panel and scroll the tabs internally instead of overflowing it. */
+  min-width: 0;
 }
 .stream-picker-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
 .stream-picker-tab.active {
@@ -1748,7 +1761,7 @@ button {
 }
 
 /* --- CinePlayer Component --- */
-.neo-player { position: relative; aspect-ratio: 16 / 9; }
+.neo-player { position: relative; }
 
 .neo-player.theater-mode { aspect-ratio: unset; max-height: 90vh; border-radius: 0; }
 
@@ -1817,6 +1830,12 @@ button {
   pointer-events: none;
   max-width: calc(100% - 2rem);
   animation: fadeIn 0.2s ease both;
+  /* smooth fade-out when the overlay is auto-dismissed once the torrent
+     hits a healthy peer/progress threshold (see NeoPlayer.jsx). */
+  transition: opacity 220ms ease;
+}
+.torrent-status-overlay.is-dismissed {
+  opacity: 0;
 }
 .torrent-status-overlay span {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -2056,25 +2075,14 @@ button {
   padding: 1rem; padding-top: 2rem;
   background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
   transition: opacity 200ms ease;
+  /* Promote to its own GPU layer so opacity transitions stay smooth even
+     while the timeline slider is repainting at ~60fps. will-change is
+     scoped to the controls layer — the rest of the player keeps the
+     default composite behaviour. */
+  will-change: opacity, transform;
+  transform: translateZ(0);
 }
 
-.iframe-hint-bar {
-  position: absolute; bottom: 0.5rem; left: 50%; transform: translateX(-50%);
-  z-index: 12; display: flex; align-items: center; gap: 0.4rem;
-  padding: 0.4rem 0.85rem; border-radius: 9999px;
-  background: rgba(0, 0, 0, 0.72); color: rgba(255, 255, 255, 0.8);
-  font-size: 12px; font-family: var(--font-sans);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  animation: iframeHintFade 4s ease forwards;
-  cursor: pointer; pointer-events: auto;
-  white-space: nowrap;
-}
-.iframe-hint-bar:hover { background: rgba(0, 0, 0, 0.85); }
-@keyframes iframeHintFade {
-  0%, 70% { opacity: 1; }
-  100% { opacity: 0; pointer-events: none; }
-}
 
 .player-timeline {
   display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;
@@ -2084,8 +2092,18 @@ button {
   font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap;
   min-width: 45px;
 }
+.player-timeline-wrap {
+  position: relative; flex: 1; display: flex; align-items: center;
+}
+.timeline-buffered {
+  position: absolute; top: 50%; left: 0; height: 6px;
+  background: rgba(255,255,255,0.28); border-radius: 3px;
+  transform: translateY(-50%); pointer-events: none;
+  transition: width 300ms linear;
+}
 .timeline-slider {
-  flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
+  position: relative; z-index: 1;
+  width: 100%; height: 6px; -webkit-appearance: none; appearance: none;
   background: linear-gradient(
     to right,
     rgba(255, 255, 255, 0.95) 0%,
@@ -2093,20 +2111,51 @@ button {
     rgba(255, 255, 255, 0.18) var(--progress, 0%),
     rgba(255, 255, 255, 0.18) 100%
   );
-  border-radius: 2px; outline: none; cursor: pointer;
+  border-radius: 3px; outline: none; cursor: pointer;
   transition: height 120ms ease;
 }
-.timeline-slider:hover { height: 6px; }
+.timeline-slider:hover { height: 8px; }
 .timeline-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 14px; height: 14px;
+  -webkit-appearance: none; width: 16px; height: 16px;
   border-radius: 50%; background: #FFF; border: none; cursor: pointer;
-  box-shadow: 0 0 8px rgba(255,255,255,0.45);
-  transition: transform 120ms ease;
+  box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  transition: transform 150ms ease, box-shadow 150ms ease;
 }
-.timeline-slider:hover::-webkit-slider-thumb { transform: scale(1.15); }
+.timeline-slider:hover::-webkit-slider-thumb { transform: scale(1.25); box-shadow: 0 0 14px rgba(255,255,255,0.6); }
 .timeline-slider::-moz-range-thumb {
-  width: 14px; height: 14px; border-radius: 50%; background: #FFF;
+  width: 16px; height: 16px; border-radius: 50%; background: #FFF;
   border: none; cursor: pointer;
+}
+
+.timeline-time-tooltip {
+  position: absolute; bottom: calc(100% + 8px); left: var(--thumb-x, 50%);
+  transform: translateX(-50%);
+  padding: 3px 7px; border-radius: 4px;
+  background: rgba(0,0,0,0.88); color: #fff;
+  font-size: 11px; font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 120ms ease;
+}
+.timeline-slider:hover ~ .timeline-time-tooltip,
+.player-timeline-wrap:hover .timeline-time-tooltip { opacity: 1; }
+
+/* ── iframe overlay bar ─────────────────────────────────────────────── */
+.iframe-overlay-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 11;
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, transparent 100%);
+  pointer-events: auto;
+}
+.iframe-overlay-bar .iframe-hint-text {
+  font-size: 11px; color: rgba(255,255,255,0.55);
+  white-space: nowrap;
+}
+.iframe-overlay-bar .iframe-time {
+  font-size: 12px; color: rgba(255,255,255,0.85);
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
 
 .player-control-row {
@@ -2631,7 +2680,6 @@ button {
 
   /* ── Player (NeoPlayer) ────────────────────────────── */
   .player-wrap { margin-bottom: 0.85rem; }
-  .neo-player { aspect-ratio: 3 / 2; }
   .player-header {
     padding: 0.4rem 0.5rem;
     gap: 0.35rem;
@@ -2653,7 +2701,11 @@ button {
     min-width: 44px;
     min-height: 44px;
   }
-  .timeline-slider { height: 5px; }
+  .timeline-slider { height: 7px; }
+  .timeline-buffered { height: 7px; }
+  .iframe-overlay-bar { padding: 0.35rem 0.6rem; }
+  .iframe-overlay-bar .iframe-hint-text { font-size: 10px; }
+  .iframe-overlay-bar .iframe-time { font-size: 11px; }
   .player-center-play { width: 52px; height: 52px; }
   .player-center-play svg { width: 26px; height: 26px; }
   .player-popover {
@@ -2796,7 +2848,6 @@ button {
   .filter-select-wrapper { padding: 0.35rem 0.5rem; font-size: 0.72rem; }
   .filter-reset-btn { padding: 0.4rem 0.6rem; font-size: 0.72rem; min-height: 44px; }
   .now-playing-panel { padding: 0.55rem; }
-  .neo-player { aspect-ratio: 3 / 2; }
   .search-result-card { padding: 0.6rem; }
   .search-result-card img { height: 150px; }
   .search-result-actions button { min-height: 44px; font-size: 0.68rem; padding: 0.5rem 0.7rem; }
@@ -3128,9 +3179,12 @@ button {
   box-shadow: 0 1px 4px rgba(0,0,0,0.4);
   transform: translate(-50%, -50%);
   transition: left 0.1s linear;
-  opacity: 0;
+  opacity: 1;
 }
-.audio-player-seekbar:hover .audio-player-seekbar-thumb { opacity: 1; }
+@media (hover: hover) {
+  .audio-player-seekbar-thumb { opacity: 0; }
+  .audio-player-seekbar:hover .audio-player-seekbar-thumb { opacity: 1; }
+}
 
 /* ── controls ───────────────────────────────────────────────────────── */
 

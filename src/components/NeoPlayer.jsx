@@ -159,6 +159,7 @@ export default function NeoPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [buffered, setBuffered] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -186,6 +187,12 @@ export default function NeoPlayer({
   // but tagged as "external player only" so the user knows why they
   // can't be rendered in the browser.
   const [isPlayingFileMse, setIsPlayingFileMse] = useState(true);
+  // Once the torrent looks healthy (enough peers + some progress) we
+  // fade the status overlay out so it stops covering the timeline.
+  // Threshold chosen so flaky/seedless streams still keep showing the
+  // overlay long enough for the user to see the problem.
+  const [torrentOverlayDismissed, setTorrentOverlayDismissed] = useState(false);
+  const torrentDismissTimerRef = useRef(null);
 
   // popover toggles
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
@@ -194,9 +201,7 @@ export default function NeoPlayer({
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [showFilesMenu, setShowFilesMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [showIframeHint, setShowIframeHint] = useState(false);
   const [iframeGateActive, setIframeGateActive] = useState(false);
-  const iframeHintTimerRef = useRef(null);
   const iframeGateTimerRef = useRef(null);
 
   const shouldShowControls = controlsVisible || !isPlaying || isLoading || playbackError;
@@ -221,15 +226,24 @@ export default function NeoPlayer({
   // ── controls auto-hide ──────────────────────────────────────────────────
 
   const hideTimerRef = useRef(null);
+  // requestAnimationFrame id used to coalesce high-frequency
+  // onMouseMove/onTouchStart calls into one setState + one timer refresh
+  // per frame. Without this, a precision trackpad firing 100+ mousemoves
+  // per second would re-arm `hideTimerRef` 100+ times per second.
+  const revealRafRef = useRef(0);
   const revealControls = useCallback(() => {
-    setControlsVisible(true);
-    clearTimeout(hideTimerRef.current);
-    if (isPlaying && !playbackError && !isLoading) {
-      hideTimerRef.current = setTimeout(() => {
-        setControlsVisible(false);
-        closePopovers();
-      }, 2800);
-    }
+    if (revealRafRef.current) return;
+    revealRafRef.current = window.requestAnimationFrame(() => {
+      revealRafRef.current = 0;
+      setControlsVisible(true);
+      window.clearTimeout(hideTimerRef.current);
+      if (isPlaying && !playbackError && !isLoading) {
+        hideTimerRef.current = window.setTimeout(() => {
+          setControlsVisible(false);
+          closePopovers();
+        }, 2800);
+      }
+    });
   }, [isPlaying, playbackError, isLoading, closePopovers]);
 
   // ── video source setup ──────────────────────────────────────────────────
@@ -526,6 +540,8 @@ export default function NeoPlayer({
     // briefly reference the previous torrent's container before the new
     // torrent's onFileChange callback fires.
     setIsPlayingFileMse(true);
+    setTorrentOverlayDismissed(false);
+    window.clearTimeout(torrentDismissTimerRef.current);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [videoUrl, retryNonce, isMagnet]);
 
@@ -790,25 +806,20 @@ export default function NeoPlayer({
     };
   }, []);
 
-  // iframe hint: show a brief "use the player inside" message when in iframe mode
-  // Uses useLayoutEffect (allowed for transient state resets) so the hint
-  // appears synchronously with the iframe swap.
+  // iframe gate: intercepts first 3 seconds of clicks to absorb popup ads.
+  // Uses useLayoutEffect (allowed for transient state resets) so the gate
+  // activates synchronously with the iframe swap.
   useLayoutEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
-    window.clearTimeout(iframeHintTimerRef.current);
     window.clearTimeout(iframeGateTimerRef.current);
     if (!isIframe) {
-      setShowIframeHint(false);
       setIframeGateActive(false);
       return;
     }
     // Activate the click gate for 3 seconds to absorb first-click popups
     setIframeGateActive(true);
     iframeGateTimerRef.current = window.setTimeout(() => setIframeGateActive(false), 3000);
-    setShowIframeHint(true);
-    iframeHintTimerRef.current = window.setTimeout(() => setShowIframeHint(false), 4000);
     return () => {
-      window.clearTimeout(iframeHintTimerRef.current);
       window.clearTimeout(iframeGateTimerRef.current);
     };
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -858,6 +869,21 @@ export default function NeoPlayer({
         // Once peers or any progress arrive, drop the loading overlay.
         if ((status.peers ?? 0) > 0 || (status.progress ?? 0) > 0) {
           setIsLoading(false);
+          // Auto-dismiss the floating status pill once the stream looks
+          // healthy enough that the user probably wants it out of the
+          // way. The overlay is still visible during the first few
+          // seconds after peers land so the seed/progress text is
+          // readable without scrubbing back.
+          if (
+            !torrentOverlayDismissed &&
+            (status.peers ?? 0) >= 5 &&
+            (status.progress ?? 0) >= 0.01
+          ) {
+            window.clearTimeout(torrentDismissTimerRef.current);
+            torrentDismissTimerRef.current = window.setTimeout(() => {
+              setTorrentOverlayDismissed(true);
+            }, 2200);
+          }
         }
       },
       onError: (err) => {
@@ -890,6 +916,7 @@ export default function NeoPlayer({
 
     return () => {
       window.clearTimeout(progressTimer);
+      window.clearTimeout(torrentDismissTimerRef.current);
       session.cleanup();
       if (torrentSessionRef.current === session) {
         torrentSessionRef.current = null;
@@ -900,7 +927,7 @@ export default function NeoPlayer({
     // Torrentio source from the Source popover. videoUrl already changes
     // on stream switch, so this is more of a lint-satisfier than a
     // correctness fix, but it keeps exhaustive-deps happy.
-  }, [videoUrl, isMagnet, usesTorrentProxy, retryNonce, currentStream?.fileIdx, currentStream?.isNotWebReady, currentStream?.behaviorHints?.notWebReady]);
+  }, [videoUrl, isMagnet, usesTorrentProxy, retryNonce, currentStream?.fileIdx, currentStream?.isNotWebReady, currentStream?.behaviorHints?.notWebReady, torrentOverlayDismissed]);
 
   const handleSelectTorrentFile = useCallback((file) => {
     if (!file) return;
@@ -990,15 +1017,10 @@ export default function NeoPlayer({
             setIsPlaying(true);
           }}
         />
-        {showIframeHint && (
-          <button
-            className="iframe-hint-bar"
-            onClick={() => setShowIframeHint(false)}
-          >
-            <Play size={13} />
-            <span>Use the player controls inside the video to play &amp; seek</span>
-          </button>
-        )}
+        <div className="iframe-overlay-bar">
+          <span className="iframe-hint-text">Use player controls inside the video to play &amp; seek</span>
+          <span className="iframe-time" />
+        </div>
         </>
       ) : (
         <video
@@ -1006,6 +1028,12 @@ export default function NeoPlayer({
           onClick={togglePlay}
           onLoadedMetadata={handleLoadedMetadata}
           onTimeUpdate={handleTimeUpdate}
+          onProgress={() => {
+            const video = videoRef.current;
+            if (video && video.buffered.length > 0) {
+              setBuffered(video.buffered.end(video.buffered.length - 1));
+            }
+          }}
           onEnded={handleEnded}
           onError={handleVideoError}
           onPlay={() => setIsPlaying(true)}
@@ -1092,7 +1120,10 @@ export default function NeoPlayer({
 
       {/* ── torrent stats overlay (magnet streams) ──────────────────────── */}
       {isMagnet && torrentStatus && !torrentError && (
-        <div className="torrent-status-overlay" aria-live="polite">
+        <div
+          className={`torrent-status-overlay${torrentOverlayDismissed ? " is-dismissed" : ""}`}
+          aria-live="polite"
+        >
           <div className="torrent-status-dot" />
           <span>{formatTorrentStatus(torrentStatus) || "Connecting to peers..."}</span>
         </div>
@@ -1167,16 +1198,22 @@ export default function NeoPlayer({
       {!isAudioOnly && (
         <div className="player-controls" style={{ opacity: shouldShowControls ? 1 : 0, pointerEvents: shouldShowControls ? "auto" : "none" }}>
           {!isIframe && (
-            <input
-              type="range"
-              className="timeline-slider"
-              min={0}
-              max={duration || 100}
-              value={currentTime}
-              onChange={handleScrub}
-              aria-label="Playback timeline"
-              style={{ "--progress": duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}
-            />
+            <div className="player-timeline-wrap">
+              <div className="timeline-buffered" style={{ width: duration > 0 ? `${(buffered / duration) * 100}%` : "0%" }} />
+              <input
+                type="range"
+                className="timeline-slider"
+                min={0}
+                max={duration || 100}
+                value={currentTime}
+                onChange={handleScrub}
+                aria-label="Playback timeline"
+                style={{ "--progress": duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}
+              />
+              <span className="timeline-time-tooltip" style={{ "--thumb-x": duration > 0 ? `${(currentTime / duration) * 100}%` : "0%" }}>
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+            </div>
           )}
 
           <div className="player-control-row">
