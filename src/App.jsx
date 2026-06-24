@@ -1061,7 +1061,7 @@ export default function App() {
 
   const handleSelectSeason = async (index) => {
     setSelectedSeasonIndex(index);
-    const movie = hydratedMovie || selectedMovie;
+    const movie = hydratedMovie || selectedMovie || sourceMovieRef;
     if (!movie?.tmdbId || !movie?.seasons?.[index]) return;
 
     const season = movie.seasons[index];
@@ -1073,8 +1073,12 @@ export default function App() {
       const updatedSeasons = [...movie.seasons];
       updatedSeasons[index] = { ...updatedSeasons[index], episodes };
       const updated = { ...movie, seasons: updatedSeasons };
-      setHydratedMovie(updated);
-      setSelectedMovie(updated);
+      
+      if (hydratedMovie?.tmdbId === movie.tmdbId) setHydratedMovie(updated);
+      if (selectedMovie?.tmdbId === movie.tmdbId) setSelectedMovie(updated);
+      
+      setSourceMovieRef((prev) => prev?.tmdbId === movie.tmdbId ? { ...prev, seasons: updatedSeasons } : prev);
+      
       saveToSeasonsCache(movie.tmdbId, updatedSeasons);
       setCatalog((prev) => prev.map((item) =>
         item.tmdbId === movie.tmdbId ? { ...item, seasons: updatedSeasons } : item
