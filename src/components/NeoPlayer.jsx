@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Maximize, Minimize } from "lucide-react";
 import Hls from "hls.js";
+import { App } from '@capacitor/app';
 
 const isDirectHlsUrl = (url) => {
   if (!url) return false;
@@ -105,15 +106,42 @@ export default function NeoPlayer({
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
 
+  const handleClose = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
+    onClose?.();
+  }, [onClose]);
+
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape" && !document.fullscreenElement) {
-        onClose?.();
+        handleClose();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [handleClose]);
+
+  useEffect(() => {
+    let listener = null;
+    const registerListener = async () => {
+      try {
+        listener = await App.addListener('backButton', () => {
+          handleClose();
+        });
+      } catch (err) {
+        console.warn('[NeoPlayer] Capacitor App plugin not available:', err);
+      }
+    };
+    registerListener();
+
+    return () => {
+      if (listener) {
+        listener.remove();
+      }
+    };
+  }, [handleClose]);
 
   useEffect(() => {
     queueMicrotask(() => revealControls());
@@ -127,6 +155,7 @@ export default function NeoPlayer({
       onTouchStart={revealControls}
       style={{ backgroundColor: "#000", overflow: "hidden" }}
     >
+
       {isDirect ? (
         <>
           <video
@@ -163,8 +192,13 @@ export default function NeoPlayer({
             style={{ opacity: controlsVisible ? 1 : 0 }}
           >
             <div className="player-header-left">
-              <button onClick={onClose} className="soft-btn accent clickable">
-                <ArrowLeft size={14} /> Back
+              <button
+                onClick={handleClose}
+                className="icon-control clickable"
+                title="Back"
+                style={{ marginRight: "1rem" }}
+              >
+                <ArrowLeft size={18} />
               </button>
             </div>
 
@@ -211,8 +245,13 @@ export default function NeoPlayer({
             style={{ opacity: controlsVisible ? 1 : 0 }}
           >
             <div className="player-header-left">
-              <button onClick={onClose} className="soft-btn accent clickable">
-                <ArrowLeft size={14} /> Back
+              <button
+                onClick={handleClose}
+                className="icon-control clickable"
+                title="Back"
+                style={{ marginRight: "1rem" }}
+              >
+                <ArrowLeft size={18} />
               </button>
             </div>
 

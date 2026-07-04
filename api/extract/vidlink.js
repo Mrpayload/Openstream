@@ -5,8 +5,8 @@ export const config = { maxDuration: 30 };
 const VIDLINK_BASE = "https://vidlink.pro";
 const VIDLINK_TIMEOUT_MS = 12_000;
 
-const buildVidlinkUrl = (tmdbId, type, season, episode) => {
-  const id = String(tmdbId || "").replace(/^tmdb:/, "");
+const buildVidlinkUrl = (tmdbId, imdbId, type, season, episode) => {
+  const id = imdbId || String(tmdbId || "").replace(/^tmdb:/, "");
   const autoplay = "autoplay=true&nextbutton=true";
   if (type === "tv" || type === "series") {
     return `${VIDLINK_BASE}/tv/${id}/${season}/${episode}?${autoplay}`;
@@ -28,12 +28,13 @@ export default async function handler(req, res) {
   try {
     const url = getRequestUrl(req);
     const tmdbId = url.searchParams.get("tmdbId");
+    const imdbId = url.searchParams.get("imdbId");
     const type = url.searchParams.get("type") || "movie";
     const season = url.searchParams.get("season");
     const episode = url.searchParams.get("episode");
 
-    if (!tmdbId) {
-      sendJson(res, 400, { error: "Missing required parameter: tmdbId" });
+    if (!tmdbId && !imdbId) {
+      sendJson(res, 400, { error: "Missing required parameter: tmdbId or imdbId" });
       return;
     }
 
@@ -42,7 +43,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const embedUrl = buildVidlinkUrl(tmdbId, type, season, episode);
+    const embedUrl = buildVidlinkUrl(tmdbId, imdbId, type, season, episode);
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), VIDLINK_TIMEOUT_MS);

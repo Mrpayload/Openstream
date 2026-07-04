@@ -104,9 +104,10 @@ export default function embedProxyPlugin() {
     name: "embed-proxy-plugin",
     configureServer(server) {
       server.middlewares.use("/api/embed-proxy", async (req, res) => {
+        let targetUrl;
         try {
           const url = new URL(req.url, "http://localhost");
-          const targetUrl = url.searchParams.get("url");
+          targetUrl = url.searchParams.get("url");
 
           if (!targetUrl) {
             sendJson(res, 400, { error: "Missing required parameter: url" });
@@ -142,8 +143,10 @@ export default function embedProxyPlugin() {
             });
 
             if (!upstreamRes.ok) {
-              console.warn(`[embed-proxy] upstream ${upstreamRes.status} for ${targetUrl}`);
-              sendJson(res, upstreamRes.status, { error: `Upstream returned ${upstreamRes.status}` });
+              console.warn(`[embed-proxy] upstream ${upstreamRes.status} for ${targetUrl} (redirecting)`);
+              res.statusCode = 302;
+              res.setHeader("Location", targetUrl);
+              res.end();
               return;
             }
 
@@ -160,13 +163,16 @@ export default function embedProxyPlugin() {
 
             let html = await upstreamRes.text();
 
-            // Inject guard script at the top of <head> (or at the start of <html> if no <head>)
+            const baseTag = `<base href="${parsedTarget.origin}/">`;
+            const injectedHead = baseTag + "\n" + GUARD_SCRIPT;
+            
+            // Inject guard script and base tag at the top of <head> (or at the start of <html> if no <head>)
             if (html.includes("<head")) {
-              html = html.replace(/(<head[^>]*>)/i, "$1\n" + GUARD_SCRIPT);
+              html = html.replace(/(<head[^>]*>)/i, "$1\n" + injectedHead);
             } else if (html.includes("<html")) {
-              html = html.replace(/(<html[^>]*>)/i, "$1\n<head>\n" + GUARD_SCRIPT + "\n</head>");
+              html = html.replace(/(<html[^>]*>)/i, "$1\n<head>\n" + injectedHead + "\n</head>");
             } else {
-              html = GUARD_SCRIPT + "\n" + html;
+              html = injectedHead + "\n" + html;
             }
 
             // Strip upstream CSP headers that might block our scripts
@@ -184,7 +190,9 @@ export default function embedProxyPlugin() {
           if (error?.name !== "AbortError") {
             console.warn("[embed-proxy] error:", error?.message || error);
           }
-          sendJson(res, 502, { error: "Proxy fetch failed" });
+          res.statusCode = 302;
+          res.setHeader("Location", targetUrl);
+          res.end();
         }
       });
     }

@@ -56,12 +56,13 @@ export default function smplStreamPlugin() {
         try {
           const url = new URL(req.url, "http://localhost");
           const tmdbId = url.searchParams.get("tmdbId");
+          const imdbId = url.searchParams.get("imdbId");
           const type = url.searchParams.get("type") || "movie";
           const season = url.searchParams.get("season");
           const episode = url.searchParams.get("episode");
 
-          if (!tmdbId) {
-            sendJson(res, 400, { error: "Missing required parameter: tmdbId", servers: [] });
+          if (!tmdbId && !imdbId) {
+            sendJson(res, 400, { error: "Missing required parameter: tmdbId or imdbId", servers: [] });
             return;
           }
 
@@ -97,8 +98,12 @@ export default function smplStreamPlugin() {
             // Step 2: Fetch player data
             const playerParams = new URLSearchParams({
               player: "f",
-              tmdb: String(tmdbId)
             });
+            if (imdbId) {
+              playerParams.set("imdb", String(imdbId));
+            } else {
+              playerParams.set("tmdb", String(tmdbId));
+            }
             if ((type === "tv" || type === "series") && season && episode) {
               playerParams.set("season", String(season));
               playerParams.set("episode", String(episode));

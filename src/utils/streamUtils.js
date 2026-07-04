@@ -1,5 +1,6 @@
 // Shared stream helpers used by the catalog, stream picker, and player.
 // All functions are pure and tolerant of partial/undefined inputs.
+import { getAbsoluteApiUrl } from "./apiConfig";
 
 export const hasProxyHeaders = (stream) =>
   Boolean(stream?.behaviorHints?.proxyHeaders?.request);
@@ -53,7 +54,7 @@ export const isHlsUrl = (url) => {
 
 export const getSidecarUrl = (url) => {
   if (!url || !isHlsUrl(url)) return null;
-  return `/api/sidecar/stream?url=${encodeURIComponent(url)}`;
+  return getAbsoluteApiUrl(`/api/sidecar/stream?url=${encodeURIComponent(url)}`);
 };
 
 export const isIframeUrl = (url) => {
@@ -116,16 +117,12 @@ export const isWebtorrentPlayable = (stream) => {
 };
 
 // Split a mixed list of streams into the three groups shown in StreamPicker:
+// Partitions a flat stream list into display buckets:
 //   - iframe:      embed players that must be rendered inside an <iframe>
 //                  (vidsrc-embed, vsembed, multiembed, vidlink, ...)
 //   - webstreamer: direct, browser-playable sources (FlixHQ, ezvidapi,
 //                  SmashyStream, MediaFusion, webstreamrMBG, ...)
-//   - torrentio:   magnet-based torrent streams from the Torrentio addon.
-//                  These are NOT directly browser-playable; they must be
-//                  handed off to VLC, qBittorrent, or another torrent client.
-//   - streamTorrent: server-backed torrent streams derived from Torrentio
-//                  metadata. These are normal HTTP/HLS player URLs.
-// Priority order: torrentio → iframe → webstreamer
+// Priority order: iframe → webstreamer
 export const partitionStreams = (streams) => {
   const list = Array.isArray(streams) ? streams : [];
   const iframe = [];
@@ -133,10 +130,13 @@ export const partitionStreams = (streams) => {
   const torrentio = [];
   for (const stream of list) {
     if (!stream) continue;
+    // Skip magnet/torrent streams — Torrentio has been removed
     const isTorrent = stream.source === "torrentio" || stream.isMagnet || isMagnetUrl(stream.url);
     if (isTorrent) {
       torrentio.push(stream);
-    } else if (stream.isIframe || isIframeUrl(stream.url)) {
+      continue;
+    }
+    if (stream.isIframe || isIframeUrl(stream.url)) {
       iframe.push(stream);
     } else {
       webstreamer.push(stream);

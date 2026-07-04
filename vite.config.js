@@ -18,6 +18,7 @@ const devPlugins = async () => {
     { default: sidecarPlugin },
     { default: trackerProxyPlugin },
     { default: embedProxyPlugin },
+    { default: vidlinkPlugin },
   ] = await Promise.all([
     import('./vite/flixhq-plugin.js'),
     import('./vite/ezvidapi-plugin.js'),
@@ -29,6 +30,7 @@ const devPlugins = async () => {
     import('./vite/sidecar-plugin.js'),
     import('./vite/tracker-proxy-plugin.js'),
     import('./vite/embed-proxy-plugin.js'),
+    import('./vite/vidlink-plugin.js'),
   ])
   return [
     flixhqApiPlugin(),
@@ -41,6 +43,7 @@ const devPlugins = async () => {
     sidecarPlugin(),
     trackerProxyPlugin(),
     embedProxyPlugin(),
+    vidlinkPlugin(),
   ]
 }
 

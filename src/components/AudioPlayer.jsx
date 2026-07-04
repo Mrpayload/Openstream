@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft, ListVideo, Pause, Play, RotateCcw, SkipBack, SkipForward,
+  ArrowLeft, Pause, Play, RotateCcw, SkipForward,
   Volume2, VolumeX
 } from "lucide-react";
 import { getAudioFileFormat } from "../utils/streamUtils";
@@ -35,10 +35,8 @@ export default function AudioPlayer({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [waveformData, setWaveformData] = useState(() => new Uint8Array(WAVE_BARS).fill(128));
-  const [showStreamPicker, setShowStreamPicker] = useState(false);
 
   const format = useMemo(() => getAudioFileFormat(videoUrl), [videoUrl]);
 
@@ -106,7 +104,6 @@ export default function AudioPlayer({
     const a = audioRef.current;
     if (a) {
       setDuration(a.duration);
-      setIsLoading(false);
     }
   }, []);
 
@@ -115,7 +112,6 @@ export default function AudioPlayer({
   }, []);
 
   const handleError = useCallback(() => {
-    const a = audioRef.current;
     setError("Failed to load audio");
     setIsPlaying(false);
     onNotify?.({ type: "error", message: "Audio playback failed" });
@@ -307,7 +303,7 @@ export default function AudioPlayer({
       {error && (
         <div className="audio-player-error">
           <p>{error}</p>
-          <button onClick={() => { setError(null); setIsLoading(true); audioRef.current?.load(); }}>
+          <button onClick={() => { setError(null); audioRef.current?.load(); }}>
             Retry
           </button>
         </div>

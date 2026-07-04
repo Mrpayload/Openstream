@@ -1,9 +1,10 @@
 import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, ChevronUp, Film, Heart, Info, Loader2, Play, RefreshCw, Search, SlidersHorizontal, Star, X } from "lucide-react";
+import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, ChevronUp, Coffee, Film, Heart, Info, Loader2, Play, RefreshCw, Search, Server, SlidersHorizontal, Star, X } from "lucide-react";
 import { genresList, movies as fallbackMovies } from "./data/movies";
-import { fetchEzvidapiStream, fetchFlixhqStream, fetchMediafusionStream, fetchSmplstreamStream, fetchStreams, fetchTorrentioStream, fetchVidlinkStream } from "./services/streamApi";
-import { discoverTmdbCatalogItems, fetchTmdbSeasonEpisodes, fetchTmdbSeasons, hasTmdbCredentials, hydrateCatalogFromTmdb, searchTmdb } from "./services/tmdbApi";
-import { getStreamLabel, hasProxyHeaders, isBrowserPlayableStream, isMagnetUrl } from "./utils/streamUtils";
+import { fetchEzvidapiStream, fetchFlixhqStream, fetchMediafusionStream, fetchSmplstreamStream, fetchStreams, fetchVidlinkStream } from "./services/streamApi";
+import { discoverTmdbCatalogItems, fetchTmdbSeasonEpisodes, fetchTmdbSeasons, hasTmdbCredentials, hydrateCatalogFromTmdb, searchTmdb, isImdbId } from "./services/tmdbApi";
+import { searchCinemeta, fetchCinemetaDetails, normalizeCinemetaSearchResult, convertCinemetaVideosToSeasons } from "./services/cinemetaApi";
+import { getStreamLabel, hasProxyHeaders, isMagnetUrl } from "./utils/streamUtils";
 import { useLandingData } from "./hooks/useLandingData";
 import { useSwipeDownDismiss } from "./hooks/useSwipeDownDismiss";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -15,7 +16,8 @@ import LoadingScreen from "./components/LoadingScreen";
 import { motion, AnimatePresence } from "framer-motion";
 const StreamPicker = lazy(() => import("./components/StreamPicker"));
 import { buildFallbackStreamList } from "./utils/fallbackStreams";
-
+import { getAbsoluteApiUrl } from "./utils/apiConfig";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 const TOAST_TTL_MS = 3200;
 
 // Catalog refresh cadence. A 30-minute poll was noisy: it kept the tab
@@ -27,17 +29,10 @@ const CATALOG_REFRESH_MIN_AGE_MS = 6 * 60 * 60 * 1000;
 
 let soundCtx = null;
 
-const closeSoundContext = () => {
-  if (!soundCtx) return;
-
-  const ctx = soundCtx;
-  soundCtx = null;
-  if (ctx.state !== "closed") {
-    void ctx.close().catch(() => {});
-  }
-};
-
 const playSound = (type) => {
+  if (typeof window !== "undefined" && window.Capacitor) {
+    Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+  }
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
@@ -148,8 +143,25 @@ const fetchEpisodesForSeason = async (tmdbId, seasonNumber) => {
 };
 
 const hydrateSeasonsForItem = async (item) => {
-  if (item.type !== "series" || !item.tmdbId) return item;
-  if (!hasTmdbCredentials) return item;
+  if (item.type !== "series") return item;
+
+  if (item.imdbId && (!item.tmdbId || item.needsSeasonHydration)) {
+    try {
+      const meta = await fetchCinemetaDetails("series", item.imdbId);
+      if (meta) {
+        item = {
+          ...item,
+          tmdbId: meta.moviedb_id ? Number(meta.moviedb_id) : item.tmdbId,
+          seasons: meta.videos ? convertCinemetaVideosToSeasons(meta.videos) : item.seasons,
+          needsSeasonHydration: false
+        };
+      }
+    } catch (error) {
+      console.warn("Cinemeta background hydration failed:", error);
+    }
+  }
+
+  if (!item.tmdbId || !hasTmdbCredentials) return item;
 
   const cached = getFromSeasonsCache(item.tmdbId);
   if (cached && cached.length > 0) {
@@ -268,7 +280,7 @@ const waitForStreamTorrentFile = async (infoHash, preferredIndex) => {
   const deadline = Date.now() + 45_000;
   let lastError = "Torrent metadata is not ready yet";
   while (Date.now() < deadline) {
-    const response = await fetch(`/api/stream/${encodeURIComponent(infoHash)}/status`, { cache: "no-store" });
+    const response = await fetch(getAbsoluteApiUrl(`/api/stream/${encodeURIComponent(infoHash)}/status`), { cache: "no-store" });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
       lastError = body.error || `Torrent status failed (${response.status})`;
@@ -288,7 +300,7 @@ const prepareStreamTorrentPlayback = async (stream) => {
     throw new Error("Stream Torrent row is missing the original magnet link");
   }
 
-  const response = await fetch("/api/stream", {
+  const response = await fetch(getAbsoluteApiUrl("/api/stream"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ magnet })
@@ -305,7 +317,7 @@ const prepareStreamTorrentPlayback = async (stream) => {
 
   return {
     ...stream,
-    url: `/api/stream/${encodeURIComponent(body.infoHash)}/${file.index}${query ? `?${query}` : ""}`,
+    url: getAbsoluteApiUrl(`/api/stream/${encodeURIComponent(body.infoHash)}/${file.index}${query ? `?${query}` : ""}`),
     streamTorrentInfoHash: body.infoHash,
     streamTorrentFileIndex: file.index,
     activeTorrentFileName: file.name,
@@ -634,6 +646,7 @@ export default function App() {
   const [selectedSeasonIndex, setSelectedSeasonIndex] = useState(0);
   const [hydratedMovie, setHydratedMovie] = useState(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
+  const lastSyncEpisodeKeyRef = useRef(null);
   const [sourceMovieRef, setSourceMovieRef] = useState(null);
   const [streamRequest, setStreamRequest] = useState(null);
   const [currentStreams, setCurrentStreams] = useState([]);
@@ -805,7 +818,10 @@ export default function App() {
   }, [catalog.length, isHeroPaused]);
 
   useEffect(() => {
-    if (!hasTmdbCredentials || !searchTerm.trim()) return undefined;
+    if (!searchTerm.trim()) {
+      setTmdbResults([]);
+      return undefined;
+    }
 
     const controller = new AbortController();
     let cancelled = false;
@@ -814,10 +830,69 @@ export default function App() {
       if (cancelled) return;
       setIsTmdbSearching(true);
 
+      const query = searchTerm.trim();
+
       try {
-        const results = await searchTmdb(searchTerm, controller.signal);
+        if (isImdbId(query)) {
+          // Direct IMDb lookup
+          const [movieDetails, seriesDetails] = await Promise.allSettled([
+            fetchCinemetaDetails("movie", query, controller.signal),
+            fetchCinemetaDetails("series", query, controller.signal)
+          ]);
+
+          if (cancelled) return;
+
+          let found = null;
+          if (movieDetails.status === "fulfilled" && movieDetails.value) {
+            found = normalizeCinemetaSearchResult(movieDetails.value, "movie");
+          } else if (seriesDetails.status === "fulfilled" && seriesDetails.value) {
+            found = normalizeCinemetaSearchResult(seriesDetails.value, "series");
+          }
+
+          if (!cancelled) {
+            setTmdbResults(found ? [found] : []);
+            setIsTmdbSearching(false);
+          }
+          return;
+        }
+
+        // Standard search
+        let tmdbResultsList = [];
+        let cinemetaResultsList = [];
+
+        // Run in parallel so TMDB delay/block does not hang the search
+        const [cinemetaRes, tmdbRes] = await Promise.allSettled([
+          searchCinemeta(query, controller.signal),
+          hasTmdbCredentials ? searchTmdb(query, controller.signal) : Promise.resolve([])
+        ]);
+
+        if (cinemetaRes.status === "fulfilled" && cinemetaRes.value) {
+          cinemetaResultsList = cinemetaRes.value;
+        }
+        if (tmdbRes.status === "fulfilled" && tmdbRes.value) {
+          tmdbResultsList = tmdbRes.value;
+        }
+
+        if (cancelled) return;
+
+        // Merge and deduplicate, putting IMDb (Cinemeta) results first
+        const merged = [...cinemetaResultsList];
+        for (const item of tmdbResultsList) {
+          const match = cinemetaResultsList.find(
+            (c) =>
+              c.title.toLowerCase() === item.title.toLowerCase() &&
+              c.year === item.year &&
+              c.type === item.type
+          );
+          if (match) {
+            match.tmdbId = item.tmdbId;
+          } else {
+            merged.push(item);
+          }
+        }
+
         if (!cancelled) {
-          setTmdbResults(results);
+          setTmdbResults(merged);
           setIsTmdbSearching(false);
         }
       } catch (error) {
@@ -833,6 +908,102 @@ export default function App() {
       controller.abort();
     };
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (!currentlyPlaying || currentlyPlaying.streamType !== "series") {
+      lastSyncEpisodeKeyRef.current = null;
+      return;
+    }
+
+    const movie = catalog.find((m) => m.tmdbId === currentlyPlaying.tmdbId) || sourceMovieRef;
+    if (!movie) return;
+
+    const episodeKey = `${currentlyPlaying.tmdbId}:${currentlyPlaying.seasonNumber}:${currentlyPlaying.episodeNumber}`;
+
+    // 1. Hydrate seasons if needed
+    if (movie.needsSeasonHydration && !seasonsLoading) {
+      const doHydration = async () => {
+        setSeasonsLoading(true);
+        try {
+          const hydrated = await hydrateSeasonsForItem(movie);
+          setCatalog((prev) => prev.map((item) =>
+            item.tmdbId === movie.tmdbId ? { ...item, seasons: hydrated.seasons, needsSeasonHydration: false } : item
+          ));
+          if (sourceMovieRef?.tmdbId === movie.tmdbId) {
+            setSourceMovieRef(hydrated);
+          }
+          if (selectedMovie?.tmdbId === movie.tmdbId) {
+            setSelectedMovie(hydrated);
+          }
+          if (hydratedMovie?.tmdbId === movie.tmdbId) {
+            setHydratedMovie(hydrated);
+          }
+        } catch (error) {
+          console.warn("Player season hydration failed:", error);
+        } finally {
+          setSeasonsLoading(false);
+        }
+      };
+      void doHydration();
+      return;
+    }
+
+    // 2. Synchronize selectedSeasonIndex if playing a new episode
+    if (movie.seasons && movie.seasons.length > 0 && episodeKey !== lastSyncEpisodeKeyRef.current) {
+      const targetIndex = movie.seasons.findIndex(
+        (s) => s.seasonNumber === currentlyPlaying.seasonNumber
+      );
+      if (targetIndex !== -1) {
+        lastSyncEpisodeKeyRef.current = episodeKey;
+        queueMicrotask(() => {
+          setSelectedSeasonIndex(targetIndex);
+        });
+      }
+    }
+
+    // 3. Auto-load episodes for the selected season if they are empty
+    if (movie.seasons && movie.seasons[selectedSeasonIndex]) {
+      const season = movie.seasons[selectedSeasonIndex];
+      if ((!season.episodes || season.episodes.length === 0) && episodesLoadingSeason !== selectedSeasonIndex && !seasonsLoading) {
+        const doLoadEpisodes = async () => {
+          setEpisodesLoadingSeason(selectedSeasonIndex);
+          try {
+            const episodes = await fetchEpisodesForSeason(movie.tmdbId, season.seasonNumber);
+            const updatedSeasons = [...movie.seasons];
+            updatedSeasons[selectedSeasonIndex] = { ...updatedSeasons[selectedSeasonIndex], episodes };
+            
+            setCatalog((prev) => prev.map((item) =>
+              item.tmdbId === movie.tmdbId ? { ...item, seasons: updatedSeasons } : item
+            ));
+            if (sourceMovieRef?.tmdbId === movie.tmdbId) {
+              setSourceMovieRef((prev) => prev ? { ...prev, seasons: updatedSeasons } : prev);
+            }
+            if (selectedMovie?.tmdbId === movie.tmdbId) {
+              setSelectedMovie((prev) => prev ? { ...prev, seasons: updatedSeasons } : prev);
+            }
+            if (hydratedMovie?.tmdbId === movie.tmdbId) {
+              setHydratedMovie((prev) => prev ? { ...prev, seasons: updatedSeasons } : prev);
+            }
+            saveToSeasonsCache(movie.tmdbId, updatedSeasons);
+          } catch (err) {
+            console.warn("Failed to fetch episodes for selected season:", err);
+          } finally {
+            setEpisodesLoadingSeason(null);
+          }
+        };
+        void doLoadEpisodes();
+      }
+    }
+  }, [
+    currentlyPlaying,
+    catalog,
+    sourceMovieRef,
+    selectedMovie,
+    hydratedMovie,
+    selectedSeasonIndex,
+    seasonsLoading,
+    episodesLoadingSeason,
+  ]);
 
   const featured = catalog[heroIndex % Math.max(catalog.length, 1)];
 
@@ -967,10 +1138,11 @@ export default function App() {
     // Fetch API streams in the background and merge them in as they arrive.
     // Uses allSettled so a single slow/hanging API doesn't block the others.
     try {
-      const [webStreamResult, flixhqResult, ezvidResult, smplResult, mediafusionResult, torrentioResult, vidlinkExtractResult] = await Promise.allSettled([
+      const [webStreamResult, flixhqResult, ezvidResult, smplResult, mediafusionResult, vidlinkExtractResult] = await Promise.allSettled([
         fetchStreams(
           playable.streamType,
           playable.tmdbId,
+          playable.imdbId,
           playable.seasonNumber,
           playable.episodeNumber
         ),
@@ -978,7 +1150,6 @@ export default function App() {
         fetchEzvidapiStream(playable),
         fetchSmplstreamStream(playable),
         fetchMediafusionStream(playable),
-        fetchTorrentioStream(playable),
         fetchVidlinkStream(playable)
       ]);
 
@@ -994,23 +1165,17 @@ export default function App() {
       const ezvidapiStreams = unwrap(ezvidResult);
       const smplstreamStreams = unwrap(smplResult);
       const mediafusionStreams = unwrap(mediafusionResult);
-      const torrentioStreamsRaw = unwrap(torrentioResult);
 
       const flixhqStreams = flixhqStream ? [flixhqStream] : [];
       const ezvidStreams = Array.isArray(ezvidapiStreams) ? ezvidapiStreams : ezvidapiStreams ? [ezvidapiStreams] : [];
       const smplStreams = Array.isArray(smplstreamStreams) ? smplstreamStreams : smplstreamStreams ? [smplstreamStreams] : [];
       const mfStreams = Array.isArray(mediafusionStreams) ? mediafusionStreams : [];
-      const torrentioStreams = Array.isArray(torrentioStreamsRaw) ? torrentioStreamsRaw : [];
       const vidlinkDirectStream = unwrap(vidlinkExtractResult);
       const apiStreams = [...(vidlinkDirectStream ? [vidlinkDirectStream] : []), ...flixhqStreams, ...ezvidStreams, ...smplStreams, ...mfStreams, ...(data.streams || [])];
 
-      if (torrentioStreams.length > 0) {
-        showToast(`Torrentio · ${torrentioStreams.length} magnet${torrentioStreams.length === 1 ? "" : "s"} ready`, "info");
-      }
-
       // Merge API results before fallback streams
-      if (apiStreams.length > 0 || torrentioStreams.length > 0) {
-        setCurrentStreams([...apiStreams, ...torrentioStreams, ...fallbackStreams]);
+      if (apiStreams.length > 0) {
+        setCurrentStreams([...apiStreams, ...fallbackStreams]);
       }
     } catch (error) {
       console.warn("Stream fetch error, fallback embed players already shown:", error);
@@ -1021,12 +1186,28 @@ export default function App() {
       setIsStreamLoading(false);
       // Mark every async section as resolved so the picker stops spinning
       // on a tab even if its API returned an empty array.
-      setSectionsResolved({ webstreamer: true, torrentio: true });
+      setSectionsResolved({ webstreamer: true });
     }
   };
 
-  const startPlayback = (movie, playableOverride) => {
-    const playable = playableOverride || getDefaultPlayable(movie);
+  const startPlayback = async (movie, playableOverride) => {
+    let playable = playableOverride || getDefaultPlayable(movie);
+
+    if (!playable && movie.type === "series" && movie.needsSeasonHydration) {
+      setIsStreamLoading(true);
+      try {
+        const hydrated = await hydrateSeasonsForItem(movie);
+        setCatalog((prev) => prev.map((item) =>
+          item.tmdbId === movie.tmdbId ? { ...item, seasons: hydrated.seasons, needsSeasonHydration: false } : item
+        ));
+        playable = getDefaultPlayable(hydrated);
+      } catch (error) {
+        console.warn("Play-initiated hydration failed:", error);
+      } finally {
+        setIsStreamLoading(false);
+      }
+    }
+
     if (!playable) return;
 
     playSound("pop");
@@ -1042,17 +1223,56 @@ export default function App() {
     setSelectedSeasonIndex(0);
     setHydratedMovie(movie);
 
-    if (movie.type === "series" && movie.needsSeasonHydration && hasTmdbCredentials) {
+    let activeMovie = movie;
+
+    if (activeMovie.imdbId) {
       setSeasonsLoading(true);
       try {
-        const hydrated = await hydrateSeasonsForItem(movie);
+        const meta = await fetchCinemetaDetails(activeMovie.type, activeMovie.imdbId);
+        if (meta) {
+          const updatedSeasons = activeMovie.type === "series" && meta.videos
+            ? convertCinemetaVideosToSeasons(meta.videos)
+            : activeMovie.seasons;
+
+          activeMovie = {
+            ...activeMovie,
+            tmdbId: meta.moviedb_id ? Number(meta.moviedb_id) : activeMovie.tmdbId,
+            description: meta.description || activeMovie.description,
+            genres: meta.genres || meta.genre || activeMovie.genres,
+            posterUrl: meta.poster || activeMovie.posterUrl,
+            backdropUrl: meta.background || activeMovie.backdropUrl,
+            rating: meta.imdbRating ? Number(Number(meta.imdbRating).toFixed(1)) : activeMovie.rating,
+            year: meta.releaseInfo || meta.year || activeMovie.year,
+            creator: Array.isArray(meta.director) ? meta.director.join(", ") : meta.director || activeMovie.creator,
+            cast: meta.cast || activeMovie.cast,
+            seasons: updatedSeasons,
+            needsSeasonHydration: activeMovie.type === "series" && !updatedSeasons?.length
+          };
+          setHydratedMovie(activeMovie);
+          setSelectedMovie(activeMovie);
+          
+          setCatalog((prev) => prev.map((item) =>
+            item.id === activeMovie.id ? activeMovie : item
+          ));
+        }
+      } catch (error) {
+        console.warn("Cinemeta details hydration failed:", error);
+      } finally {
+        setSeasonsLoading(false);
+      }
+    }
+
+    if (activeMovie.type === "series" && activeMovie.needsSeasonHydration && activeMovie.tmdbId && hasTmdbCredentials) {
+      setSeasonsLoading(true);
+      try {
+        const hydrated = await hydrateSeasonsForItem(activeMovie);
         setHydratedMovie(hydrated);
         setSelectedMovie(hydrated);
         setCatalog((prev) => prev.map((item) =>
-          item.tmdbId === movie.tmdbId ? { ...item, seasons: hydrated.seasons } : item
+          item.tmdbId === activeMovie.tmdbId ? { ...item, seasons: hydrated.seasons, needsSeasonHydration: false } : item
         ));
       } catch (error) {
-        console.warn("Season hydration failed:", error);
+        console.warn("TMDB Season hydration failed:", error);
       } finally {
         setSeasonsLoading(false);
       }
@@ -1157,47 +1377,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const switchPlayerStream = useCallback((stream, index) => {
-    if (!stream?.url || hasProxyHeaders(stream)) return false;
-    const selectedStream = stream.serverTorrent && stream.serverUrl
-      ? { ...stream, url: stream.serverUrl }
-      : stream;
-
-    setCurrentlyPlaying((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        videoUrl: selectedStream.url,
-        stream: selectedStream,
-        streamIndex: index,
-        subtitle: `${prev.subtitle.split(" · ")[0]} · ${getStreamLabel(selectedStream)}`
-      };
-    });
-
-    return true;
-  }, []);
-
-  const playFallbackStream = useCallback(() => {
-    if (!currentlyPlaying?.streams?.length) return false;
-
-    const nextIndex = currentlyPlaying.streams.findIndex((stream, index) => (
-      index > currentlyPlaying.streamIndex && isBrowserPlayableStream(stream)
-    ));
-
-    if (nextIndex === -1) return false;
-    return switchPlayerStream(currentlyPlaying.streams[nextIndex], nextIndex);
-  }, [currentlyPlaying, switchPlayerStream]);
-
-  const playAdjacentEpisode = (direction) => {
-    const target = direction === "next" ? currentEpisodeNavigation.next : currentEpisodeNavigation.previous;
-    if (!target || !currentEpisodeNavigation.movie) return;
-
-    startPlayback(
-      currentEpisodeNavigation.movie,
-      buildEpisodePlayable(currentEpisodeNavigation.movie, target.season, target.episode)
-    );
-  };
-
   const playEpisodeFromPlayer = (episodeEntry) => {
     if (!episodeEntry || !currentEpisodeNavigation.movie) return;
 
@@ -1205,6 +1384,38 @@ export default function App() {
       currentEpisodeNavigation.movie,
       buildEpisodePlayable(currentEpisodeNavigation.movie, episodeEntry.season, episodeEntry.episode)
     );
+  };
+
+  const handleChangeSource = () => {
+    if (!currentlyPlaying) return;
+    const playable = {
+      videoUrl: currentlyPlaying.videoUrl,
+      title: currentlyPlaying.title,
+      subtitle: currentlyPlaying.subtitle.split(" · ")[0],
+      tmdbId: currentlyPlaying.tmdbId,
+      tmdbMediaType: currentlyPlaying.tmdbMediaType,
+      streamType: currentlyPlaying.streamType,
+      streamId: currentlyPlaying.streamId,
+      seasonNumber: currentlyPlaying.seasonNumber,
+      episodeNumber: currentlyPlaying.episodeNumber
+    };
+    setStreamRequest(playable);
+    loadStreamsForPlayable(playable);
+  };
+
+  const handleLogoClick = () => {
+    setActiveTab("browse");
+    setSelectedMovie(null);
+    setHydratedMovie(null);
+    setCurrentlyPlaying(null);
+    setSourceMovieRef(null);
+    setSearchInput("");
+    setSearchTerm("");
+    setSelectedGenre("All");
+    setSelectedType("all");
+    setSelectedYearRange("all");
+    setSelectedRating("all");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -1219,7 +1430,7 @@ export default function App() {
       </AnimatePresence>
       <a className="skip-link" href="#main-content">Skip to content</a>
         <header className="site-header">
-          <button className="brand clickable" onClick={() => setActiveTab("browse")}>
+          <button className="brand clickable" onClick={handleLogoClick}>
           <HeroBranding header immediate layoutId={null} />
           <span className="brand-text-wrap">
             <span className="brand-title-line" aria-label="Openstream">
@@ -1334,6 +1545,15 @@ export default function App() {
             const nowPlayingMovie = catalog.find((m) => m.tmdbId === currentlyPlaying.tmdbId) || currentEpisodeNavigation.movie || sourceMovieRef;
             const isSeries = currentlyPlaying.streamType === "series";
             const seasons = nowPlayingMovie?.seasons || [];
+
+            let playingEpisode = null;
+            if (isSeries) {
+              const pSeason = seasons.find((s) => s.seasonNumber === currentlyPlaying.seasonNumber);
+              if (pSeason && pSeason.episodes) {
+                playingEpisode = pSeason.episodes.find((e) => e.episodeNumber === currentlyPlaying.episodeNumber);
+              }
+            }
+
             const activeSeason = seasons[selectedSeasonIndex] || seasons[0];
             const activeEpisodes = activeSeason?.episodes || [];
 
@@ -1367,6 +1587,24 @@ export default function App() {
                           </button>
                         )}
                       </label>
+                      <a
+                        href={import.meta.env.VITE_STRIPE_PAYMENT_LINK || "https://buy.stripe.com/9B6dR89g7anB5L9gOh1kA00"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="stripe-donate-btn"
+                        title="Support with a coffee"
+                      >
+                        <Coffee size={16} aria-hidden="true" />
+                        <span>Support with a coffee</span>
+                      </a>
+                      <button className="source-select-btn clickable" onClick={handleChangeSource} title="Change Server/Source">
+                        <Server size={18} />
+                        <span>Source</span>
+                      </button>
+                    </div>
+
+                    <div className="donation-support-text">
+                      Buy me a coffee for continuous support
                     </div>
 
                     {searchTerm && (
@@ -1405,18 +1643,28 @@ export default function App() {
                         onError={handleImageError}
                       />
                       <div className="player-detail-copy">
-                        <span className="eyebrow">{typeLabel(nowPlayingMovie.type)}</span>
+                        <span className="eyebrow">
+                          {isSeries ? `Playing Season ${currentlyPlaying.seasonNumber} Episode ${currentlyPlaying.episodeNumber}` : typeLabel(nowPlayingMovie.type)}
+                        </span>
                         <h2>{nowPlayingMovie.title}</h2>
-                        {nowPlayingMovie.tagline && (
+                        
+                        {playingEpisode && (
+                          <h3 style={{ marginTop: "-0.5rem", marginBottom: "1rem", color: "var(--foreground)", fontWeight: 500, fontSize: "1.25rem" }}>
+                            {playingEpisode.title}
+                          </h3>
+                        )}
+
+                        {(!isSeries && nowPlayingMovie.tagline) && (
                           <span className="tagline">&ldquo;{nowPlayingMovie.tagline}&rdquo;</span>
                         )}
+
                         <div className="meta-line">
                           <span><Star size={14} fill="currentColor" /> {nowPlayingMovie.rating || "--"}</span>
                           <span><Calendar size={14} /> {nowPlayingMovie.year}</span>
-                          {nowPlayingMovie.duration && <span>{nowPlayingMovie.duration}</span>}
+                          {(playingEpisode?.duration || nowPlayingMovie.duration) && <span>{playingEpisode?.duration || nowPlayingMovie.duration}</span>}
                           <span>{nowPlayingMovie.genres?.slice(0, 3).join(" / ")}</span>
                         </div>
-                        <p>{nowPlayingMovie.description}</p>
+                        <p>{playingEpisode?.overview || nowPlayingMovie.description}</p>
                         <div className="detail-meta-grid">
                           <span>Creator</span>
                           <strong>{nowPlayingMovie.creator || "Unknown"}</strong>

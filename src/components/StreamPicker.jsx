@@ -10,8 +10,7 @@ import ExternalPlayerMenu from "./ExternalPlayerMenu";
 
 const TABS = [
   { id: "iframe", label: "Iframe Players" },
-  { id: "webstreamer", label: "Webstreamer" },
-  { id: "torrentio", label: "Torrentio" }
+  { id: "webstreamer", label: "Webstreamer" }
 ];
 
 const getStreamAudioPriority = (stream) => {
@@ -30,30 +29,27 @@ export default function StreamPicker({
   streams = [],
   isLoading = false,
   error = null,
-  sectionsResolved = { webstreamer: false, torrentio: false },
+  sectionsResolved = { webstreamer: false },
   onSelect,
   onRetry,
   onClose,
   onNotify
 }) {
   const hasStreams = streams.length > 0;
-  const { webstreamer, iframe, torrentio } = useMemo(() => partitionStreams(streams), [streams]);
+  const { webstreamer, iframe } = useMemo(() => partitionStreams(streams), [streams]);
 
-  // Default to Iframe Players so the 6 always-on embeds are immediately
+  // Default to Iframe Players so the always-on embeds are immediately
   // tappable. App.jsx pushes them to `streams` synchronously; the Webstreamer
-  // and Torrentio tabs fill in as the API calls resolve.
+  // tab fills in as the API calls resolve.
   const [activeTab, setActiveTab] = useState("iframe");
   const counts = {
     webstreamer: webstreamer.length,
     iframe: iframe.length,
-    torrentio: torrentio.length
   };
   const prioritizedWebstreamer = useMemo(() => prioritizeGoodToGoStreams(webstreamer), [webstreamer]);
   const activeStreams = activeTab === "iframe"
     ? iframe
-    : activeTab === "torrentio"
-      ? torrentio
-      : prioritizedWebstreamer;
+    : prioritizedWebstreamer;
   const externalStream = activeStreams.find((stream) =>
     stream?.url &&
     !stream.isConfigLink &&
@@ -63,13 +59,12 @@ export default function StreamPicker({
     !isIframeUrl(stream.url) &&
     !hasProxyHeaders(stream)
   );
-  const isTorrentioTab = activeTab === "torrentio";
+
 
   // Per-section "is this tab still waiting for its API?" flag. Iframe is
   // always ready synchronously, so it's not tracked.
   const isSectionLoading = {
     webstreamer: !sectionsResolved.webstreamer,
-    torrentio: !sectionsResolved.torrentio
   }[activeTab] ?? false;
 
   // Magnet rows show a copy button so the user can grab the link without
@@ -232,14 +227,8 @@ export default function StreamPicker({
                 {isSectionLoading ? (
                   <>
                     <Loader2 className="spin" size={18} />
-                    <span>
-                  {activeTab === "webstreamer"
-                    ? "Loading direct streams from webstreamer sources..."
-                    : "Searching Torrentio for server-backed torrent streams..."}
-                    </span>
+                    <span>Loading direct streams from webstreamer sources...</span>
                   </>
-                ) : activeTab === "torrentio" ? (
-                  <span>No Torrentio streams returned for this title.</span>
                 ) : activeTab === "webstreamer" ? (
                   <span>No direct streams returned for this title.</span>
                 ) : (
@@ -250,7 +239,7 @@ export default function StreamPicker({
             {activeStreams.map((stream, index) => {
               const isBlocked = !stream.url || hasProxyHeaders(stream);
               const isConfigLink = Boolean(stream.isConfigLink);
-              const isMagnet = !isConfigLink && (isTorrentioTab || isMagnetUrl(stream.url) || stream.isMagnet);
+              const isMagnet = !isConfigLink && (isMagnetUrl(stream.url) || stream.isMagnet);
               const isIframeStream = !isMagnet && !isConfigLink && (stream.isIframe || isIframeUrl(stream.url));
               const recommended = isMagnet || (!isMagnet && isBrowserPlayableStream(stream));
               const audioSupport = checkAudioSupport(stream);

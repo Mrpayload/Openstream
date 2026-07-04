@@ -30,14 +30,17 @@ export default function ezvidApiPlugin() {
           const url = new URL(req.url, "http://localhost");
           const type = url.searchParams.get("type") || "movie";
           const tmdbId = url.searchParams.get("tmdbId");
+          const imdbId = url.searchParams.get("imdbId");
           const season = url.searchParams.get("season");
           const episode = url.searchParams.get("episode");
           const provider = url.searchParams.get("provider");
 
-          if (!tmdbId) {
-            sendJson(res, 400, { error: "Missing required parameter: tmdbId" });
+          if (!tmdbId && !imdbId) {
+            sendJson(res, 400, { error: "Missing required parameter: tmdbId or imdbId" });
             return;
           }
+
+          const id = imdbId || tmdbId;
 
           // Build the ezvidapi URL based on media type
           let apiUrl;
@@ -46,9 +49,9 @@ export default function ezvidApiPlugin() {
               sendJson(res, 400, { error: "Season and episode are required for TV shows" });
               return;
             }
-            apiUrl = `${EZVIDAPI_BASE}/embed/tv/${tmdbId}/${season}/${episode}`;
+            apiUrl = `${EZVIDAPI_BASE}/embed/tv/${id}/${season}/${episode}`;
           } else {
-            apiUrl = `${EZVIDAPI_BASE}/embed/movie/${tmdbId}`;
+            apiUrl = `${EZVIDAPI_BASE}/embed/movie/${id}`;
           }
 
           // Add optional provider parameter

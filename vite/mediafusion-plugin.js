@@ -181,12 +181,13 @@ export default function mediafusionPlugin() {
         try {
           const url = new URL(req.url, "http://localhost");
           const tmdbId = url.searchParams.get("tmdbId");
+          const imdbIdParam = url.searchParams.get("imdbId");
           const type = url.searchParams.get("type") || "movie";
           const season = url.searchParams.get("season");
           const episode = url.searchParams.get("episode");
 
-          if (!tmdbId) {
-            sendJson(res, 400, { error: "Missing required parameter: tmdbId", streams: [] });
+          if (!tmdbId && !imdbIdParam) {
+            sendJson(res, 400, { error: "Missing required parameter: tmdbId or imdbId", streams: [] });
             return;
           }
 
@@ -196,7 +197,7 @@ export default function mediafusionPlugin() {
           }
 
           // Step 1: Convert TMDB ID → IMDb ID
-          const imdbId = await tmdbToImdb(tmdbId, type);
+          const imdbId = imdbIdParam || await tmdbToImdb(tmdbId, type);
           if (!imdbId) {
             sendJson(res, 200, {
               streams: [],

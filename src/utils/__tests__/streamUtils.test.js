@@ -1014,16 +1014,16 @@ describe("buildFallbackStreamList", () => {
   const movie = { tmdbId: 324857, streamType: "movie" };
   const episode = { tmdbId: 66732, streamType: "series", seasonNumber: 1, episodeNumber: 1 };
 
-  it("returns four entries for a movie", () => {
+  it("returns five entries for a movie", () => {
     const streams = buildFallbackStreamList(movie);
-    expect(streams).toHaveLength(4);
+    expect(streams).toHaveLength(5);
     expect(streams.every((s) => s.isIframe)).toBe(true);
   });
 
   it("includes season/episode params for series streams", () => {
     const streams = buildFallbackStreamList(episode);
-    expect(streams.some((s) => s.url.includes("season=1"))).toBe(true);
-    expect(streams.some((s) => s.url.includes("episode=1"))).toBe(true);
+    expect(streams.some((s) => s.url.includes("season=1") || s.url.includes("season%3D1"))).toBe(true);
+    expect(streams.some((s) => s.url.includes("episode=1") || s.url.includes("episode%3D1"))).toBe(true);
   });
 
   it("returns an empty list when no tmdbId is provided", () => {
@@ -1031,9 +1031,9 @@ describe("buildFallbackStreamList", () => {
     expect(buildFallbackStreamList(null)).toEqual([]);
   });
 
-  it("uses vsembed.ru as the first source", () => {
+  it("uses vidlink.pro as the first source", () => {
     const streams = buildFallbackStreamList(movie);
-    expect(streams[0].url).toContain("vsembed.ru");
+    expect(streams[0].url).toContain("vidlink.pro");
   });
 });
 
@@ -1050,12 +1050,13 @@ describe("isFallbackEmbedUrl", () => {
 });
 
 describe("FALLBACK_EMBED_PLAYER_IDS", () => {
-  it("exposes the four registered ids", () => {
+  it("exposes the five registered ids", () => {
     expect(FALLBACK_EMBED_PLAYER_IDS).toEqual([
-      "vidsrc-embed",
       "vidlink",
+      "vidsrc-embed",
       "vidsrc-me",
       "superembed",
+      "vidsrc-to",
     ]);
   });
 });

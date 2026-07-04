@@ -1,3 +1,5 @@
+import { getAbsoluteApiUrl } from "../utils/apiConfig";
+
 export const WEBSTREAMR_BASE_URL = "https://87d6a6ef6b58-webstreamrmbg.baby-beamup.club";
 
 const STREAM_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -19,6 +21,8 @@ export const fetchFlixhqStream = async (playable) => {
     title: playable.title,
     type: playable.streamType || "movie",
   });
+  if (playable.tmdbId) params.set("tmdbId", String(playable.tmdbId));
+  if (playable.imdbId) params.set("imdbId", String(playable.imdbId));
   if (playable.streamType === "series" || playable.streamType === "tv") {
     if (playable.seasonNumber) params.set("season", String(playable.seasonNumber));
     if (playable.episodeNumber) params.set("episode", String(playable.episodeNumber));
@@ -28,7 +32,7 @@ export const fetchFlixhqStream = async (playable) => {
   const timer = setTimeout(() => controller.abort(), FLIXHQ_PROXY_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`/api/flixhq/source?${params.toString()}`, { signal: controller.signal });
+    const response = await fetch(getAbsoluteApiUrl(`/api/flixhq/source?${params.toString()}`), { signal: controller.signal });
     if (!response.ok) {
       console.warn(`[flixhq] ${response.status}: ${(await response.text()).slice(0, 120)}`);
       return null;
@@ -58,12 +62,13 @@ export const fetchFlixhqStream = async (playable) => {
 // Calls the local Vite dev middleware at /api/ezvidapi/source (see vite/ezvidapi-plugin.js).
 // ezvidapi returns direct HLS URLs from multiple providers with no auth required.
 export const fetchEzvidapiStream = async (playable) => {
-  if (!playable?.tmdbId) return null;
+  if (!playable?.tmdbId && !playable?.imdbId) return null;
 
   const params = new URLSearchParams({
-    type: playable.streamType || "movie",
-    tmdbId: String(playable.tmdbId)
+    type: playable.streamType || "movie"
   });
+  if (playable.tmdbId) params.set("tmdbId", String(playable.tmdbId));
+  if (playable.imdbId) params.set("imdbId", String(playable.imdbId));
   if (playable.streamType === "series" || playable.streamType === "tv") {
     if (playable.seasonNumber) params.set("season", String(playable.seasonNumber));
     if (playable.episodeNumber) params.set("episode", String(playable.episodeNumber));
@@ -73,7 +78,7 @@ export const fetchEzvidapiStream = async (playable) => {
   const timer = setTimeout(() => controller.abort(), EZVIDAPI_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`/api/ezvidapi/embed?${params.toString()}`, { signal: controller.signal });
+    const response = await fetch(getAbsoluteApiUrl(`/api/ezvidapi/embed?${params.toString()}`), { signal: controller.signal });
     if (!response.ok) {
       console.warn(`[ezvidapi] ${response.status}: ${(await response.text()).slice(0, 120)}`);
       return null;
@@ -104,12 +109,13 @@ export const fetchEzvidapiStream = async (playable) => {
 // Calls the local Vite dev middleware at /api/smplstream/source (see vite/smplstream-plugin.js).
 // SmashyStream returns multiple stream sources with decoded URLs.
 export const fetchSmplstreamStream = async (playable) => {
-  if (!playable?.tmdbId) return null;
+  if (!playable?.tmdbId && !playable?.imdbId) return null;
 
   const params = new URLSearchParams({
-    tmdbId: String(playable.tmdbId),
     type: playable.streamType || "movie"
   });
+  if (playable.tmdbId) params.set("tmdbId", String(playable.tmdbId));
+  if (playable.imdbId) params.set("imdbId", String(playable.imdbId));
   if (playable.streamType === "series" || playable.streamType === "tv") {
     if (playable.seasonNumber) params.set("season", String(playable.seasonNumber));
     if (playable.episodeNumber) params.set("episode", String(playable.episodeNumber));
@@ -119,7 +125,7 @@ export const fetchSmplstreamStream = async (playable) => {
   const timer = setTimeout(() => controller.abort(), SMPLSTREAM_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`/api/smplstream/embed?${params.toString()}`, { signal: controller.signal });
+    const response = await fetch(getAbsoluteApiUrl(`/api/smplstream/embed?${params.toString()}`), { signal: controller.signal });
     if (!response.ok) {
       console.warn(`[smplstream] ${response.status}: ${(await response.text()).slice(0, 120)}`);
       return null;
@@ -152,12 +158,13 @@ export const fetchSmplstreamStream = async (playable) => {
 // Each returned stream is a magnet link (isMagnet: true) and must be played
 // via an external torrent-aware client (VLC, qBittorrent, etc.).
 export const fetchTorrentioStream = async (playable) => {
-  if (!playable?.tmdbId) return null;
+  if (!playable?.tmdbId && !playable?.imdbId) return null;
 
   const params = new URLSearchParams({
-    tmdbId: String(playable.tmdbId),
     type: playable.streamType || "movie"
   });
+  if (playable.tmdbId) params.set("tmdbId", String(playable.tmdbId));
+  if (playable.imdbId) params.set("imdbId", String(playable.imdbId));
   if (playable.streamType === "series" || playable.streamType === "tv") {
     if (playable.seasonNumber) params.set("season", String(playable.seasonNumber));
     if (playable.episodeNumber) params.set("episode", String(playable.episodeNumber));
@@ -167,7 +174,7 @@ export const fetchTorrentioStream = async (playable) => {
   const timer = setTimeout(() => controller.abort(), MEDIAFUSION_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`/api/torrentio/stream?${params.toString()}`, { signal: controller.signal });
+    const response = await fetch(getAbsoluteApiUrl(`/api/torrentio/stream?${params.toString()}`), { signal: controller.signal });
     if (!response.ok) {
       console.warn(`[torrentio] ${response.status}: ${(await response.text()).slice(0, 120)}`);
       return null;
@@ -193,12 +200,13 @@ export const fetchTorrentioStream = async (playable) => {
 const VIDLINK_EXTRACT_TIMEOUT_MS = 12_000;
 
 export const fetchVidlinkStream = async (playable) => {
-  if (!playable?.tmdbId) return null;
+  if (!playable?.tmdbId && !playable?.imdbId) return null;
 
   const params = new URLSearchParams({
-    tmdbId: String(playable.tmdbId),
     type: playable.streamType || "movie",
   });
+  if (playable.tmdbId) params.set("tmdbId", String(playable.tmdbId));
+  if (playable.imdbId) params.set("imdbId", String(playable.imdbId));
   if (playable.streamType === "series" || playable.streamType === "tv") {
     if (playable.seasonNumber) params.set("season", String(playable.seasonNumber));
     if (playable.episodeNumber) params.set("episode", String(playable.episodeNumber));
@@ -208,7 +216,7 @@ export const fetchVidlinkStream = async (playable) => {
   const timer = setTimeout(() => controller.abort(), VIDLINK_EXTRACT_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`/api/extract/vidlink?${params.toString()}`, { signal: controller.signal });
+    const response = await fetch(getAbsoluteApiUrl(`/api/extract/vidlink?${params.toString()}`), { signal: controller.signal });
     if (!response.ok) {
       console.warn(`[vidlink] ${response.status}: ${(await response.text()).slice(0, 120)}`);
       return null;
@@ -236,12 +244,13 @@ export const fetchVidlinkStream = async (playable) => {
 };
 
 export const fetchMediafusionStream = async (playable) => {
-  if (!playable?.tmdbId) return null;
+  if (!playable?.tmdbId && !playable?.imdbId) return null;
 
   const params = new URLSearchParams({
-    tmdbId: String(playable.tmdbId),
     type: playable.streamType || "movie"
   });
+  if (playable.tmdbId) params.set("tmdbId", String(playable.tmdbId));
+  if (playable.imdbId) params.set("imdbId", String(playable.imdbId));
   if (playable.streamType === "series" || playable.streamType === "tv") {
     if (playable.seasonNumber) params.set("season", String(playable.seasonNumber));
     if (playable.episodeNumber) params.set("episode", String(playable.episodeNumber));
@@ -251,7 +260,7 @@ export const fetchMediafusionStream = async (playable) => {
   const timer = setTimeout(() => controller.abort(), MEDIAFUSION_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`/api/mediafusion/stream?${params.toString()}`, { signal: controller.signal });
+    const response = await fetch(getAbsoluteApiUrl(`/api/mediafusion/stream?${params.toString()}`), { signal: controller.signal });
     if (!response.ok) {
       console.warn(`[mediafusion] ${response.status}: ${(await response.text()).slice(0, 120)}`);
       return null;
@@ -278,11 +287,12 @@ const normalizeType = (type) => {
   throw new Error(`Unsupported stream type: ${type}`);
 };
 
-const buildStreamId = (type, tmdbId, season, episode) => {
+const buildStreamId = (type, tmdbId, imdbId, season, episode) => {
   const normalizedType = normalizeType(type);
+  const id = tmdbId ? `tmdb:${tmdbId}` : imdbId;
 
-  if (!tmdbId) {
-    throw new Error("TMDB ID is required to fetch streams");
+  if (!id) {
+    throw new Error("Either TMDB ID or IMDb ID is required to fetch streams");
   }
 
   if (normalizedType === "series") {
@@ -290,25 +300,26 @@ const buildStreamId = (type, tmdbId, season, episode) => {
       throw new Error("Season and episode are required to fetch series streams");
     }
 
-    return `tmdb:${tmdbId}:${season}:${episode}`;
+    return `${id}:${season}:${episode}`;
   }
 
-  return `tmdb:${tmdbId}`;
+  return `${id}`;
 };
 
-const buildCacheKey = (type, tmdbId, season, episode) => {
+const buildCacheKey = (type, tmdbId, imdbId, season, episode) => {
   const normalizedType = normalizeType(type);
+  const id = tmdbId ? `tmdb:${tmdbId}` : imdbId;
 
   if (normalizedType === "series") {
-    return `${normalizedType}:${tmdbId}:${season}:${episode}`;
+    return `${normalizedType}:${id}:${season}:${episode}`;
   }
 
-  return `${normalizedType}:${tmdbId}`;
+  return `${normalizedType}:${id}`;
 };
 
-export const buildStreamUrl = (type, tmdbId, season, episode) => {
+export const buildStreamUrl = (type, tmdbId, imdbId, season, episode) => {
   const normalizedType = normalizeType(type);
-  const streamId = buildStreamId(normalizedType, tmdbId, season, episode);
+  const streamId = buildStreamId(normalizedType, tmdbId, imdbId, season, episode);
 
   return `${WEBSTREAMR_BASE_URL}/stream/${normalizedType}/${streamId}.json`;
 };
@@ -322,8 +333,8 @@ export async function checkHealth() {
   }
 }
 
-export async function fetchStreams(type, tmdbId, season, episode) {
-  const cacheKey = buildCacheKey(type, tmdbId, season, episode);
+export async function fetchStreams(type, tmdbId, imdbId, season, episode) {
+  const cacheKey = buildCacheKey(type, tmdbId, imdbId, season, episode);
   const cached = streamCache.get(cacheKey);
 
   if (cached && Date.now() - cached.createdAt < STREAM_CACHE_TTL_MS) {
@@ -334,7 +345,7 @@ export async function fetchStreams(type, tmdbId, season, episode) {
     return inFlightRequests.get(cacheKey);
   }
 
-  const request = fetch(buildStreamUrl(type, tmdbId, season, episode))
+  const request = fetch(buildStreamUrl(type, tmdbId, imdbId, season, episode))
     .then(async (response) => {
       if (!response.ok) {
         throw new Error(`WebStreamrMBG request failed: ${response.status}`);

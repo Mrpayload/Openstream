@@ -458,3 +458,7 @@ export async function discoverComingSoon(limit = 12) {
 
   return discoverByCategory({ "primary_release_date.gte": today }, limit);
 }
+
+export const IMDB_ID_REGEX = /^tt\d{7,10}$/i;
+export const isImdbId = (val) => typeof val === "string" && IMDB_ID_REGEX.test(val.trim());
+

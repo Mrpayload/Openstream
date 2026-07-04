@@ -15,14 +15,17 @@ export default async function handler(req, res) {
     const url = getRequestUrl(req);
     const type = url.searchParams.get("type") || "movie";
     const tmdbId = url.searchParams.get("tmdbId");
+    const imdbId = url.searchParams.get("imdbId");
     const season = url.searchParams.get("season");
     const episode = url.searchParams.get("episode");
     const provider = url.searchParams.get("provider");
 
-    if (!tmdbId) {
-      sendJson(res, 400, { error: "Missing required parameter: tmdbId", servers: [] });
+    if (!tmdbId && !imdbId) {
+      sendJson(res, 400, { error: "Missing required parameter: tmdbId or imdbId", servers: [] });
       return;
     }
+
+    const id = imdbId || tmdbId;
 
     let apiUrl;
     if (type === "tv" || type === "series") {
@@ -30,9 +33,9 @@ export default async function handler(req, res) {
         sendJson(res, 400, { error: "Season and episode are required for TV shows", servers: [] });
         return;
       }
-      apiUrl = `${EZVIDAPI_BASE}/embed/tv/${tmdbId}/${season}/${episode}`;
+      apiUrl = `${EZVIDAPI_BASE}/embed/tv/${id}/${season}/${episode}`;
     } else {
-      apiUrl = `${EZVIDAPI_BASE}/embed/movie/${tmdbId}`;
+      apiUrl = `${EZVIDAPI_BASE}/embed/movie/${id}`;
     }
 
     if (provider) {

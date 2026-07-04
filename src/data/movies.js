@@ -345,6 +345,21 @@ const tmdbIdsByCatalogId = {
   "la-la-land": 313369
 };
 
+const imdbIdsByCatalogId = {
+  "stranger-things": "tt4574334",
+  "spider-man-spiderverse": "tt4633694",
+  "wednesday": "tt13443470",
+  "dune-part-two": "tt15239678",
+  "rick-and-morty": "tt2861424",
+  "squid-game": "tt10919420",
+  "everything-everywhere": "tt11097524",
+  "knives-out": "tt8103176",
+  "interstellar": "tt0814314",
+  "arcane": "tt11126994",
+  "demon-slayer": "tt10134098",
+  "la-la-land": "tt3783958"
+};
+
 const tmdbImagePathsByCatalogId = {
   "stranger-things": {
     poster: "/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg",
@@ -408,12 +423,14 @@ const buildTmdbStreamId = (movie, seasonNumber, episodeNumber) => {
 
 export const movies = catalog.map((movie) => {
   const tmdbId = tmdbIdsByCatalogId[movie.id];
+  const imdbId = imdbIdsByCatalogId[movie.id];
   const tmdbMediaType = movie.type === "series" ? "tv" : "movie";
   const imagePaths = tmdbImagePathsByCatalogId[movie.id];
 
   return {
     ...movie,
     tmdbId,
+    imdbId,
     tmdbMediaType,
     posterUrl: tmdbImageUrl(imagePaths.poster, "w500"),
     backdropUrl: tmdbImageUrl(imagePaths.backdrop, "w1280"),

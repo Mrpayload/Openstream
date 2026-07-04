@@ -5,13 +5,24 @@
 // is shared by App.jsx (initial stream fetch) and any UI that wants to know
 // which URL patterns to recognize as embed/iframe.
 
+import { getAbsoluteApiUrl } from "./apiConfig";
+
 // In development, route embed URLs through the proxy so the guard script
 // can block popups. In production, use the direct URL (no proxy available).
-const PROXY_PREFIX = "/api/embed-proxy?url=";
+const PROXY_PREFIX = getAbsoluteApiUrl("/api/embed-proxy?url=");
 
 const proxyUrl = (url) => {
-  // Only proxy in dev (Vite dev server serves /api/embed-proxy)
-  if (typeof window !== "undefined" && window.location?.port === "5173") {
+  const isCapacitor = typeof window !== "undefined" && (window.Capacitor || window.location?.protocol === "capacitor:");
+  
+  // If inside the APK, native Android interception handles ad-blocking.
+  // We do not want to proxy requests through our server.
+  if (isCapacitor) {
+    return url;
+  }
+
+  // Fallback to local dev proxy when testing in standard browser.
+  const isLocalhost = typeof window !== "undefined" && (window.location?.hostname === "localhost" || window.location?.hostname === "127.0.0.1");
+  if (isLocalhost) {
     return PROXY_PREFIX + encodeURIComponent(url);
   }
   return url;
@@ -59,6 +70,18 @@ const FALLBACK_EMBED_PLAYERS = [
         params.set("e", String(playable.episodeNumber));
       }
       return `https://multiembed.mov/?${params.toString()}`;
+    }
+  },
+  {
+    id: "vidsrc-to",
+    label: "VidSrc.to (Server 5)",
+    title: "Embedded player via vidsrc.to (Subtitles, Server switching)",
+    build: (playable) => {
+      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
+      if (isTvPlayable(playable)) {
+        return `https://vidsrc.to/embed/tv/${id}/${playable.seasonNumber}/${playable.episodeNumber}`;
+      }
+      return `https://vidsrc.to/embed/movie/${id}`;
     }
   }
 ];
@@ -110,6 +133,7 @@ export const isFallbackEmbedUrl = (url) => {
       // Match dynamic builders by known domain patterns
       if (player.id === "superembed") return raw.includes("multiembed.mov");
       if (player.id === "vidlink") return raw.includes("vidlink.pro");
+      if (player.id === "vidsrc-to") return raw.includes("vidsrc.to");
       return false;
     }
     return raw.startsWith(player.baseMovie) || raw.startsWith(player.baseTv);

@@ -2,13 +2,9 @@ import { useEffect, useState } from "react";
 import {
   discoverBollywood,
   discoverMollywood,
-  discoverAnime,
-  discoverMostPopular,
-  discoverTopRated,
-  discoverNewReleases,
-  discoverComingSoon,
   hasTmdbCredentials
 } from "../services/tmdbApi";
+import { fetchCinemetaCatalog } from "../services/cinemetaApi";
 
 const CATEGORY_TTL_MS = 6 * 60 * 60 * 1000;
 const STORAGE_KEY = "openstream_category_cache_v1";
@@ -49,40 +45,71 @@ export function useLandingData() {
   const [topRatedList, setTopRatedList] = useState(cached?.topRated || []);
   const [newReleases, setNewReleases] = useState(cached?.newReleases || []);
   const [comingSoon, setComingSoon] = useState(cached?.comingSoon || []);
-  const [loading, setLoading] = useState(hasTmdbCredentials && !cached);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!hasTmdbCredentials || cached) return;
+    if (cached) return;
 
+    const controller = new AbortController();
     let cancelled = false;
 
     queueMicrotask(async () => {
       try {
-        const results = await Promise.allSettled([
-          discoverBollywood(12),
-          discoverMollywood(12),
-          discoverAnime(12),
-          discoverMostPopular(12),
-          discoverTopRated(12),
-          discoverNewReleases(12),
-          discoverComingSoon(12)
+        const [cinemetaRes, tmdbRes] = await Promise.all([
+          Promise.allSettled([
+            fetchCinemetaCatalog("movie", null, controller.signal),
+            fetchCinemetaCatalog("series", null, controller.signal),
+            fetchCinemetaCatalog("series", "Animation", controller.signal),
+            fetchCinemetaCatalog("movie", "Animation", controller.signal),
+          ]),
+          hasTmdbCredentials ? Promise.allSettled([
+            discoverBollywood(12),
+            discoverMollywood(12)
+          ]) : Promise.resolve([])
         ]);
 
         if (cancelled) return;
 
-        const bolly = results[0].status === "fulfilled" ? results[0].value : [];
-        const molly = results[1].status === "fulfilled" ? results[1].value : [];
-        const anim = results[2].status === "fulfilled" ? results[2].value : [];
-        const popular = results[3].status === "fulfilled" ? results[3].value : [];
-        const top = results[4].status === "fulfilled" ? results[4].value : [];
-        const newRel = results[5].status === "fulfilled" ? results[5].value : [];
-        const coming = results[6].status === "fulfilled" ? results[6].value : [];
+        const cTopMovies = cinemetaRes[0].status === "fulfilled" ? cinemetaRes[0].value : [];
+        const cTopSeries = cinemetaRes[1].status === "fulfilled" ? cinemetaRes[1].value : [];
+        const cAnimeSeries = cinemetaRes[2].status === "fulfilled" ? cinemetaRes[2].value : [];
+        const cAnimeMovies = cinemetaRes[3].status === "fulfilled" ? cinemetaRes[3].value : [];
+
+        const bolly = tmdbRes[0]?.status === "fulfilled" ? tmdbRes[0].value : [];
+        const molly = tmdbRes[1]?.status === "fulfilled" ? tmdbRes[1].value : [];
+
+        const popular = [];
+        const maxLen = Math.max(cTopMovies.length, cTopSeries.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (cTopMovies[i]) popular.push(cTopMovies[i]);
+          if (cTopSeries[i]) popular.push(cTopSeries[i]);
+        }
+
+        const top = [...cTopMovies, ...cTopSeries].sort((a, b) => b.rating - a.rating).slice(0, 24);
+
+        const currentYear = new Date().getFullYear();
+        const newRel = [...cTopMovies, ...cTopSeries].filter((item) => {
+          const y = parseInt(item.year);
+          return !isNaN(y) && y >= currentYear - 1;
+        }).slice(0, 24);
+
+        const coming = [...cTopMovies, ...cTopSeries].filter((item) => {
+          const y = parseInt(item.year);
+          return !isNaN(y) && y >= currentYear;
+        }).slice(0, 24);
+
+        const anim = [];
+        const maxAnimeLen = Math.max(cAnimeMovies.length, cAnimeSeries.length);
+        for (let i = 0; i < maxAnimeLen; i++) {
+          if (cAnimeSeries[i]) anim.push(cAnimeSeries[i]);
+          if (cAnimeMovies[i]) anim.push(cAnimeMovies[i]);
+        }
 
         setBollywood(bolly);
         setMollywood(molly);
-        setAnime(anim);
-        setMostPopular(popular);
+        setAnime(anim.slice(0, 24));
+        setMostPopular(popular.slice(0, 24));
         setTopRatedList(top);
         setNewReleases(newRel);
         setComingSoon(coming);
@@ -93,8 +120,8 @@ export function useLandingData() {
 
         saveIfNonEmpty("bollywood", bolly);
         saveIfNonEmpty("mollywood", molly);
-        saveIfNonEmpty("anime", anim);
-        saveIfNonEmpty("mostPopular", popular);
+        saveIfNonEmpty("anime", anim.slice(0, 24));
+        saveIfNonEmpty("mostPopular", popular.slice(0, 24));
         saveIfNonEmpty("topRated", top);
         saveIfNonEmpty("newReleases", newRel);
         saveIfNonEmpty("comingSoon", coming);
@@ -105,11 +132,12 @@ export function useLandingData() {
       }
     });
 
-    return () => { cancelled = true; };
-    // `cached` is intentionally a dep so the effect re-fetches if the
-    // category cache is cleared during the component's lifetime. In practice
-    // it never changes after mount, so this is effectively run-once.
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [cached]);
 
   return { bollywood, mollywood, anime, mostPopular, topRated: topRatedList, newReleases, comingSoon, loading, error };
 }
+

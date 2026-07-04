@@ -11,6 +11,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/haptics": "^8.0.2",
     "flixhq-api": "^1.0.4",
     "framer-motion": "^12.40.0",
     "hls.js": "^1.6.16",
@@ -22,6 +26,8 @@
     "webtorrent": "^3.0.16"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.1",
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
