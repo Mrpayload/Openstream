@@ -1,4 +1,8 @@
-const CINEMETA_API_BASE = "https://v3-cinemeta.strem.io";
+import { getAbsoluteApiUrl } from "../utils/apiConfig";
+
+const getCinemetaUrl = (path) => {
+  return getAbsoluteApiUrl(`/api/cinemeta?path=${encodeURIComponent(path)}`);
+};
 
 const normalizeGenres = (genres) => {
   if (Array.isArray(genres)) return genres.slice(0, 3);
@@ -83,8 +87,8 @@ export async function searchCinemeta(query, signal) {
   const trimmed = query.trim();
 
   const [movieRes, tvRes] = await Promise.allSettled([
-    fetch(`${CINEMETA_API_BASE}/catalog/movie/top/search=${encodeURIComponent(trimmed)}.json`, { signal }),
-    fetch(`${CINEMETA_API_BASE}/catalog/series/top/search=${encodeURIComponent(trimmed)}.json`, { signal })
+    fetch(getCinemetaUrl(`/catalog/movie/top/search=${encodeURIComponent(trimmed)}.json`), { signal }),
+    fetch(getCinemetaUrl(`/catalog/series/top/search=${encodeURIComponent(trimmed)}.json`), { signal })
   ]);
 
   const results = [];
@@ -109,7 +113,7 @@ export async function searchCinemeta(query, signal) {
 export async function fetchCinemetaCatalog(type, genre, signal) {
   const normalizedType = type === "series" || type === "tv" ? "series" : "movie";
   const genrePath = genre ? `/genre=${encodeURIComponent(genre)}` : "";
-  const url = `${CINEMETA_API_BASE}/catalog/${normalizedType}/top${genrePath}.json`;
+  const url = getCinemetaUrl(`/catalog/${normalizedType}/top${genrePath}.json`);
 
   try {
     const response = await fetch(url, { signal });
@@ -132,7 +136,7 @@ export async function fetchCinemetaDetails(type, imdbId, signal) {
 
   const normalizedType = type === "series" ? "series" : "movie";
   try {
-    const response = await fetch(`${CINEMETA_API_BASE}/meta/${normalizedType}/${encodeURIComponent(imdbId)}.json`, { signal });
+    const response = await fetch(getCinemetaUrl(`/meta/${normalizedType}/${encodeURIComponent(imdbId)}.json`), { signal });
     if (!response.ok) return null;
 
     const data = await response.json();

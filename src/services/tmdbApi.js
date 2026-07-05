@@ -1,4 +1,5 @@
-const TMDB_API_BASE = "https://api.themoviedb.org/3";
+import { getAbsoluteApiUrl } from "../utils/apiConfig";
+
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p";
 const SAMPLE_MOVIE_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4";
 
@@ -9,21 +10,22 @@ const getImageUrl = (path, size) => path ? `${TMDB_IMAGE_BASE}/${size}${path}` :
 
 const getHeaders = () => {
   if (!accessToken) return {};
-
   return {
     Authorization: `Bearer ${accessToken}`
   };
 };
 
-const buildUrl = (path) => {
-  const url = new URL(`${TMDB_API_BASE}${path}`);
-  url.searchParams.set("language", "en-US");
-
+const buildUrl = (pathWithParams) => {
+  const separator = pathWithParams.includes("?") ? "&" : "?";
+  let finalPath = `${pathWithParams}${separator}language=en-US`;
+  
   if (apiKey && !accessToken) {
-    url.searchParams.set("api_key", apiKey);
+    finalPath += `&api_key=${apiKey}`;
   }
 
-  return url.toString();
+  const proxyBase = getAbsoluteApiUrl("/api/tmdb");
+  const proxySeparator = proxyBase.includes("?") ? "&" : "?";
+  return `${proxyBase}${proxySeparator}path=${encodeURIComponent(finalPath)}`;
 };
 
 const slugify = (value) => value
@@ -361,19 +363,14 @@ export async function discoverByCategory(params, limit = 12) {
   if (!hasTmdbCredentials) return [];
 
   try {
-    const url = new URL(`${TMDB_API_BASE}/discover/movie`);
-    url.searchParams.set("language", "en-US");
-
-    if (apiKey && !accessToken) {
-      url.searchParams.set("api_key", apiKey);
-    }
+    const searchParams = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
-      url.searchParams.set(key, value);
+      searchParams.set(key, value);
     }
-    url.searchParams.set("sort_by", "popularity.desc");
-    url.searchParams.set("page", "1");
+    searchParams.set("sort_by", "popularity.desc");
+    searchParams.set("page", "1");
 
-    const response = await fetch(url.toString(), { headers: getHeaders() });
+    const response = await fetch(buildUrl(`/discover/movie?${searchParams.toString()}`), { headers: getHeaders() });
     if (!response.ok) return [];
 
     const data = await response.json();
@@ -401,15 +398,10 @@ export async function discoverMostPopular(limit = 12) {
   if (!hasTmdbCredentials) return [];
 
   try {
-    const url = new URL(`${TMDB_API_BASE}/movie/popular`);
-    url.searchParams.set("language", "en-US");
-    url.searchParams.set("page", "1");
+    const searchParams = new URLSearchParams();
+    searchParams.set("page", "1");
 
-    if (apiKey && !accessToken) {
-      url.searchParams.set("api_key", apiKey);
-    }
-
-    const response = await fetch(url.toString(), { headers: getHeaders() });
+    const response = await fetch(buildUrl(`/movie/popular?${searchParams.toString()}`), { headers: getHeaders() });
     if (!response.ok) return [];
 
     const data = await response.json();
@@ -425,15 +417,10 @@ export async function discoverTopRated(limit = 12) {
   if (!hasTmdbCredentials) return [];
 
   try {
-    const url = new URL(`${TMDB_API_BASE}/movie/top_rated`);
-    url.searchParams.set("language", "en-US");
-    url.searchParams.set("page", "1");
+    const searchParams = new URLSearchParams();
+    searchParams.set("page", "1");
 
-    if (apiKey && !accessToken) {
-      url.searchParams.set("api_key", apiKey);
-    }
-
-    const response = await fetch(url.toString(), { headers: getHeaders() });
+    const response = await fetch(buildUrl(`/movie/top_rated?${searchParams.toString()}`), { headers: getHeaders() });
     if (!response.ok) return [];
 
     const data = await response.json();
