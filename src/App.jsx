@@ -67,12 +67,15 @@ const playSound = (type) => {
 
 const getStoredWatchList = () => {
   const list = localStorage.getItem("openstream_watchlist_v3");
-  if (!list) return [];
+  return list ? JSON.parse(list) : [];
+};
 
+const getStoredFavoritesMetadata = () => {
   try {
-    return JSON.parse(list);
+    const data = localStorage.getItem("openstream_favorites_metadata_v3");
+    return data ? JSON.parse(data) : {};
   } catch {
-    return [];
+    return {};
   }
 };
 
@@ -398,7 +401,7 @@ function MediaRow({ title, items, watchList, onOpenDetails, onToggleFavorite }) 
             rank={title.includes("Top") ? index + 1 : undefined}
             isFavorite={watchList.includes(movie.id)}
             onOpenDetails={() => onOpenDetails(movie)}
-            onToggleFavorite={(e) => onToggleFavorite(movie.id, e)}
+            onToggleFavorite={(e) => onToggleFavorite(movie, e)}
           />
         ))}
       </div>
@@ -1055,7 +1058,37 @@ export default function App() {
 
   const filterActiveCount = (selectedGenre !== "All" ? 1 : 0) + (selectedType !== "all" ? 1 : 0) + (selectedYearRange !== "all" ? 1 : 0) + (selectedRating !== "all" ? 1 : 0);
 
-  const favorites = useMemo(() => catalog.filter((movie) => watchList.includes(movie.id)), [catalog, watchList]);
+  const favorites = useMemo(() => {
+    const storedMetadata = getStoredFavoritesMetadata();
+    const list = [];
+    
+    for (const id of watchList) {
+      if (storedMetadata[id]) {
+        list.push(storedMetadata[id]);
+      } else {
+        const fromCatalog = catalog.find((m) => m.id === id);
+        if (fromCatalog) {
+          list.push(fromCatalog);
+        } else {
+          const type = id.includes("series") ? "series" : "movie";
+          const imdbId = id.split("-").pop();
+          list.push({
+            id,
+            title: "Loading Title...",
+            type,
+            streamType: type,
+            imdbId,
+            genres: ["Drama"],
+            rating: 0,
+            year: "----",
+            description: "No details cached. Click to open details.",
+            isSearchResult: true
+          });
+        }
+      }
+    }
+    return list;
+  }, [catalog, watchList]);
 
   const currentEpisodeNavigation = useMemo(() => {
     if (!currentlyPlaying || currentlyPlaying.streamType !== "series") {
@@ -1080,16 +1113,28 @@ export default function App() {
 
   const isInitialCatalogReady = catalogStatus !== "refreshing" && !isTmdbLoading && !categoriesLoading && catalog.length > 0;
 
-  const toggleWatchList = (movieId, e) => {
+  const toggleWatchList = (movieOrId, e) => {
     if (e) e.stopPropagation();
     playSound("pop");
 
-    const updated = watchList.includes(movieId)
+    const movie = typeof movieOrId === "object" && movieOrId !== null ? movieOrId : null;
+    const movieId = movie ? movie.id : movieOrId;
+
+    const isRemoving = watchList.includes(movieId);
+    const updatedWatchList = isRemoving
       ? watchList.filter((id) => id !== movieId)
       : [...watchList, movieId];
 
-    setWatchList(updated);
-    localStorage.setItem("openstream_watchlist_v3", JSON.stringify(updated));
+    setWatchList(updatedWatchList);
+    localStorage.setItem("openstream_watchlist_v3", JSON.stringify(updatedWatchList));
+
+    const storedMetadata = getStoredFavoritesMetadata();
+    if (isRemoving) {
+      delete storedMetadata[movieId];
+    } else if (movie) {
+      storedMetadata[movieId] = movie;
+    }
+    localStorage.setItem("openstream_favorites_metadata_v3", JSON.stringify(storedMetadata));
   };
 
   const saveRecentSearch = (term) => {
@@ -1254,6 +1299,12 @@ export default function App() {
           setCatalog((prev) => prev.map((item) =>
             item.id === activeMovie.id ? activeMovie : item
           ));
+          
+          const storedMetadata = getStoredFavoritesMetadata();
+          if (storedMetadata[activeMovie.id] !== undefined) {
+            storedMetadata[activeMovie.id] = activeMovie;
+            localStorage.setItem("openstream_favorites_metadata_v3", JSON.stringify(storedMetadata));
+          }
         }
       } catch (error) {
         console.warn("Cinemeta details hydration failed:", error);
@@ -1512,7 +1563,7 @@ export default function App() {
               isFavorite={watchList.includes(selectedMovie.id)}
               onClose={() => { setSelectedMovie(null); setHydratedMovie(null); }}
               onPlay={(playableOverride) => startPlayback(selectedMovie, playableOverride)}
-              onToggleFavorite={(e) => toggleWatchList(selectedMovie.id, e)}
+              onToggleFavorite={(e) => toggleWatchList(selectedMovie, e)}
               seasonsLoading={seasonsLoading}
               episodesLoadingSeason={episodesLoadingSeason}
               selectedSeasonIndex={selectedSeasonIndex}
@@ -1621,7 +1672,7 @@ export default function App() {
                               movie={movie}
                               isFavorite={watchList.includes(movie.id)}
                               onOpenDetails={() => openDetails(movie)}
-                              onToggleFavorite={(e) => toggleWatchList(movie.id, e)}
+                              onToggleFavorite={(e) => toggleWatchList(movie, e)}
                             />
                           ))}
                         </div>
@@ -1804,7 +1855,7 @@ export default function App() {
                       movie={movie}
                       isFavorite={true}
                       onOpenDetails={() => openDetails(movie)}
-                      onToggleFavorite={(e) => toggleWatchList(movie.id, e)}
+                      onToggleFavorite={(e) => toggleWatchList(movie, e)}
                     />
                   ))}
                 </div>
@@ -1851,7 +1902,7 @@ export default function App() {
                           <Play size={18} fill="currentColor" /> Play
                         </button>
                         <button className="ghost-btn clickable" onClick={() => openDetails(featured)}>Details</button>
-                        <button className="secondary-btn clickable" onClick={(e) => toggleWatchList(featured.id, e)}>
+                        <button className="secondary-btn clickable" onClick={(e) => toggleWatchList(featured, e)}>
                           <Heart size={18} strokeWidth={2} />
                           {watchList.includes(featured.id) ? "Saved" : "My List"}
                         </button>
@@ -1982,7 +2033,7 @@ export default function App() {
                         movie={movie}
                         isFavorite={watchList.includes(movie.id)}
                         onOpenDetails={() => openDetails(movie)}
-                        onToggleFavorite={(e) => toggleWatchList(movie.id, e)}
+                        onToggleFavorite={(e) => toggleWatchList(movie, e)}
                       />
                     ))}
                   </div>
