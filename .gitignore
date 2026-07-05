@@ -29,3 +29,17 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Visual Test Snapshots & Captures
+.playwright-mcp/
+
+# Local JDK
+jdk21/
+jdk21.zip
+
+# Temp files and extra logs
+tmp/
+*.log
+vite.log*
+vite.err.log*
+
