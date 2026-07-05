@@ -1,5 +1,5 @@
 import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, ChevronUp, Coffee, Film, Heart, Info, Loader2, Play, RefreshCw, Search, Server, SlidersHorizontal, Star, X } from "lucide-react";
+import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, ChevronUp, Coffee, Film, Heart, Info, Loader2, Play, RefreshCw, Search, Server, SlidersHorizontal, Star, X, UserCircle2 } from "lucide-react";
 import { genresList, movies as fallbackMovies } from "./data/movies";
 import { fetchEzvidapiStream, fetchFlixhqStream, fetchMediafusionStream, fetchSmplstreamStream, fetchStreams, fetchVidlinkStream } from "./services/streamApi";
 import { discoverTmdbCatalogItems, fetchTmdbSeasonEpisodes, fetchTmdbSeasons, hasTmdbCredentials, hydrateCatalogFromTmdb, searchTmdb, isImdbId } from "./services/tmdbApi";
@@ -15,6 +15,7 @@ import HeroBranding from "./components/HeroBranding";
 import LoadingScreen from "./components/LoadingScreen";
 import { motion, AnimatePresence } from "framer-motion";
 const StreamPicker = lazy(() => import("./components/StreamPicker"));
+import ProfileSelectorModal from "./components/ProfileSelectorModal";
 import { buildFallbackStreamList } from "./utils/fallbackStreams";
 import { getAbsoluteApiUrl } from "./utils/apiConfig";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
@@ -65,14 +66,14 @@ const playSound = (type) => {
   }
 };
 
-const getStoredWatchList = () => {
-  const list = localStorage.getItem("openstream_watchlist_v3");
+const getStoredWatchList = (profileId) => {
+  const list = localStorage.getItem(`openstream_watchlist_v3_${profileId || 'default'}`);
   return list ? JSON.parse(list) : [];
 };
 
-const getStoredFavoritesMetadata = () => {
+const getStoredFavoritesMetadata = (profileId) => {
   try {
-    const data = localStorage.getItem("openstream_favorites_metadata_v3");
+    const data = localStorage.getItem(`openstream_favorites_metadata_v3_${profileId || 'default'}`);
     return data ? JSON.parse(data) : {};
   } catch {
     return {};
@@ -622,6 +623,16 @@ const PlayerEpisodeCard = memo(function PlayerEpisodeCard({ activeSeason, episod
 });
 
 export default function App() {
+  const [profiles, setProfiles] = useState(() => {
+    const stored = localStorage.getItem("openstream_profiles");
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [activeProfileId, setActiveProfileId] = useState(() => {
+    return localStorage.getItem("openstream_active_profile_id") || null;
+  });
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [pendingWatchlistAction, setPendingWatchlistAction] = useState(null);
+
   const { bollywood, mollywood, anime, mostPopular, topRated, newReleases, comingSoon, loading: categoriesLoading } = useLandingData();
   const [catalog, setCatalog] = useState(fallbackMovies);
   const [isTmdbLoading, setIsTmdbLoading] = useState(hasTmdbCredentials);
@@ -637,7 +648,7 @@ export default function App() {
   const [selectedRating, setSelectedRating] = useState("all");
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState(getStoredRecentSearches);
-  const [watchList, setWatchList] = useState(getStoredWatchList);
+  const [watchList, setWatchList] = useState(() => getStoredWatchList(activeProfileId));
   const [activeTab, setActiveTab] = useState("browse");
   const [heroIndex, setHeroIndex] = useState(0);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
@@ -661,6 +672,66 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const toastTimerRef = useRef(null);
+
+  useEffect(() => {
+    setWatchList(getStoredWatchList(activeProfileId));
+  }, [activeProfileId]);
+
+  const handleAddProfile = useCallback((name) => {
+    const newProfile = {
+      id: `profile_${Date.now()}`,
+      name,
+      color: ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'][profiles.length % 5]
+    };
+    const updated = [...profiles, newProfile];
+    setProfiles(updated);
+    localStorage.setItem("openstream_profiles", JSON.stringify(updated));
+    setActiveProfileId(newProfile.id);
+    localStorage.setItem("openstream_active_profile_id", newProfile.id);
+    setIsProfileModalOpen(false);
+  }, [profiles]);
+
+  const handleSelectProfile = useCallback((id) => {
+    setActiveProfileId(id);
+    localStorage.setItem("openstream_active_profile_id", id);
+    setIsProfileModalOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeProfileId && pendingWatchlistAction) {
+      const action = pendingWatchlistAction;
+      setPendingWatchlistAction(null);
+      
+      if (action.type === 'navigate') {
+        setActiveTab("favorites");
+        setSearchTerm("");
+        setShowSearch(false);
+        setSearchResults([]);
+      } else if (action.type === 'toggle') {
+        const currentWatchList = getStoredWatchList(activeProfileId);
+        const movieOrId = action.payload;
+        const movie = typeof movieOrId === "object" && movieOrId !== null ? movieOrId : null;
+        const movieId = movie ? movie.id : movieOrId;
+
+        const isRemoving = currentWatchList.includes(movieId);
+        const updatedWatchList = isRemoving
+          ? currentWatchList.filter((id) => id !== movieId)
+          : [...currentWatchList, movieId];
+
+        setWatchList(updatedWatchList);
+        localStorage.setItem(`openstream_watchlist_v3_${activeProfileId}`, JSON.stringify(updatedWatchList));
+
+        const storedMetadata = getStoredFavoritesMetadata(activeProfileId);
+        if (isRemoving) {
+          delete storedMetadata[movieId];
+        } else if (movie) {
+          storedMetadata[movieId] = movie;
+        }
+        localStorage.setItem(`openstream_favorites_metadata_v3_${activeProfileId}`, JSON.stringify(storedMetadata));
+        playSound("pop");
+      }
+    }
+  }, [activeProfileId, pendingWatchlistAction]);
 
   const showToast = useCallback((message, variant = "info") => {
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
@@ -1059,7 +1130,7 @@ export default function App() {
   const filterActiveCount = (selectedGenre !== "All" ? 1 : 0) + (selectedType !== "all" ? 1 : 0) + (selectedYearRange !== "all" ? 1 : 0) + (selectedRating !== "all" ? 1 : 0);
 
   const favorites = useMemo(() => {
-    const storedMetadata = getStoredFavoritesMetadata();
+    const storedMetadata = getStoredFavoritesMetadata(activeProfileId);
     const list = [];
     
     for (const id of watchList) {
@@ -1115,26 +1186,34 @@ export default function App() {
 
   const toggleWatchList = (movieOrId, e) => {
     if (e) e.stopPropagation();
+
+    if (!activeProfileId) {
+      setPendingWatchlistAction({ type: 'toggle', payload: movieOrId });
+      setIsProfileModalOpen(true);
+      return;
+    }
+
     playSound("pop");
 
     const movie = typeof movieOrId === "object" && movieOrId !== null ? movieOrId : null;
     const movieId = movie ? movie.id : movieOrId;
 
-    const isRemoving = watchList.includes(movieId);
+    const currentWatchList = getStoredWatchList(activeProfileId);
+    const isRemoving = currentWatchList.includes(movieId);
     const updatedWatchList = isRemoving
-      ? watchList.filter((id) => id !== movieId)
-      : [...watchList, movieId];
+      ? currentWatchList.filter((id) => id !== movieId)
+      : [...currentWatchList, movieId];
 
     setWatchList(updatedWatchList);
-    localStorage.setItem("openstream_watchlist_v3", JSON.stringify(updatedWatchList));
+    localStorage.setItem(`openstream_watchlist_v3_${activeProfileId}`, JSON.stringify(updatedWatchList));
 
-    const storedMetadata = getStoredFavoritesMetadata();
+    const storedMetadata = getStoredFavoritesMetadata(activeProfileId);
     if (isRemoving) {
       delete storedMetadata[movieId];
     } else if (movie) {
       storedMetadata[movieId] = movie;
     }
-    localStorage.setItem("openstream_favorites_metadata_v3", JSON.stringify(storedMetadata));
+    localStorage.setItem(`openstream_favorites_metadata_v3_${activeProfileId}`, JSON.stringify(storedMetadata));
   };
 
   const saveRecentSearch = (term) => {
@@ -1495,7 +1574,26 @@ export default function App() {
         </button>
 
         <nav className="header-nav">
-          <button className={activeTab === "favorites" ? "active" : ""} onClick={() => setActiveTab("favorites")} aria-label="My List">
+          {activeProfileId && (
+            <button onClick={() => setIsProfileModalOpen(true)} aria-label="Switch Profile">
+              <UserCircle2 size={16} />
+            </button>
+          )}
+          <button 
+            className={activeTab === "favorites" ? "active" : ""} 
+            onClick={() => {
+              if (!activeProfileId) {
+                setPendingWatchlistAction({ type: 'navigate' });
+                setIsProfileModalOpen(true);
+              } else {
+                setActiveTab("favorites");
+                setSearchTerm("");
+                setShowSearch(false);
+                setSearchResults([]);
+              }
+            }} 
+            aria-label="My List"
+          >
             <Heart size={16} aria-hidden="true" />
             <span>My List</span>
           </button>
@@ -2153,6 +2251,19 @@ export default function App() {
           </button>
         </div>
       )}
+
+      <ProfileSelectorModal 
+        isOpen={isProfileModalOpen}
+        profiles={profiles}
+        activeProfileId={activeProfileId}
+        onSelectProfile={handleSelectProfile}
+        onAddProfile={handleAddProfile}
+        onClose={() => {
+          setIsProfileModalOpen(false);
+          setPendingWatchlistAction(null);
+        }}
+        canClose={true}
+      />
     </>
   );
 }
