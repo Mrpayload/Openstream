@@ -5,7 +5,6 @@ import {
   hasTmdbCredentials
 } from "../services/tmdbApi";
 import { fetchCinemetaCatalog } from "../services/cinemetaApi";
-
 const CATEGORY_TTL_MS = 6 * 60 * 60 * 1000;
 const STORAGE_KEY = "openstream_category_cache_v1";
 
@@ -16,8 +15,8 @@ const getStoredCache = () => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (Date.now() - parsed.updatedAt > CATEGORY_TTL_MS) return null;
-    const hasData = CATEGORY_KEYS.some(k => Array.isArray(parsed[k]) && parsed[k].length > 0);
+    if (typeof parsed.updatedAt !== 'number' || Date.now() - parsed.updatedAt > CATEGORY_TTL_MS) return null;
+    const hasData = CATEGORY_KEYS.every(k => Array.isArray(parsed[k]) && parsed[k].length > 0);
     if (!hasData) return null;
     return parsed;
   } catch {
@@ -38,13 +37,13 @@ const saveToCache = (key, data) => {
 
 export function useLandingData() {
   const cached = getStoredCache();
-  const [bollywood, setBollywood] = useState(cached?.bollywood || []);
-  const [mollywood, setMollywood] = useState(cached?.mollywood || []);
-  const [anime, setAnime] = useState(cached?.anime || []);
-  const [mostPopular, setMostPopular] = useState(cached?.mostPopular || []);
-  const [topRatedList, setTopRatedList] = useState(cached?.topRated || []);
-  const [newReleases, setNewReleases] = useState(cached?.newReleases || []);
-  const [comingSoon, setComingSoon] = useState(cached?.comingSoon || []);
+  const [bollywood, setBollywood] = useState(() => Array.isArray(cached?.bollywood) ? cached.bollywood : []);
+  const [mollywood, setMollywood] = useState(() => Array.isArray(cached?.mollywood) ? cached.mollywood : []);
+  const [anime, setAnime] = useState(() => Array.isArray(cached?.anime) ? cached.anime : []);
+  const [mostPopular, setMostPopular] = useState(() => Array.isArray(cached?.mostPopular) ? cached.mostPopular : []);
+  const [topRatedList, setTopRatedList] = useState(() => Array.isArray(cached?.topRated) ? cached.topRated : []);
+  const [newReleases, setNewReleases] = useState(() => Array.isArray(cached?.newReleases) ? cached.newReleases : []);
+  const [comingSoon, setComingSoon] = useState(() => Array.isArray(cached?.comingSoon) ? cached.comingSoon : []);
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState(null);
 
@@ -110,9 +109,9 @@ export function useLandingData() {
         setMollywood(molly);
         setAnime(anim.slice(0, 24));
         setMostPopular(popular.slice(0, 24));
-        setTopRatedList(top);
-        setNewReleases(newRel);
-        setComingSoon(coming);
+        setTopRatedList(top.slice(0, 24));
+        setNewReleases(newRel.slice(0, 24));
+        setComingSoon(coming.slice(0, 24));
 
         const saveIfNonEmpty = (key, data) => {
           if (Array.isArray(data) && data.length > 0) saveToCache(key, data);

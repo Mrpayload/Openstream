@@ -67,8 +67,12 @@ const playSound = (type) => {
 };
 
 const getStoredWatchList = (profileId) => {
-  const list = localStorage.getItem(`openstream_watchlist_v3_${profileId || 'default'}`);
-  return list ? JSON.parse(list) : [];
+  try {
+    const list = localStorage.getItem(`openstream_watchlist_v3_${profileId || 'default'}`);
+    return list ? JSON.parse(list) : [];
+  } catch {
+    return [];
+  }
 };
 
 const getStoredFavoritesMetadata = (profileId) => {
@@ -624,8 +628,12 @@ const PlayerEpisodeCard = memo(function PlayerEpisodeCard({ activeSeason, episod
 
 export default function App() {
   const [profiles, setProfiles] = useState(() => {
-    const stored = localStorage.getItem("openstream_profiles");
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem("openstream_profiles");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
   });
   const [activeProfileId, setActiveProfileId] = useState(() => {
     return localStorage.getItem("openstream_active_profile_id") || null;

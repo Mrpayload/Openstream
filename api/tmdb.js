@@ -4,6 +4,15 @@ const TMDB_ACCESS_TOKEN = process.env.VITE_TMDB_ACCESS_TOKEN;
 const TMDB_API_KEY = process.env.VITE_TMDB_API_KEY;
 
 export default async function handler(req, res) {
+  if (req.method === "OPTIONS") {
+    res.statusCode = 200;
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+    res.setHeader("Access-Control-Allow-Headers", "*");
+    res.end();
+    return;
+  }
+
   if (req.method !== "GET") {
     sendJson(res, 405, { error: "Method not allowed" });
     return;
