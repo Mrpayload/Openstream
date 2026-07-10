@@ -4,7 +4,7 @@ import { genresList, movies as fallbackMovies } from "./data/movies";
 import { fetchEzvidapiStream, fetchFlixhqStream, fetchMediafusionStream, fetchSmplstreamStream, fetchStreams, fetchVidlinkStream } from "./services/streamApi";
 import { discoverTmdbCatalogItems, fetchTmdbSeasonEpisodes, fetchTmdbSeasons, hasTmdbCredentials, hydrateCatalogFromTmdb, searchTmdb, isImdbId } from "./services/tmdbApi";
 import { searchCinemeta, fetchCinemetaDetails, normalizeCinemetaSearchResult, convertCinemetaVideosToSeasons } from "./services/cinemetaApi";
-import { getStreamLabel, hasProxyHeaders, isMagnetUrl } from "./utils/streamUtils";
+import { getStreamLabel, hasProxyHeaders } from "./utils/streamUtils";
 import { useLandingData } from "./hooks/useLandingData";
 import { useSwipeDownDismiss } from "./hooks/useSwipeDownDismiss";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from "framer-motion";
 const StreamPicker = lazy(() => import("./components/StreamPicker"));
 import ProfileSelectorModal from "./components/ProfileSelectorModal";
 import { buildFallbackStreamList } from "./utils/fallbackStreams";
-import { getAbsoluteApiUrl } from "./utils/apiConfig";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 const TOAST_TTL_MS = 3200;
 
@@ -269,68 +268,6 @@ const getPlaybackKey = (playable) => {
     return `tv:${playable.tmdbId}:${playable.seasonNumber}:${playable.episodeNumber}`;
   }
   return `movie:${playable.tmdbId}`;
-};
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const pickStreamTorrentFile = (files, preferredIndex) => {
-  if (!Array.isArray(files) || files.length === 0) return null;
-  const preferred = Number.isInteger(preferredIndex)
-    ? files.find((file) => file.index === preferredIndex && file.isMedia)
-    : null;
-  if (preferred) return preferred;
-  return files
-    .filter((file) => file.isMedia)
-    .sort((a, b) => (b.length || 0) - (a.length || 0))[0] || null;
-};
-
-const waitForStreamTorrentFile = async (infoHash, preferredIndex) => {
-  const deadline = Date.now() + 45_000;
-  let lastError = "Torrent metadata is not ready yet";
-  while (Date.now() < deadline) {
-    const response = await fetch(getAbsoluteApiUrl(`/api/stream/${encodeURIComponent(infoHash)}/status`), { cache: "no-store" });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      lastError = body.error || `Torrent status failed (${response.status})`;
-    } else {
-      const file = pickStreamTorrentFile(body.files, preferredIndex);
-      if (body.ready && file) return { status: body, file };
-      if (body.metadataTimedOut) lastError = "Torrent metadata lookup timed out";
-    }
-    await wait(1000);
-  }
-  throw new Error(lastError);
-};
-
-const prepareStreamTorrentPlayback = async (stream) => {
-  const magnet = stream.originalMagnet || stream.url;
-  if (!magnet?.startsWith("magnet:?")) {
-    throw new Error("Stream Torrent row is missing the original magnet link");
-  }
-
-  const response = await fetch(getAbsoluteApiUrl("/api/stream"), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ magnet })
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.error || "Could not start server torrent");
-  if (!body.infoHash) throw new Error("Torrent server did not return an infoHash");
-
-  const preferredIndex = Number.isInteger(stream.fileIdx) ? stream.fileIdx : null;
-  const { file } = await waitForStreamTorrentFile(body.infoHash, preferredIndex);
-  const params = new URLSearchParams();
-  if (stream.isHls) params.set("transcode", "1");
-  const query = params.toString();
-
-  return {
-    ...stream,
-    url: getAbsoluteApiUrl(`/api/stream/${encodeURIComponent(body.infoHash)}/${file.index}${query ? `?${query}` : ""}`),
-    streamTorrentInfoHash: body.infoHash,
-    streamTorrentFileIndex: file.index,
-    activeTorrentFileName: file.name,
-    isMagnet: false,
-  };
 };
 
 const getStoredPlaybackPosition = (playbackKey) => {
@@ -676,7 +613,7 @@ export default function App() {
   const [streamError, setStreamError] = useState(null);
   // Per-section resolution state so the picker can stop spinning on a tab
   // once the corresponding API call has returned (even with 0 results).
-  const [sectionsResolved, setSectionsResolved] = useState({ webstreamer: false, torrentio: false });
+  const [sectionsResolved, setSectionsResolved] = useState({ webstreamer: false });
   const [toast, setToast] = useState(null);
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
   const toastTimerRef = useRef(null);
@@ -1256,7 +1193,7 @@ export default function App() {
     setIsStreamLoading(true);
     setStreamError(null);
     setCurrentStreams([]);
-    setSectionsResolved({ webstreamer: false, torrentio: false });
+    setSectionsResolved({ webstreamer: false });
 
     // Show fallback streams immediately so the user always sees playable options.
     // The fallback list is defined in src/utils/fallbackStreams.js so every UI
@@ -1458,7 +1395,7 @@ export default function App() {
     setCurrentStreams([]);
     setStreamError(null);
     setIsStreamLoading(false);
-    setSectionsResolved({ webstreamer: false, torrentio: false });
+    setSectionsResolved({ webstreamer: false });
   };
 
   const selectStream = async (stream) => {
@@ -1477,27 +1414,7 @@ export default function App() {
     const selectedStreamIndex = currentStreams.findIndex((candidate) => candidate === stream);
     let selectedStream = stream;
 
-    if (stream.serverTorrent || stream.source === "stream-torrent" || stream.isMagnet || isMagnetUrl(stream.url)) {
-      setIsStreamLoading(true);
-      setStreamError(null);
-      showToast("Starting server-backed torrent...", "loading");
-      try {
-        const needsTranscode = stream.behaviorHints?.notWebReady || stream.isNotWebReady;
-        if (needsTranscode && !stream.isHls) {
-          stream.isHls = true;
-        }
-        if (!stream.originalMagnet) {
-          stream.originalMagnet = stream.url;
-        }
-        selectedStream = await prepareStreamTorrentPlayback(stream);
-        showToast("Server-backed torrent ready", "success");
-      } catch (error) {
-        setStreamError(error instanceof Error ? error.message : "Could not start server-backed torrent playback");
-        showToast("Server-backed torrent failed", "error");
-        setIsStreamLoading(false);
-        return;
-      }
-    }
+
     const playbackStreams = selectedStreamIndex >= 0
       ? currentStreams.map((candidate, index) => index === selectedStreamIndex ? selectedStream : candidate)
       : currentStreams;

@@ -56,11 +56,26 @@ export default async function handler(req, res) {
       if (!response.ok) {
         const text = await response.text().catch(() => "");
         console.warn(`[ezvidapi] ${response.status}: ${text.slice(0, 200)}`);
-        sendJson(res, 502, { error: `ezvidapi returned ${response.status}`, servers: [] });
+        sendJson(res, 200, { hls: false, servers: [] });
         return;
       }
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("json")) {
+        // Upstream returned HTML instead of JSON — the API may have changed
+        // to an iframe-first model. Return gracefully, matching the dev proxy.
+        console.warn(`[ezvidapi] Upstream returned ${contentType.split(";")[0]} — API may have changed`);
+        sendJson(res, 200, { hls: false, servers: [] });
+        return;
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        sendJson(res, 200, { hls: false, servers: [] });
+        return;
+      }
       sendJson(res, 200, {
         hls: Boolean(data.hls),
         servers: Array.isArray(data.servers) ? data.servers : [],
@@ -70,10 +85,10 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     if (error?.name === "AbortError") {
-      sendJson(res, 504, { error: "ezvidapi request timed out", servers: [] });
+      console.warn("[ezvidapi] request timed out");
     } else {
       console.warn("[ezvidapi] error:", error?.message || error);
-      sendJson(res, 502, { error: error?.message || "ezvidapi proxy failed", servers: [] });
     }
+    sendJson(res, 200, { hls: false, servers: [] });
   }
 }

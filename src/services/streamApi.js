@@ -152,48 +152,6 @@ export const fetchSmplstreamStream = async (playable) => {
   }
 };
 
-// Calls the local Vite dev middleware at /api/torrentio/stream (see vite/torrentio-plugin.js).
-// Torrentio (torrentio.strem.fun by default) is a Stremio addon that returns
-// magnet-based torrent streams. The plugin converts TMDB → IMDb server-side.
-// Each returned stream is a magnet link (isMagnet: true) and must be played
-// via an external torrent-aware client (VLC, qBittorrent, etc.).
-export const fetchTorrentioStream = async (playable) => {
-  if (!playable?.tmdbId && !playable?.imdbId) return null;
-
-  const params = new URLSearchParams({
-    type: playable.streamType || "movie"
-  });
-  if (playable.tmdbId) params.set("tmdbId", String(playable.tmdbId));
-  if (playable.imdbId) params.set("imdbId", String(playable.imdbId));
-  if (playable.streamType === "series" || playable.streamType === "tv") {
-    if (playable.seasonNumber) params.set("season", String(playable.seasonNumber));
-    if (playable.episodeNumber) params.set("episode", String(playable.episodeNumber));
-  }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), MEDIAFUSION_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(getAbsoluteApiUrl(`/api/torrentio/stream?${params.toString()}`), { signal: controller.signal });
-    if (!response.ok) {
-      console.warn(`[torrentio] ${response.status}: ${(await response.text()).slice(0, 120)}`);
-      return null;
-    }
-
-    const data = await response.json();
-    if (!data?.streams?.length) return null;
-
-    return data.streams;
-  } catch (error) {
-    if (error.name !== "AbortError") {
-      console.warn("[torrentio] proxy error:", error.message || error);
-    }
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
-};
-
 // Calls the local Vite dev middleware at /api/mediafusion/stream (see vite/mediafusion-plugin.js).
 // MediaFusion is a Stremio addon aggregator that returns m3u8/mp4 streams.
 // It converts TMDB IDs to IMDb IDs server-side, then queries a public MediaFusion instance.

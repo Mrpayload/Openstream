@@ -1,30 +1,10 @@
 import { getRequestUrl, sendJson } from "../_lib/http.js";
+import { decodeSmashyStream } from "../../vite/smashyStream.js";
 
 export const config = { maxDuration: 30 };
 
 const SMPLSTREAM_BASE = "https://embed.smashystream.com";
 const SMPLSTREAM_TIMEOUT_MS = 15_000;
-
-const SMASHY_B64_PARTS = [
-  "U0ZML2RVN0IvRGx4",
-  "MGNhL0JWb0kvTlM5",
-  "Ym94LzJTSS9aU0Zj",
-  "SGJ0L1dGakIvN0dX",
-  "eE52L1QwOC96N0Yz",
-];
-
-const decodeSmashyStream = (encoded) => {
-  if (!encoded || typeof encoded !== "string") return null;
-  try {
-    let formattedB64 = encoded.slice(2);
-    for (let i = SMASHY_B64_PARTS.length - 1; i >= 0; i--) {
-      formattedB64 = formattedB64.replace(`//${SMASHY_B64_PARTS[i]}`, "");
-    }
-    return Buffer.from(formattedB64, "base64").toString("utf8");
-  } catch {
-    return null;
-  }
-};
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -63,7 +43,7 @@ export default async function handler(req, res) {
 
       if (!initResponse.ok) {
         console.warn(`[smplstream] init ${initResponse.status}`);
-        sendJson(res, 502, { error: `SmashyStream init failed: ${initResponse.status}`, servers: [] });
+        sendJson(res, 200, { servers: [] });
         return;
       }
 
@@ -94,7 +74,7 @@ export default async function handler(req, res) {
 
       if (!playerResponse.ok) {
         console.warn(`[smplstream] player ${playerResponse.status}`);
-        sendJson(res, 502, { error: `SmashyStream player failed: ${playerResponse.status}`, servers: [] });
+        sendJson(res, 200, { servers: [] });
         return;
       }
 
@@ -119,10 +99,10 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     if (error?.name === "AbortError") {
-      sendJson(res, 504, { error: "SmashyStream request timed out", servers: [] });
+      console.warn("[smplstream] request timed out");
     } else {
       console.warn("[smplstream] error:", error?.message || error);
-      sendJson(res, 502, { error: error?.message || "SmashyStream proxy failed", servers: [] });
     }
+    sendJson(res, 200, { servers: [] });
   }
 }

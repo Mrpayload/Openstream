@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Copy, ExternalLink, Loader2, Magnet, RotateCcw, X, Play } from "lucide-react";
+import { AlertTriangle, Loader2, RotateCcw, X, Play } from "lucide-react";
 import { motion } from "framer-motion";
 import {
-  checkAudioSupport, copyToClipboard, getAudioFileFormat, getStreamFormat, getStreamQuality, hasProxyHeaders, isAudioOnlyStream, isBrowserPlayableStream,
-  isIframeUrl, isMagnetUrl, partitionStreams
+  checkAudioSupport, getAudioFileFormat, getStreamFormat, getStreamQuality, hasProxyHeaders, isAudioOnlyStream, isBrowserPlayableStream,
+  isIframeUrl, partitionStreams
 } from "../utils/streamUtils";
 import { useSwipeDownDismiss } from "../hooks/useSwipeDownDismiss";
 import ExternalPlayerMenu from "./ExternalPlayerMenu";
@@ -52,49 +52,16 @@ export default function StreamPicker({
     : prioritizedWebstreamer;
   const externalStream = activeStreams.find((stream) =>
     stream?.url &&
-    !stream.isConfigLink &&
-    !stream.isMagnet &&
-    !isMagnetUrl(stream.url) &&
     !stream.isIframe &&
     !isIframeUrl(stream.url) &&
     !hasProxyHeaders(stream)
   );
-
 
   // Per-section "is this tab still waiting for its API?" flag. Iframe is
   // always ready synchronously, so it's not tracked.
   const isSectionLoading = {
     webstreamer: !sectionsResolved.webstreamer,
   }[activeTab] ?? false;
-
-  // Magnet rows show a copy button so the user can grab the link without
-  // opening the OS handler. Notification flows through onNotify so the
-  // toast is the same one the rest of the app uses.
-  const handleCopyMagnet = async (url, label = "Magnet link") => {
-    if (!url) return;
-    const ok = await copyToClipboard(url);
-    if (onNotify) {
-      onNotify(ok ? `${label} copied` : "Copy failed", ok ? "success" : "error");
-    }
-  };
-
-  const handlePlayClick = (stream, event) => {
-    event.stopPropagation();
-    onSelect(stream);
-  };
-
-  const handleMagnetOpen = (stream, event) => {
-    event.stopPropagation();
-    if (!stream?.url) return;
-    window.open(stream.url, "_self");
-  };
-
-  // Truncate long magnet URLs for the visible row; the full URL stays in
-  // the `title` attribute and the OS handler gets the un-truncated value.
-  const truncateMagnet = (url) => {
-    if (!url) return "";
-    return url.length > 72 ? `${url.slice(0, 72)}\u2026` : url;
-  };
 
   // Swipe-down-to-dismiss on mobile. The grab handle at the top of the
   // panel is the touch target; dragging it down past the threshold
@@ -238,146 +205,11 @@ export default function StreamPicker({
             )}
             {activeStreams.map((stream, index) => {
               const isBlocked = !stream.url || hasProxyHeaders(stream);
-              const isConfigLink = Boolean(stream.isConfigLink);
-              const isMagnet = !isConfigLink && (isMagnetUrl(stream.url) || stream.isMagnet);
-              const isIframeStream = !isMagnet && !isConfigLink && (stream.isIframe || isIframeUrl(stream.url));
-              const recommended = isMagnet || (!isMagnet && isBrowserPlayableStream(stream));
+              const isIframeStream = stream.isIframe || isIframeUrl(stream.url);
+              const recommended = isBrowserPlayableStream(stream);
               const audioSupport = checkAudioSupport(stream);
-              const audioNeedsVlc = !isConfigLink && !isMagnet && !isIframeStream && audioSupport.supported === false;
+              const audioNeedsVlc = !isIframeStream && audioSupport.supported === false;
               const quality = getStreamQuality(stream);
-              const handleOpenConfig = () => {
-                if (!stream.url || typeof window === "undefined") return;
-                window.open(stream.url, "_blank", "noopener,noreferrer");
-              };
-
-              const inner = (
-                <>
-                  <div className="stream-play-icon">
-                    {isConfigLink ? <ExternalLink size={18} /> : isMagnet ? <Magnet size={18} /> : <Play size={18} fill="currentColor" />}
-                  </div>
-                  <span className="stream-main">
-                    <strong>
-                      {isConfigLink ? "Torrentio configure" : `${title} · #${index + 1}`}
-                      {stream.size && <span className="quality-badge auto">[{stream.size}]</span>}
-                      <span className={`quality-badge ${quality === "Auto" ? "auto" : ""}`}>[{isConfigLink ? "Configure" : quality}]</span>
-                      {isAudioOnlyStream(stream) && (
-                        <span className="quality-badge audio">{getAudioFileFormat(stream.url)}</span>
-                      )}
-                    </strong>
-                    <small>
-                      ({isBlocked
-                        ? "Unsupported Source"
-                          : isConfigLink
-                            ? "Torrentio setup link · opens in browser"
-                          : isMagnet
-                            ? stream.isHls || stream.behaviorHints?.notWebReady || stream.isNotWebReady
-                              ? "Server-backed torrent · HLS transcode"
-                              : "Server-backed torrent · HTTP range stream"
-                            : isIframeStream
-                              ? "Web-Ready Fallback"
-                              : `${getStreamFormat(stream)} direct stream`})
-                    </small>
-                    {(isMagnet || isConfigLink) && stream.url && (
-                      <code className="magnet-url" title={stream.url}>
-                        {truncateMagnet(stream.url)}
-                      </code>
-                    )}
-                  </span>
-                  <span className="stream-tags">
-                    {(isMagnet || isConfigLink) && stream.url && (
-                      <span className="stream-magnet-actions">
-                        {isMagnet && (
-                          <button
-                            type="button"
-                            className="stream-action-btn play-btn"
-                            onClick={(event) => handlePlayClick(stream, event)}
-                            aria-label="Play in browser"
-                            title="Play via server-backed torrent"
-                          >
-                            <Play size={13} fill="currentColor" /> Play
-                          </button>
-                        )}
-                        {isMagnet && (
-                          <button
-                            type="button"
-                            className="stream-action-btn magnet-btn"
-                            onClick={(event) => handleMagnetOpen(stream, event)}
-                            aria-label="Open in torrent downloader"
-                            title="Open in external torrent client"
-                          >
-                            <Magnet size={13} /> Magnet
-                          </button>
-                        )}
-                        {isConfigLink && (
-                          <button
-                            type="button"
-                            className="stream-action-btn config-btn"
-                            onClick={(event) => { event.stopPropagation(); handleOpenConfig(); }}
-                            aria-label="Open Torrentio configuration"
-                            title="Open configuration in browser"
-                          >
-                            <ExternalLink size={13} /> Configure
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="stream-action-btn copy-btn"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleCopyMagnet(stream.url, isConfigLink ? "Configure link" : "Magnet link");
-                          }}
-                          aria-label={isConfigLink ? "Copy configure link to clipboard" : "Copy magnet link to clipboard"}
-                          title={isConfigLink ? "Copy configure link" : "Copy magnet link"}
-                        >
-                          <Copy size={13} />
-                        </button>
-                      </span>
-                    )}
-                    {isMagnet && Number.isFinite(stream.seeds) && <span className="seed-badge">Seeds: {stream.seeds}</span>}
-                    {isMagnet && <span className="recommended-badge">Server</span>}
-                    {!isConfigLink && !isMagnet && (
-                      <span className={`audio-status-badge ${audioNeedsVlc ? "vlc-recommended" : "good-to-go"}`}>
-                        {audioNeedsVlc ? "Use local player" : "Good to go"}
-                      </span>
-                    )}
-                    {recommended && <span className="recommended-badge">Recommended</span>}
-                    {hasProxyHeaders(stream) && <span>Requires proxy</span>}
-                    {!stream.url && <span>No URL</span>}
-                  </span>
-                </>
-              );
-
-              if (isConfigLink) {
-                return (
-                  <div
-                    key={`${stream.url || stream.name}-${index}`}
-                    className="stream-option stream-option-magnet"
-                    role="button"
-                    tabIndex={isBlocked ? -1 : 0}
-                    aria-disabled={isBlocked}
-                    title={isBlocked ? "Configure link unavailable" : "Open Torrentio configuration"}
-                  >
-                    {inner}
-                  </div>
-                );
-              }
-
-              if (isMagnet) {
-                return (
-                  <div
-                    key={`${stream.url || stream.name}-${index}`}
-                    className="stream-option stream-option-magnet"
-                    role="button"
-                    tabIndex={isBlocked ? -1 : 0}
-                    aria-disabled={isBlocked}
-                    title={isBlocked
-                      ? "Stream not playable in browser"
-                      : "Play in browser or open magnet in external client"}
-                  >
-                    {inner}
-                  </div>
-                );
-              }
 
               return (
                 <button
@@ -387,7 +219,36 @@ export default function StreamPicker({
                   onClick={() => onSelect(stream)}
                   title={isBlocked ? "Stream not playable in browser" : undefined}
                 >
-                  {inner}
+                  <div className="stream-play-icon">
+                    <Play size={18} fill="currentColor" />
+                  </div>
+                  <span className="stream-main">
+                    <strong>
+                      {`${title} · #${index + 1}`}
+                      {stream.size && <span className="quality-badge auto">[{stream.size}]</span>}
+                      <span className={`quality-badge ${quality === "Auto" ? "auto" : ""}`}>[{quality}]</span>
+                      {isAudioOnlyStream(stream) && (
+                        <span className="quality-badge audio">{getAudioFileFormat(stream.url)}</span>
+                      )}
+                    </strong>
+                    <small>
+                      {isBlocked
+                        ? "Unsupported Source"
+                        : isIframeStream
+                          ? "Web-Ready Fallback"
+                          : `${getStreamFormat(stream)} direct stream`}
+                    </small>
+                  </span>
+                  <span className="stream-tags">
+                    {!isBlocked && (
+                      <span className={`audio-status-badge ${audioNeedsVlc ? "vlc-recommended" : "good-to-go"}`}>
+                        {audioNeedsVlc ? "Use local player" : "Good to go"}
+                      </span>
+                    )}
+                    {recommended && !isBlocked && <span className="recommended-badge">Recommended</span>}
+                    {hasProxyHeaders(stream) && <span>Requires proxy</span>}
+                    {!stream.url && <span>No URL</span>}
+                  </span>
                 </button>
               );
             })}

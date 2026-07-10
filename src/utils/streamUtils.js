@@ -116,33 +116,24 @@ export const isWebtorrentPlayable = (stream) => {
   return isMagnetUrl(stream.url);
 };
 
-// Split a mixed list of streams into the three groups shown in StreamPicker:
-// Partitions a flat stream list into display buckets:
+// Split a flat stream list into the display buckets shown in StreamPicker:
 //   - iframe:      embed players that must be rendered inside an <iframe>
 //                  (vidsrc-embed, vsembed, multiembed, vidlink, ...)
 //   - webstreamer: direct, browser-playable sources (FlixHQ, ezvidapi,
 //                  SmashyStream, MediaFusion, webstreamrMBG, ...)
-// Priority order: iframe → webstreamer
 export const partitionStreams = (streams) => {
   const list = Array.isArray(streams) ? streams : [];
   const iframe = [];
   const webstreamer = [];
-  const torrentio = [];
   for (const stream of list) {
     if (!stream) continue;
-    // Skip magnet/torrent streams — Torrentio has been removed
-    const isTorrent = stream.source === "torrentio" || stream.isMagnet || isMagnetUrl(stream.url);
-    if (isTorrent) {
-      torrentio.push(stream);
-      continue;
-    }
     if (stream.isIframe || isIframeUrl(stream.url)) {
       iframe.push(stream);
     } else {
       webstreamer.push(stream);
     }
   }
-  return { iframe, webstreamer, torrentio };
+  return { iframe, webstreamer };
 };
 
 const getMediaSource = () => {

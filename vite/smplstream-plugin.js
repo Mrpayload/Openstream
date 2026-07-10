@@ -16,30 +16,7 @@
 const SMPLSTREAM_BASE = "https://embed.smashystream.com";
 const SMPLSTREAM_TIMEOUT_MS = 15_000;
 
-// SmashyStream obfuscated base64 decoding
-// Path segments used in URL construction (reversed order for decoding)
-const SMASHY_B64_PARTS = [
-  "U0ZML2RVN0IvRGx4",
-  "MGNhL0JWb0kvTlM5",
-  "Ym94LzJTSS9aU0Zj",
-  "SGJ0L1dGakIvN0dX",
-  "eE52L1QwOC96N0Yz"
-];
-
-const decodeSmashyStream = (encoded) => {
-  if (!encoded || typeof encoded !== "string") return null;
-  try {
-    // Remove the first 2 characters (version/type prefix)
-    let formattedB64 = encoded.slice(2);
-    // Remove obfuscated path segments in reverse order
-    for (let i = SMASHY_B64_PARTS.length - 1; i >= 0; i--) {
-      formattedB64 = formattedB64.replace(`//${SMASHY_B64_PARTS[i]}`, "");
-    }
-    return atob(formattedB64);
-  } catch {
-    return null;
-  }
-};
+import { decodeSmashyStream } from "./smashyStream.js";
 
 const sendJson = (res, status, payload) => {
   res.statusCode = status;

@@ -73,7 +73,7 @@ export default function ezvidApiPlugin() {
             if (!response.ok) {
               const text = await response.text().catch(() => "");
               console.warn(`[ezvidapi] ${response.status}: ${text.slice(0, 200)}`);
-              sendJson(res, 502, { error: `ezvidapi returned ${response.status}`, servers: [] });
+              sendJson(res, 200, { hls: false, servers: [] });
               return;
             }
 
