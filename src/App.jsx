@@ -16,7 +16,9 @@ import LoadingScreen from "./components/LoadingScreen";
 import { motion, AnimatePresence } from "framer-motion";
 const StreamPicker = lazy(() => import("./components/StreamPicker"));
 import ProfileSelectorModal from "./components/ProfileSelectorModal";
+import AdBlockPrompt from "./components/AdBlockPrompt";
 import { buildFallbackStreamList } from "./utils/fallbackStreams";
+import { detectBrave, detectUBlock, isWebPlatform } from "./utils/browser";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 const TOAST_TTL_MS = 3200;
 
@@ -616,11 +618,39 @@ export default function App() {
   const [sectionsResolved, setSectionsResolved] = useState({ webstreamer: false });
   const [toast, setToast] = useState(null);
   const [showLoadingScreen, setShowLoadingScreen] = useState(true);
+  const [showAdBlockPrompt, setShowAdBlockPrompt] = useState(false);
   const toastTimerRef = useRef(null);
 
   useEffect(() => {
     setWatchList(getStoredWatchList(activeProfileId));
   }, [activeProfileId]);
+
+  // Web-only prompt: show the ad-block dialog only when the user is on a plain
+  // browser AND satisfies NEITHER "using Brave" NOR "has uBlock installed".
+  // Native (Capacitor) builds skip this entirely. Dismissal is remembered in
+  // localStorage so it stays gone across sessions.
+  useEffect(() => {
+    if (!isWebPlatform()) return;
+
+    let cancelled = false;
+    (async () => {
+      const [brave, ublock] = await Promise.all([detectBrave(), detectUBlock()]);
+      if (cancelled) return;
+      if (brave || ublock) return;
+
+      let dismissed = false;
+      try {
+        dismissed = localStorage.getItem("openstream_adblock_prompt_dismissed") === "1";
+      } catch {
+        // ignore storage failures
+      }
+      if (!dismissed) setShowAdBlockPrompt(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleAddProfile = useCallback((name) => {
     const newProfile = {
@@ -1559,6 +1589,12 @@ export default function App() {
       </header>
 
       <AdBlocker />
+
+      <AnimatePresence>
+        {showAdBlockPrompt && (
+          <AdBlockPrompt onDismiss={() => setShowAdBlockPrompt(false)} />
+        )}
+      </AnimatePresence>
 
       <main className="stream-shell" id="main-content">
         <AnimatePresence>

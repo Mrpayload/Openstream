@@ -3214,3 +3214,107 @@ button {
   gap: 1rem;
   margin-top: 1rem;
 }
+
+/* ── Ad-block prompt (web-only) ─────────────────────────────────────── */
+.adblock-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.adblock-prompt {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.adblock-prompt-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.adblock-prompt-close:hover {
+  color: var(--text-primary);
+}
+
+.adblock-prompt-icon {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.adblock-prompt-title {
+  font-size: var(--fs-2xl);
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.adblock-prompt-body {
+  color: var(--text-secondary);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+.adblock-prompt-body strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.adblock-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.adblock-prompt-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--text-primary);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.25rem;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.adblock-prompt-primary:hover {
+  background: var(--accent-hover);
+}
+
+.adblock-prompt-secondary {
+  background: none;
+  border: 1px solid var(--border-soft);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 1.25rem;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.adblock-prompt-secondary:hover {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
