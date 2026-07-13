@@ -22,6 +22,9 @@ const ALLOWED_EMBED_HOSTS = new Set([
   "multiembed.mov",
   "vidsrc.to",
   "autoembed.com",
+  "multiembed.com",
+  "watch-v2.autoembed.app",
+  "autoembed.net",
 ]);
 
 const PROXY_TIMEOUT_MS = 15_000;

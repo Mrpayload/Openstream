@@ -83,6 +83,44 @@ const FALLBACK_EMBED_PLAYERS = [
       }
       return `https://vidsrc.to/embed/movie/${id}`;
     }
+  },
+  {
+    id: "multiembed-com",
+    label: "MultiEmbed.com (Server 6)",
+    title: "Embedded player via multiembed.com (Multiple servers, auto quality)",
+    build: (playable) => {
+      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
+      const params = new URLSearchParams({ video_id: id, tmdb: "1" });
+      if (isTvPlayable(playable)) {
+        params.set("s", String(playable.seasonNumber));
+        params.set("e", String(playable.episodeNumber));
+      }
+      return `https://multiembed.com/?${params.toString()}`;
+    }
+  },
+  {
+    id: "autoembed-net",
+    label: "AutoEmbed.net (Server 7)",
+    title: "Embedded player via autoembed.net (Subtitles, auto quality)",
+    build: (playable) => {
+      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
+      if (isTvPlayable(playable)) {
+        return `https://autoembed.net/embed/tv/${id}/${playable.seasonNumber}/${playable.episodeNumber}`;
+      }
+      return `https://autoembed.net/embed/movie/${id}`;
+    }
+  },
+  {
+    id: "autoembed-app",
+    label: "AutoEmbed V2 (Server 8)",
+    title: "Embedded player via watch-v2.autoembed.app (Subtitles, auto quality)",
+    build: (playable) => {
+      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
+      if (isTvPlayable(playable)) {
+        return `https://watch-v2.autoembed.app/embed/tv/${id}/${playable.seasonNumber}/${playable.episodeNumber}`;
+      }
+      return `https://watch-v2.autoembed.app/embed/movie/${id}`;
+    }
   }
 ];
 
@@ -134,6 +172,9 @@ export const isFallbackEmbedUrl = (url) => {
       if (player.id === "superembed") return raw.includes("multiembed.mov");
       if (player.id === "vidlink") return raw.includes("vidlink.pro");
       if (player.id === "vidsrc-to") return raw.includes("vidsrc.to");
+      if (player.id === "multiembed-com") return raw.includes("multiembed.com");
+      if (player.id === "autoembed-net") return raw.includes("autoembed.net");
+      if (player.id === "autoembed-app") return raw.includes("watch-v2.autoembed.app");
       return false;
     }
     return raw.startsWith(player.baseMovie) || raw.startsWith(player.baseTv);
