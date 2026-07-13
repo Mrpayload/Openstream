@@ -314,7 +314,7 @@ describe("buildFallbackStreamList", () => {
 
   it("returns five entries for a movie", () => {
     const streams = buildFallbackStreamList(movie);
-    expect(streams).toHaveLength(8);
+    expect(streams).toHaveLength(5);
     expect(streams.every((s) => s.isIframe)).toBe(true);
   });
 
@@ -355,9 +355,6 @@ describe("FALLBACK_EMBED_PLAYER_IDS", () => {
       "vidsrc-me",
       "superembed",
       "vidsrc-to",
-      "multiembed-com",
-      "autoembed-net",
-      "autoembed-app",
     ]);
   });
 });
