@@ -28,7 +28,7 @@ const proxyUrl = (url) => {
   return url;
 };
 
-const FALLBACK_EMBED_PLAYERS = [
+export const FALLBACK_EMBED_PLAYERS = [
   {
     id: "vidlink",
     label: "VidLink (Server 1)",

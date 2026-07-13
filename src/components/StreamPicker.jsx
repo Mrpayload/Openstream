@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { AlertTriangle, Loader2, RotateCcw, X, Play } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Activity, AlertTriangle, Loader2, RotateCcw, X, Play } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   checkAudioSupport, getAudioFileFormat, getStreamFormat, getStreamQuality, hasProxyHeaders, isAudioOnlyStream, isBrowserPlayableStream,
@@ -7,6 +7,7 @@ import {
 } from "../utils/streamUtils";
 import { useSwipeDownDismiss } from "../hooks/useSwipeDownDismiss";
 import ExternalPlayerMenu from "./ExternalPlayerMenu";
+import { getServerRankings, getLatencyStatus, sortStreamsByLatency } from "../services/serverRanker";
 
 const TABS = [
   { id: "iframe", label: "Iframe Players" },
@@ -47,8 +48,30 @@ export default function StreamPicker({
     iframe: iframe.length,
   };
   const prioritizedWebstreamer = useMemo(() => prioritizeGoodToGoStreams(webstreamer), [webstreamer]);
+  const [serverRankings, setServerRankings] = useState(null);
+  const [isRanking, setIsRanking] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchRanks = async () => {
+      setIsRanking(true);
+      const ranks = await getServerRankings();
+      if (mounted) {
+        setServerRankings(ranks);
+        setIsRanking(false);
+      }
+    };
+    fetchRanks();
+    return () => { mounted = false; };
+  }, []);
+
+  const rankedIframe = useMemo(() => {
+    if (!serverRankings) return iframe;
+    return sortStreamsByLatency(iframe, serverRankings);
+  }, [iframe, serverRankings]);
+
   const activeStreams = activeTab === "iframe"
-    ? iframe
+    ? rankedIframe
     : prioritizedWebstreamer;
   const externalStream = activeStreams.find((stream) =>
     stream?.url &&
@@ -210,6 +233,8 @@ export default function StreamPicker({
               const audioSupport = checkAudioSupport(stream);
               const audioNeedsVlc = !isIframeStream && audioSupport.supported === false;
               const quality = getStreamQuality(stream);
+              const latencyStatus = isIframeStream && serverRankings && stream.source ? getLatencyStatus(serverRankings[stream.source]) : null;
+              const statusColor = latencyStatus === "fast" ? "var(--success, #22c55e)" : latencyStatus === "average" ? "var(--warning, #f59e0b)" : latencyStatus === "offline" ? "var(--border-strong, #525252)" : "var(--danger, #ef4444)";
 
               return (
                 <button
@@ -225,6 +250,9 @@ export default function StreamPicker({
                   <span className="stream-main">
                     <strong>
                       {`${title} · #${index + 1}`}
+                      {isIframeStream && stream.name && (
+                        <span className="quality-badge server">[{stream.name}]</span>
+                      )}
                       {stream.size && <span className="quality-badge auto">[{stream.size}]</span>}
                       <span className={`quality-badge ${quality === "Auto" ? "auto" : ""}`}>[{quality}]</span>
                       {isAudioOnlyStream(stream) && (
@@ -240,6 +268,12 @@ export default function StreamPicker({
                     </small>
                   </span>
                   <span className="stream-tags">
+                    {latencyStatus && (
+                      <span className="audio-status-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-tertiary, #1f1f1f)' }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: statusColor }} />
+                        {latencyStatus === 'offline' ? 'Offline' : `${serverRankings[stream.source]}ms`}
+                      </span>
+                    )}
                     {!isBlocked && (
                       <span className={`audio-status-badge ${audioNeedsVlc ? "vlc-recommended" : "good-to-go"}`}>
                         {audioNeedsVlc ? "Use local player" : "Good to go"}
