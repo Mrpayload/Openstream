@@ -25,6 +25,9 @@ const ALLOWED_EMBED_HOSTS = new Set([
   "multiembed.com",
   "watch-v2.autoembed.app",
   "autoembed.net",
+  "embed.smashystream.com",
+  "www.2embed.cc",
+  "flicky.host",
 ]);
 
 const PROXY_TIMEOUT_MS = 15_000;

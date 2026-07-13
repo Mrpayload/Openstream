@@ -83,6 +83,42 @@ const FALLBACK_EMBED_PLAYERS = [
       }
       return `https://vidsrc.to/embed/movie/${id}`;
     }
+  },
+  {
+    id: "smashystream",
+    label: "SmashyStream (Server 6)",
+    title: "Embedded player via smashystream.com (Multiple sources)",
+    build: (playable) => {
+      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
+      if (isTvPlayable(playable)) {
+        return `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${playable.seasonNumber}&episode=${playable.episodeNumber}`;
+      }
+      return `https://embed.smashystream.com/playere.php?tmdb=${id}`;
+    }
+  },
+  {
+    id: "2embed",
+    label: "2Embed (Server 7)",
+    title: "Embedded player via 2embed.cc",
+    build: (playable) => {
+      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
+      if (isTvPlayable(playable)) {
+        return `https://www.2embed.cc/embedtv/${id}&s=${playable.seasonNumber}&e=${playable.episodeNumber}`;
+      }
+      return `https://www.2embed.cc/embed/${id}`;
+    }
+  },
+  {
+    id: "flicky",
+    label: "Flicky (Server 8)",
+    title: "Embedded player via flicky.host",
+    build: (playable) => {
+      const id = String(playable.tmdbId || "").replace(/^tmdb:/, "");
+      if (isTvPlayable(playable)) {
+        return `https://flicky.host/embed/tv/?id=${id}/${playable.seasonNumber}/${playable.episodeNumber}`;
+      }
+      return `https://flicky.host/embed/movie/?id=${id}`;
+    }
   }
 ];
 
@@ -134,6 +170,9 @@ export const isFallbackEmbedUrl = (url) => {
       if (player.id === "superembed") return raw.includes("multiembed.mov");
       if (player.id === "vidlink") return raw.includes("vidlink.pro");
       if (player.id === "vidsrc-to") return raw.includes("vidsrc.to");
+      if (player.id === "smashystream") return raw.includes("smashystream.com");
+      if (player.id === "2embed") return raw.includes("2embed.cc");
+      if (player.id === "flicky") return raw.includes("flicky.host");
       return false;
     }
     return raw.startsWith(player.baseMovie) || raw.startsWith(player.baseTv);
